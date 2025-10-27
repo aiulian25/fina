@@ -61,7 +61,9 @@ Installation
 mkdir fina
 cd fina
 
-2. Create docker-compose.yml:
+**2. Create `docker-compose.yml`:**
+
+Copy this content into a new file called `docker-compose.yml`:
 
 
 version: '3.8'
