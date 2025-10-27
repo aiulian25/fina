@@ -125,11 +125,14 @@ Open your browser to: http://localhost:5001
     Start tracking your expenses!
 
  Configuration
-Environment Variables
-Variable	Default	Description
-SECRET_KEY	change-this-secret-key-in-production	Flask secret key for sessions
-REDIS_HOST	redis	Redis hostname
-REDIS_PORT	6369	Redis port
+Environment Variables Example
+~~~
+SECRET_KEY=your-super-secret-random-key-here
+DATABASE_URL=sqlite:///finance.db
+REDIS_URL=redis://redis:6369/0
+FLASK_ENV=production
+~~~
+
 Ports
 
     5001: Web application (customizable in docker-compose.yml)
