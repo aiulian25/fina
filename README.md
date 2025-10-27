@@ -19,76 +19,50 @@
 <img width="1917" height="928" alt="fina-tags-page" src="https://github.com/user-attachments/assets/75af122d-7bc6-4e0b-a57b-729fe75a48b6" />
 
 
+Disclaimer
 
-## Disclaimer
+USE AT YOUR OWN RISK: This software is provided "as is", without warranty of any kind, express or implied. By using FINA, you acknowledge that you understand and accept these risks.
+ About
 
-**USE AT YOUR OWN RISK**: This software is provided "as is", without warranty of any kind, express or implied. The authors and contributors assume no responsibility for any damages, data loss, security breaches, or other issues that may arise from using this software. Users are solely responsible for:
+FINA is a modern, self-hosted personal finance tracker built with Flask and Docker. Track expenses, manage categories, visualize spending patterns, and keep your financial data completely under your control.
+ Features
 
-- Securing their deployment
-- Backing up their data
-- Configuring appropriate security measures
-- Complying with applicable data protection regulations
+     Expense tracking with custom categories
 
-By using FINA, you acknowledge that you understand and accept these risks.
+     Interactive pie and bar charts
 
----
+     Tag management system
 
-##  About
+     Receipt uploads (images/PDFs)
 
-FINA is a modern, self-hosted personal finance tracker built with Flask and Docker. Track your expenses, manage categories, visualize spending patterns, and keep your financial data completely under your control.
+     Two-factor authentication
 
-###  Features
+     Multi-user support
 
-- ** Expense Tracking**: Organize expenses by custom categories
-- ** Visual Analytics**: Interactive pie and bar charts for spending insights
-- ** Tagging System**: Tag expenses for better organization
-- ** Receipt Management**: Upload and store receipt images/PDFs
-- ** Two-Factor Authentication**: Optional 2FA for enhanced security
-- ** Multi-User Support**: Admin can create and manage user accounts
-- ** Multi-Currency**: Support for USD, EUR, GBP, and RON
-- ** Import/Export**: CSV import and export functionality
-- ** Modern UI**: Beautiful dark-themed glassmorphism design
-- ** Mobile Responsive**: Works seamlessly on all devices
+     Multi-currency (USD, EUR, GBP, RON)
 
-## Quick Start
+     CSV import/export
 
-### Prerequisites
+     Modern glassmorphism UI
 
-- Docker and Docker Compose installed
-- Ports 5001 and 6369 available on your host
+     Mobile responsive
 
-### Installation
+ Quick Start
+Prerequisites
 
-1. **Clone the repository:**
-git clone https://github.com/aiulian25/fina.git
-docker compose up -d
+    Docker and Docker Compose installed
 
-## Configuration
+    Port 5001 available
 
-### Environment Variables
+Installation
 
-Create a `.env` file to customize your deployment:
+1. Create project directory:
 
-SECRET_KEY=your-super-secret-key-change-this
-REDIS_HOST=redis
-REDIS_PORT=6369
+mkdir fina
+cd fina
 
-**Access FINA:**
-- Open your browser to `http://localhost:5001`
-- Register your first user (automatically becomes admin)
-- Start tracking!
+2. Create docker-compose.yml:
 
-### Ports
-
-- **5001**: Web application (can be changed in docker-compose.yml)
-- **6369**: Redis cache
-
-### Pull 
-Docker Compose Recomended
-
-- mkdir fina
-- cd fina
-- nano docker-compose.yml
 
 version: '3.8'
 
@@ -106,7 +80,7 @@ services:
       - FLASK_ENV=production
       - REDIS_HOST=redis
       - REDIS_PORT=6369
-      - SECRET_KEY=${SECRET_KEY:-change-this-secret-key-openssl rand -hex 32}
+      - SECRET_KEY=${SECRET_KEY:-change-this-secret-key-in-production}
     depends_on:
       - redis
     restart: unless-stopped
@@ -122,103 +96,164 @@ volumes:
   fina-db:
   fina-uploads:
 
-### (Optional but recommended): Create .env file:
+3. (Optional but recommended) Create .env file:
 
-SECRET_KEY=ozZp4DTXGoFHZ2zFHis0oBWaYJ5jpw4x
-DATABASE_URL=sqlite:///finance.db
-REDIS_URL=redis://redis:6369/0
-FLASK_ENV=production
+Create a file called .env with your custom secret key:
 
+text
+SECRET_KEY=your-super-secret-random-key-here
 
+To generate a secure random key:
 
-## Usage
+bash
+openssl rand -hex 32
 
-### First Time Setup
+4. Start FINA:
 
-1. Register your account - first user becomes admin
-2. Go to Settings → Profile to set your currency
-3. (Optional) Enable 2FA in Settings → Security
-4. Create expense categories
-5. Start adding expenses!
-
-### Admin Features
-
-Admins can access User Management in Settings to:
-- Create managed user accounts
-- Edit user details and roles
-- Manage system users
-
-### Data Management
-
-- **Export**: Settings → Import/Export → Export to CSV
-- **Import**: Settings → Import/Export → Upload CSV file
-- **Backups**: Data persists in Docker volumes `fina-db` and `fina-uploads`
-
-## Security Considerations
-
-**IMPORTANT**: This application is designed for self-hosting. Please consider:
-
-1. **Change the default SECRET_KEY** in production
-2. **Use HTTPS** with a reverse proxy (nginx, Caddy, Traefik)
-3. **Enable 2FA** for all users
-4. **Regular backups** of your data
-5. **Keep Docker images updated**
-6. **Restrict network access** to trusted devices only
-
-### Recommended Production Setup
-
-Start
-
+bash
 docker compose up -d
-Stop
 
+5. Access FINA:
+
+Open your browser to: http://localhost:5001
+
+    Register your first user (automatically becomes admin)
+
+    Start tracking your expenses!
+
+ Configuration
+Environment Variables
+Variable	Default	Description
+SECRET_KEY	change-this-secret-key-in-production	Flask secret key for sessions
+REDIS_HOST	redis	Redis hostname
+REDIS_PORT	6369	Redis port
+Ports
+
+    5001: Web application (customizable in docker-compose.yml)
+
+    6369: Redis cache
+
+ Usage
+First Time Setup
+
+    Register your account - first user becomes admin
+
+    Go to Settings → Profile to set your currency
+
+    (Optional) Enable 2FA in Settings → Security
+
+    Create expense categories
+
+    Start adding expenses!
+
+Admin Features
+
+Access Settings → User Management to:
+
+    Create managed user accounts
+
+    Edit user details and roles
+
+    Delete users
+
+Data Management
+
+    Export: Settings → Import/Export → Export to CSV
+
+    Import: Settings → Import/Export → Upload CSV
+
+    Backups: Data stored in Docker volumes fina-db and fina-uploads
+
+ Security
+
+IMPORTANT for production deployments:
+
+     Change the SECRET_KEY in .env file
+
+     Use HTTPS with a reverse proxy (nginx, Caddy, Traefik)
+
+     Enable 2FA for all users
+
+     Regular database backups
+
+     Keep Docker images updated
+
+     Restrict network access
+
+Reverse Proxy Example (Caddy)
+
+text
+fina.yourdomain.com {
+    reverse_proxy localhost:5001
+}
+
+ Docker Commands
+
+bash
+# Start FINA
+docker compose up -d
+
+# Stop FINA
 docker compose down
-View logs
 
+# View logs
 docker compose logs -f web
-Restart
 
+# Restart
 docker compose restart
-Update to latest
 
+# Update to latest version
 docker compose pull
 docker compose up -d
 
+# Check status
+docker compose ps
 
-## Tech Stack
+ Building from Source
 
-- **Backend**: Python 3.11, Flask, SQLAlchemy
-- **Database**: SQLite
-- **Cache**: Redis
-- **Frontend**: Vanilla JavaScript, Chart.js
-- **Security**: Flask-Login, Flask-WTF (CSRF), pyotp (2FA)
-- **Deployment**: Docker, Gunicorn
+If you prefer to build from source instead of using the pre-built image:
 
-## Contributing
+bash
+git clone https://github.com/aiulian25/fina.git
+cd fina
+docker compose -f docker-compose.build.yml up -d --build
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+ Contributing
 
-1. Fork the repository
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a Pull Request
+Contributions are welcome! Please:
 
-## License
+    Fork the repository
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+    Create your feature branch (git checkout -b feature/AmazingFeature)
 
-## Acknowledgments
+    Commit your changes (git commit -m 'Add AmazingFeature')
 
-- Built with using Flask and modern web technologies
-- Icons and design inspiration from various open-source projects
+    Push to the branch (git push origin feature/AmazingFeature)
 
-## Support
+    Open a Pull Request
 
-For issues, questions, or suggestions:
-- Open an issue on GitHub
-- Check existing documentation
+ License
 
----
+This project is licensed under the MIT License - see the LICENSE file for details.
+ Support
 
-**Remember**: Always back up your data and secure your deployment appropriately. This software handles sensitive financial information.
+For issues or questions:
+
+    Open an issue on GitHub
+
+    Check existing documentation
+
+ Acknowledgments
+
+Built using:
+
+    Flask & Python
+
+    Docker & Docker Compose
+
+    Chart.js for visualizations
+
+    Redis for caching
+
+Remember: Always back up your data and secure your deployment. This software handles sensitive financial information.
+
