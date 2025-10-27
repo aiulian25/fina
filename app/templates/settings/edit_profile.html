@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Profile - Finance Tracker{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="glass-card form-card">
+        <h1>✏️ Edit Profile</h1>
+        
+        <form method="POST" class="form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" id="username" name="username" value="{{ current_user.username }}" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" value="{{ current_user.email }}" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="currency">Currency</label>
+                <select id="currency" name="currency" class="metric-select">
+                    <option value="USD" {% if current_user.currency == 'USD' %}selected{% endif %}>$ USD</option>
+                    <option value="EUR" {% if current_user.currency == 'EUR' %}selected{% endif %}>€ EUR</option>
+                    <option value="RON" {% if current_user.currency == 'RON' %}selected{% endif %}>RON (Lei)</option>
+                    <option value="GBP" {% if current_user.currency == 'GBP' %}selected{% endif %}>£ GBP</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="new_password">New Password (leave blank to keep current)</label>
+                <input type="password" id="new_password" name="new_password" minlength="6">
+            </div>
+            
+            <div class="form-actions">
+                <a href="{{ url_for('settings.index') }}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">💾 Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,218 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - Finance Tracker{% endblock %}
+
+{% block content %}
+<div class="settings-container">
+    <h1>⚙️ Settings</h1>
+    
+    <div class="settings-tabs">
+        <button class="tab-btn active" onclick="openTab(event, 'profile')">Profile</button>
+        <button class="tab-btn" onclick="openTab(event, 'security')">Security</button>
+        <button class="tab-btn" onclick="openTab(event, 'tags')">Tags</button>
+        <button class="tab-btn" onclick="openTab(event, 'import-export')">Import/Export</button>
+        {% if current_user.is_admin %}
+        <button class="tab-btn" onclick="openTab(event, 'users')">User Management</button>
+        {% endif %}
+    </div>
+    
+    <!-- Profile Tab -->
+    <div id="profile" class="tab-content active">
+        <div class="glass-card">
+            <h2>👤 Profile Settings</h2>
+            <form method="POST" action="{{ url_for('settings.edit_profile') }}" class="form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <div class="form-group">
+                    <label for="username">Username</label>
+                    <input type="text" id="username" name="username" value="{{ current_user.username }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" value="{{ current_user.email }}" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="currency">Currency</label>
+                    <select id="currency" name="currency" class="metric-select">
+                        <option value="USD" {% if current_user.currency == 'USD' %}selected{% endif %}>$ USD</option>
+                        <option value="EUR" {% if current_user.currency == 'EUR' %}selected{% endif %}>€ EUR</option>
+                        <option value="RON" {% if current_user.currency == 'RON' %}selected{% endif %}>RON (Lei)</option>
+                        <option value="GBP" {% if current_user.currency == 'GBP' %}selected{% endif %}>£ GBP</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label for="new_password">New Password (leave blank to keep current)</label>
+                    <input type="password" id="new_password" name="new_password" placeholder="Enter new password">
+                </div>
+                
+                <button type="submit" class="btn btn-primary">💾 Save Changes</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Security Tab (2FA) -->
+    <div id="security" class="tab-content">
+        <div class="glass-card">
+            <h2>🔐 Two-Factor Authentication (2FA)</h2>
+            
+            {% if current_user.is_2fa_enabled %}
+            <div style="padding: 1.5rem; background: rgba(16, 185, 129, 0.1); border: 1px solid var(--success); border-radius: 10px; margin-bottom: 1.5rem;">
+                <p style="color: var(--success); font-weight: 600; margin-bottom: 0.5rem;">✅ 2FA is currently enabled on your account.</p>
+                <p style="color: var(--text-secondary); margin: 0;">Your account is protected with an additional layer of security.</p>
+            </div>
+            
+            <form method="POST" action="{{ url_for('settings.disable_2fa') }}" onsubmit="return confirm('Are you sure you want to disable 2FA?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-danger">🔓 Disable 2FA</button>
+            </form>
+            {% else %}
+            <div style="padding: 1.5rem; background: rgba(239, 68, 68, 0.1); border: 1px solid var(--danger); border-radius: 10px; margin-bottom: 1.5rem;">
+                <p style="color: var(--danger); font-weight: 600; margin-bottom: 0.5rem;">⚠️ 2FA is currently disabled.</p>
+                <p style="color: var(--text-secondary); margin: 0;">Enable 2FA to add an extra layer of security to your account.</p>
+            </div>
+            
+            <a href="{{ url_for('settings.setup_2fa') }}" class="btn btn-primary">🔒 Enable 2FA</a>
+            {% endif %}
+            
+            <div style="margin-top: 2rem; padding: 1rem; background: rgba(99, 102, 241, 0.1); border-radius: 10px;">
+                <h3 style="margin-top: 0;">What is 2FA?</h3>
+                <p style="color: var(--text-secondary); margin: 0;">
+                    Two-Factor Authentication adds an extra layer of security by requiring a code from your phone in addition to your password when logging in.
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Tags Tab -->
+    <div id="tags" class="tab-content">
+        <div class="glass-card">
+            <div class="section-header">
+                <h2>🏷️ Manage Tags</h2>
+                <a href="{{ url_for('settings.create_tag') }}" class="btn btn-primary">+ Create Tag</a>
+            </div>
+            
+            {% if tags %}
+            <div class="tags-grid">
+                {% for tag in tags %}
+                <div class="tag-item glass-card" style="border-left: 4px solid {{ tag.color }}">
+                    <span class="tag-name">{{ tag.name }}</span>
+                    <form method="POST" action="{{ url_for('settings.delete_tag', tag_id=tag.id) }}" style="display: inline;" onsubmit="return confirm('Delete tag {{ tag.name }}?');">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-small btn-danger">Delete</button>
+                    </form>
+                </div>
+                {% endfor %}
+            </div>
+            {% else %}
+            <p class="empty-message">No tags yet. Create your first tag!</p>
+            {% endif %}
+        </div>
+    </div>
+    
+    <!-- Import/Export Tab -->
+    <div id="import-export" class="tab-content">
+        <div class="glass-card" style="margin-bottom: 2rem;">
+            <h2>📤 Export Data</h2>
+            <p style="margin-bottom: 1rem;">Download all your expenses as CSV file</p>
+            <a href="{{ url_for('settings.export_data') }}" class="btn btn-primary">⬇️ Export to CSV</a>
+        </div>
+        
+        <div class="glass-card">
+            <h2>📥 Import Data</h2>
+            <p style="margin-bottom: 1rem;">Import expenses from CSV file. Format: Category, Description, Amount, Date (YYYY-MM-DD), Paid By, Tags</p>
+            <form method="POST" action="{{ url_for('settings.import_data') }}" enctype="multipart/form-data" class="form">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                
+                <div class="form-group">
+                    <label for="file">CSV File</label>
+                    <input type="file" id="file" name="file" accept=".csv" required>
+                </div>
+                
+                <button type="submit" class="btn btn-primary">⬆️ Import CSV</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- User Management Tab (Admin Only) -->
+    {% if current_user.is_admin %}
+    <div id="users" class="tab-content">
+        <div class="glass-card">
+            <div class="section-header">
+                <h2>👥 User Management</h2>
+                <a href="{{ url_for('settings.create_user') }}" class="btn btn-primary">+ Create User</a>
+            </div>
+            
+            {% if users %}
+            <div style="overflow-x: auto;">
+                <table class="users-table">
+                    <thead>
+                        <tr>
+                            <th>Username</th>
+                            <th>Email</th>
+                            <th>Role</th>
+                            <th>Currency</th>
+                            <th>2FA</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for user in users %}
+                        <tr>
+                            <td>{{ user.username }}</td>
+                            <td>{{ user.email }}</td>
+                            <td>
+                                {% if user.is_admin %}
+                                <span style="color: #fbbf24;">⭐ Admin</span>
+                                {% else %}
+                                <span>User</span>
+                                {% endif %}
+                            </td>
+                            <td>{{ user.currency }}</td>
+                            <td>
+                                {% if user.is_2fa_enabled %}
+                                <span style="color: var(--success);">✅ Enabled</span>
+                                {% else %}
+                                <span style="color: var(--text-secondary);">❌ Disabled</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <a href="{{ url_for('settings.edit_user', user_id=user.id) }}" class="btn btn-small btn-secondary">Edit</a>
+                                {% if user.id != current_user.id %}
+                                <form method="POST" action="{{ url_for('settings.delete_user', user_id=user.id) }}" style="display: inline;" onsubmit="return confirm('Delete user {{ user.username }}?');">
+                                    <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                                    <button type="submit" class="btn btn-small btn-danger">Delete</button>
+                                </form>
+                                {% endif %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <p class="empty-message">No users found</p>
+            {% endif %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<script>
+function openTab(evt, tabName) {
+    var i, tabcontent, tablinks;
+    tabcontent = document.getElementsByClassName("tab-content");
+    for (i = 0; i < tabcontent.length; i++) {
+        tabcontent[i].classList.remove("active");
+    }
+    tablinks = document.getElementsByClassName("tab-btn");
+    for (i = 0; i < tablinks.length; i++) {
+        tablinks[i].classList.remove("active");
+    }
+    document.getElementById(tabName).classList.add("active");
+    evt.currentTarget.classList.add("active");
+}
+</script>
+{% endblock %}

@@ -1,0 +1,270 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - FINA{% endblock %}
+
+{% block content %}
+<div class="dashboard">
+    
+    {% if categories and categories|length > 0 %}
+    
+    <div class="metrics-section glass-card" style="margin-bottom: 2rem; margin-top: 0;">
+        <div class="metrics-header">
+            <h2>📈 Metrics</h2>
+            <div class="metrics-controls">
+                <select id="metricCategory" class="metric-select">
+                    <option value="all">All Categories</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.id }}" data-color="{{ cat.color }}">{{ cat.name }}</option>
+                    {% endfor %}
+                </select>
+                <select id="metricYear" class="metric-select">
+                    {% for year in available_years %}
+                    <option value="{{ year }}" {% if year == current_year %}selected{% endif %}>{{ year }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+        
+        <div class="charts-container">
+            <div class="chart-box chart-box-pie">
+                <h3>Expenses by Category</h3>
+                <div class="chart-wrapper">
+                    <canvas id="pieChart"></canvas>
+                </div>
+            </div>
+            
+            <div class="chart-box chart-box-bar">
+                <h3>Monthly Expenses</h3>
+                <div class="chart-wrapper">
+                    <canvas id="barChart"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="stats-container">
+        <div class="glass-card stat-card">
+            <h3>Total Spent</h3>
+            <p class="stat-value">{{ total_spent|currency }}</p>
+        </div>
+        
+        <div class="glass-card stat-card">
+            <h3>Categories</h3>
+            <p class="stat-value">{{ (categories|default([]))|length }}</p>
+        </div>
+        
+        <div class="glass-card stat-card">
+            <h3>Total Expenses</h3>
+            <p class="stat-value">{{ total_expenses }}</p>
+        </div>
+    </div>
+    
+    <div class="section-header" style="margin-top: 2rem;">
+        <h2>📁 Categories</h2>
+    </div>
+    <div class="categories-grid">
+        {% for category in categories %}
+        <a href="{{ url_for('main.view_category', category_id=category.id) }}" class="category-card glass-card" style="border-left: 4px solid {{ category.color }}">
+            <div class="category-content">
+                <h3>{{ category.name }}</h3>
+                {% if category.description %}
+                <p class="category-description">{{ category.description }}</p>
+                {% endif %}
+                <div class="category-amount">{{ category.get_total_spent()|currency }}</div>
+                <div class="category-info">
+                    <span>{{ category.expenses|length }} expenses</span>
+                </div>
+            </div>
+        </a>
+        {% endfor %}
+    </div>
+    
+    {% else %}
+    
+    <div class="stats-container">
+        <div class="glass-card stat-card">
+            <h3>Total Spent</h3>
+            <p class="stat-value">{{ total_spent|currency }}</p>
+        </div>
+        
+        <div class="glass-card stat-card">
+            <h3>Categories</h3>
+            <p class="stat-value">{{ (categories|default([]))|length }}</p>
+        </div>
+        
+        <div class="glass-card stat-card">
+            <h3>Total Expenses</h3>
+            <p class="stat-value">{{ total_expenses }}</p>
+        </div>
+    </div>
+    
+    <div class="glass-card empty-state">
+        <h2>Welcome to FINA!</h2>
+        <p>Create your first category to start tracking expenses</p>
+        <a href="{{ url_for('main.create_category') }}" class="btn btn-primary">Create Category</a>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.charts-container {
+    display: grid;
+    grid-template-columns: 400px 1fr;
+    gap: 2rem;
+    margin-top: 1.5rem;
+}
+
+.chart-box-pie {
+    display: flex;
+    flex-direction: column;
+}
+
+.chart-box-bar {
+    display: flex;
+    flex-direction: column;
+}
+
+.chart-wrapper {
+    position: relative;
+    height: 400px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.chart-box-pie .chart-wrapper {
+    width: 400px;
+    height: 400px;
+}
+
+@media (max-width: 1024px) {
+    .charts-container {
+        grid-template-columns: 1fr;
+    }
+    
+    .chart-box-pie .chart-wrapper {
+        width: 100%;
+        max-width: 400px;
+        margin: 0 auto;
+    }
+}
+</style>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+<script>
+const chartData = {{ chart_data|tojson }};
+const categories = {{ categories_json|tojson }};
+const currentYear = {{ current_year }};
+const currencySymbol = '{{ current_user.currency }}';
+let pieChart, barChart;
+
+function initCharts() {
+    const pieCtx = document.getElementById('pieChart').getContext('2d');
+    pieChart = new Chart(pieCtx, {
+        type: 'pie',
+        data: {
+            labels: chartData.map(d => d.name),
+            datasets: [{
+                data: chartData.map(d => d.value),
+                backgroundColor: chartData.map(d => d.color),
+                borderColor: 'rgba(255, 255, 255, 0.2)',
+                borderWidth: 2
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            aspectRatio: 1,
+            plugins: {
+                legend: {
+                    position: 'bottom',
+                    labels: { color: '#ffffff', padding: 15, font: { size: 12 } }
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.label + ': ' + formatCurrency(context.parsed);
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    const barCtx = document.getElementById('barChart').getContext('2d');
+    barChart = new Chart(barCtx, {
+        type: 'bar',
+        data: {
+            labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+            datasets: []
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: true,
+            aspectRatio: 2,
+            scales: {
+                y: { beginAtZero: true, ticks: { color: '#ffffff' }, grid: { color: 'rgba(255, 255, 255, 0.1)' } },
+                x: { ticks: { color: '#ffffff' }, grid: { color: 'rgba(255, 255, 255, 0.1)' } }
+            },
+            plugins: {
+                legend: { display: false },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return formatCurrency(context.parsed.y);
+                        }
+                    }
+                }
+            }
+        }
+    });
+    
+    updateCharts('all', currentYear);
+}
+
+function formatCurrency(amount) {
+    const formatted = amount.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, '$&,');
+    if (currencySymbol === 'RON') {
+        return formatted + ' Lei';
+    } else if (currencySymbol === 'EUR') {
+        return '€' + formatted;
+    } else if (currencySymbol === 'GBP') {
+        return '£' + formatted;
+    } else {
+        return '$' + formatted;
+    }
+}
+
+function updateCharts(categoryId, year) {
+    fetch(`/api/metrics?category=${categoryId}&year=${year}`)
+        .then(response => response.json())
+        .then(data => {
+            barChart.data.datasets = [{
+                label: data.category_name,
+                data: data.monthly_data,
+                backgroundColor: data.color || '#6366f1',
+                borderColor: 'rgba(255, 255, 255, 0.2)',
+                borderWidth: 1
+            }];
+            barChart.update();
+            
+            if (categoryId === 'all') {
+                pieChart.data.labels = data.pie_labels;
+                pieChart.data.datasets[0].data = data.pie_data;
+                pieChart.data.datasets[0].backgroundColor = data.pie_colors;
+                pieChart.update();
+            }
+        });
+}
+
+document.getElementById('metricCategory').addEventListener('change', function() {
+    updateCharts(this.value, document.getElementById('metricYear').value);
+});
+
+document.getElementById('metricYear').addEventListener('change', function() {
+    updateCharts(document.getElementById('metricCategory').value, this.value);
+});
+
+document.addEventListener('DOMContentLoaded', initCharts);
+</script>
+{% endblock %}

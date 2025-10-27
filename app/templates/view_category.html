@@ -1,0 +1,193 @@
+{% extends "base.html" %}
+
+{% block title %}{{ category.name }} - Finance Tracker{% endblock %}
+
+{% block content %}
+<div class="category-view">
+    <div class="category-header glass-card" style="border-left: 4px solid {{ category.color }}">
+        <div>
+            <h1>{{ category.name }}</h1>
+            {% if category.description %}
+            <p class="category-description">{{ category.description }}</p>
+            {% endif %}
+            <p class="category-total">Total: <strong>{{ total_spent|currency }}</strong></p>
+        </div>
+        <div class="category-actions">
+            <a href="{{ url_for('main.create_expense', category_id=category.id) }}" class="btn btn-primary">+ Add Expense</a>
+            <a href="{{ url_for('main.edit_category', category_id=category.id) }}" class="btn btn-secondary">Edit</a>
+            <form method="POST" action="{{ url_for('main.delete_category', category_id=category.id) }}" style="display: inline;" onsubmit="return confirm('Delete category and all expenses?');">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-danger">Delete</button>
+            </form>
+        </div>
+    </div>
+    
+    {% if expenses %}
+    <div class="glass-card">
+        <h2>Expenses</h2>
+        <table class="expenses-table">
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Description</th>
+                    <th>Amount</th>
+                    <th>Paid By</th>
+                    <th>Tags</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for expense in expenses %}
+                <tr>
+                    <td>{{ expense.date.strftime('%Y-%m-%d') }}</td>
+                    <td>{{ expense.description }}</td>
+                    <td><strong>{{ expense.amount|currency }}</strong></td>
+                    <td>{{ expense.paid_by or '-' }}</td>
+                    <td>{{ expense.tags or '-' }}</td>
+                    <td>
+                        <a href="{{ url_for('main.edit_expense', expense_id=expense.id) }}" class="btn btn-small btn-secondary">Edit</a>
+                        {% if expense.file_path %}
+                        <button onclick="viewAttachment('{{ url_for('main.view_file', expense_id=expense.id) }}', '{{ expense.file_path }}')" class="btn btn-small btn-secondary">👁️ View</button>
+                        <a href="{{ url_for('main.download_file', expense_id=expense.id) }}" class="btn btn-small btn-secondary">⬇️</a>
+                        {% endif %}
+                        <form method="POST" action="{{ url_for('main.delete_expense', expense_id=expense.id) }}" style="display: inline;" onsubmit="return confirm('Delete this expense?');">
+                            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                            <button type="submit" class="btn btn-small btn-danger">Delete</button>
+                        </form>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% else %}
+    <div class="glass-card empty-state">
+        <h2>No expenses yet</h2>
+        <p>Start tracking by adding your first expense</p>
+        <a href="{{ url_for('main.create_expense', category_id=category.id) }}" class="btn btn-primary">+ Add Expense</a>
+    </div>
+    {% endif %}
+</div>
+
+<!-- Attachment Preview Modal -->
+<div id="attachmentModal" class="modal">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal()">&times;</span>
+        <div id="attachmentViewer"></div>
+    </div>
+</div>
+
+<style>
+.category-view { max-width: 1200px; margin: 0 auto; }
+.category-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 2rem; flex-wrap: wrap; gap: 1rem; }
+.category-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; }
+.category-total { font-size: 1.2rem; margin-top: 1rem; }
+.expenses-table { width: 100%; border-collapse: collapse; margin-top: 1.5rem; }
+.expenses-table th, .expenses-table td { padding: 1rem; text-align: left; border-bottom: 1px solid var(--glass-border); }
+.expenses-table th { font-weight: 600; color: var(--text-secondary); }
+.expenses-table tr:hover { background: rgba(255, 255, 255, 0.05); }
+
+/* Modal Styles */
+.modal {
+    display: none;
+    position: fixed;
+    z-index: 10000;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.9);
+    animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+}
+
+.modal-content {
+    position: relative;
+    margin: 2% auto;
+    padding: 2rem;
+    width: 90%;
+    max-width: 1200px;
+    max-height: 90vh;
+    overflow: auto;
+    background: rgba(59, 7, 100, 0.95);
+    border-radius: 20px;
+    border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.close {
+    position: absolute;
+    top: 1rem;
+    right: 1.5rem;
+    color: #fff;
+    font-size: 2rem;
+    font-weight: bold;
+    cursor: pointer;
+    z-index: 1;
+}
+
+.close:hover {
+    color: #ff6b6b;
+}
+
+#attachmentViewer img {
+    max-width: 100%;
+    height: auto;
+    border-radius: 10px;
+}
+
+#attachmentViewer iframe {
+    width: 100%;
+    height: 80vh;
+    border: none;
+    border-radius: 10px;
+}
+</style>
+
+<script>
+function viewAttachment(url, filePath) {
+    const modal = document.getElementById('attachmentModal');
+    const viewer = document.getElementById('attachmentViewer');
+    
+    // Determine file type
+    const fileExt = filePath.split('.').pop().toLowerCase();
+    
+    if (['jpg', 'jpeg', 'png', 'gif'].includes(fileExt)) {
+        // Image preview
+        viewer.innerHTML = '<img src="' + url + '" alt="Attachment">';
+    } else if (fileExt === 'pdf') {
+        // PDF viewer
+        viewer.innerHTML = '<iframe src="' + url + '"></iframe>';
+    } else {
+        // Fallback for other files
+        viewer.innerHTML = '<p style="text-align: center; padding: 2rem;">Preview not available. <a href="' + url + '" download class="btn btn-primary">Download File</a></p>';
+    }
+    
+    modal.style.display = 'block';
+}
+
+function closeModal() {
+    const modal = document.getElementById('attachmentModal');
+    modal.style.display = 'none';
+    document.getElementById('attachmentViewer').innerHTML = '';
+}
+
+// Close modal on click outside
+window.onclick = function(event) {
+    const modal = document.getElementById('attachmentModal');
+    if (event.target == modal) {
+        closeModal();
+    }
+}
+
+// Close modal on Escape key
+document.addEventListener('keydown', function(event) {
+    if (event.key === 'Escape') {
+        closeModal();
+    }
+});
+</script>
+{% endblock %}

@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}FINA{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/fina-logo.png') }}">
+</head>
+<body>
+    {% if current_user.is_authenticated %}
+    <nav class="glass-nav">
+        <div class="nav-container">
+            <a href="{{ url_for('main.dashboard') }}" class="nav-brand">
+                <img src="{{ url_for('static', filename='images/fina-logo.png') }}" alt="FINA" class="nav-logo">
+                <span>FINA</span>
+            </a>
+            <div class="nav-links">
+                <a href="{{ url_for('main.create_category') }}">New Category</a>
+                <a href="{{ url_for('settings.index') }}">Settings</a>
+                <a href="{{ url_for('auth.logout') }}">Logout</a>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+    
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }} glass-card">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>
