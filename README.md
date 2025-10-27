@@ -9,6 +9,18 @@ cat > README.md << 'EOF'
   [![Flask](https://img.shields.io/badge/flask-%23000.svg?style=for-the-badge&logo=flask&logoColor=white)](https://flask.palletsprojects.com/)
 </div>
 
+<img width="1917" height="928" alt="fina-welcome-page" src="https://github.com/user-attachments/assets/39be804d-6189-496f-81d0-d84dc4f2523f" />
+<img width="1917" height="928" alt="fina-register-page" src="https://github.com/user-attachments/assets/e4944c80-964a-459e-aee5-dc2693e80646" />
+<img width="1917" height="928" alt="fina-dashboard-new-setup" src="https://github.com/user-attachments/assets/c89edc8b-9e5d-4971-ab0f-7101b577d6dc" />
+<img width="1917" height="928" alt="fina-dashboard-populated" src="https://github.com/user-attachments/assets/7e181b63-1c55-4d12-a03b-30606cb4d03f" />
+<img width="1917" height="928" alt="fina-create-category" src="https://github.com/user-attachments/assets/3885a4f0-2e35-41ca-b2a5-0ae62a76cee1" />
+<img width="1917" height="928" alt="fina-expense-entry" src="https://github.com/user-attachments/assets/d5085626-6cbd-48d3-a4ae-3a0f1f31af19" />
+<img width="1917" height="928" alt="fina-settings-page" src="https://github.com/user-attachments/assets/b38d53ab-8aa9-4c36-b040-e6ab5331f9ba" />
+<img width="1917" height="928" alt="fina-settings-page-2FA" src="https://github.com/user-attachments/assets/c6ccc285-8191-4a70-ac3b-bd60ed72dae5" />
+<img width="1917" height="928" alt="fina-tags-page" src="https://github.com/user-attachments/assets/75af122d-7bc6-4e0b-a57b-729fe75a48b6" />
+
+
+
 ## Disclaimer
 
 **USE AT YOUR OWN RISK**: This software is provided "as is", without warranty of any kind, express or implied. The authors and contributors assume no responsibility for any damages, data loss, security breaches, or other issues that may arise from using this software. Users are solely responsible for:
@@ -71,7 +83,7 @@ REDIS_PORT=6369
 - **5001**: Web application (can be changed in docker-compose.yml)
 - **6369**: Redis cache
 
-## 📖 Usage
+## Usage
 
 ### First Time Setup
 
@@ -162,4 +174,3 @@ For issues, questions, or suggestions:
 ---
 
 **Remember**: Always back up your data and secure your deployment appropriately. This software handles sensitive financial information.
-# fina
