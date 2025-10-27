@@ -1,4 +1,3 @@
-cat > README.md << 'EOF'
 # FINA - Personal Finance Tracker
 
 <div align="center">
