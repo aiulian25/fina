@@ -65,37 +65,39 @@ cd fina
 
 Copy this content into a new file called `docker-compose.yml`:
 
+~~~yml
 version: '3.8'
 
 services:
-web:
-image: aiulian25/fina:latest
-container_name: fina-web
-ports:
-- "5001:5000"
-volumes:
-- fina-db:/app/instance
-- fina-uploads:/app/app/static/uploads
-environment:
-- FLASK_APP=wsgi.py
-- FLASK_ENV=production
-- REDIS_HOST=redis
-- REDIS_PORT=6369
-- SECRET_KEY=${SECRET_KEY:-change-this-secret-key-in-production}
-depends_on:
-- redis
-restart: unless-stopped
+  web:
+    image: aiulian25/fina:latest
+    container_name: fina-web
+    ports:
+      - "5001:5000"
+    volumes:
+      - fina-db:/app/instance
+      - fina-uploads:/app/app/static/uploads
+    environment:
+      - FLASK_APP=wsgi.py
+      - FLASK_ENV=production
+      - REDIS_HOST=redis
+      - REDIS_PORT=6369
+      - SECRET_KEY=${SECRET_KEY:-change-this-secret-key-in-production}
+    depends_on:
+      - redis
+    restart: unless-stopped
 
-redis:
-image: redis:alpine
-container_name: fina-redis
-ports:
-- "6369:6379"
-restart: unless-stopped
+  redis:
+    image: redis:alpine
+    container_name: fina-redis
+    ports:
+      - "6369:6379"
+    restart: unless-stopped
 
 volumes:
-fina-db:
-fina-uploads:
+  fina-db:
+  fina-uploads:
+~~~
 
 3. (Optional but recommended) Create .env file:
 
