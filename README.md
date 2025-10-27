@@ -96,6 +96,7 @@ volumes:
   fina-db:
   fina-uploads:
 
+
 3. (Optional but recommended) Create .env file:
 
 Create a file called .env with your custom secret key:
