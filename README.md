@@ -68,6 +68,7 @@ docker compose up -d
 ### Environment Variables
 
 Create a `.env` file to customize your deployment:
+
 SECRET_KEY=your-super-secret-key-change-this
 REDIS_HOST=redis
 REDIS_PORT=6369
@@ -81,6 +82,54 @@ REDIS_PORT=6369
 
 - **5001**: Web application (can be changed in docker-compose.yml)
 - **6369**: Redis cache
+
+### Pull 
+Docker Compose Recomended
+
+- mkdir fina
+- cd fina
+- nano docker-compose.yml
+
+version: '3.8'
+
+services:
+  web:
+    image: aiulian25/fina:latest
+    container_name: fina-web
+    ports:
+      - "5001:5000"
+    volumes:
+      - fina-db:/app/instance
+      - fina-uploads:/app/app/static/uploads
+    environment:
+      - FLASK_APP=wsgi.py
+      - FLASK_ENV=production
+      - REDIS_HOST=redis
+      - REDIS_PORT=6369
+      - SECRET_KEY=${SECRET_KEY:-change-this-secret-key-openssl rand -hex 32}
+    depends_on:
+      - redis
+    restart: unless-stopped
+
+  redis:
+    image: redis:alpine
+    container_name: fina-redis
+    ports:
+      - "6369:6379"
+    restart: unless-stopped
+
+volumes:
+  fina-db:
+  fina-uploads:
+
+### (Optional but recommended): Create .env file:
+
+SECRET_KEY=ozZp4DTXGoFHZ2zFHis0oBWaYJ5jpw4x
+DATABASE_URL=sqlite:///finance.db
+REDIS_URL=redis://redis:6369/0
+FLASK_ENV=production
+
+
 
 ## Usage
 
