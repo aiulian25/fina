@@ -1,0 +1,69 @@
+{% extends "base.html" %}
+
+{% block title %}Edit {{ category.name }} - Finance Tracker{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="glass-card form-card">
+        <h1>✏️ Edit Category</h1>
+        
+        <form method="POST" class="form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <div class="form-group">
+                <label for="name">Category Name *</label>
+                <input type="text" id="name" name="name" value="{{ category.name }}" required autofocus>
+            </div>
+            
+            <div class="form-group">
+                <label for="description">Description</label>
+                <textarea id="description" name="description" rows="3">{{ category.description or '' }}</textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="color">Color</label>
+                <input type="color" id="color" name="color" value="{{ category.color }}">
+            </div>
+            
+            <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--glass-border);">
+            
+            <h3 style="margin-bottom: 1rem;">💰 Budget Settings</h3>
+            
+            <div class="form-group">
+                <label for="monthly_budget">{{ _('budget.monthly_limit') }} ({{ _('common.optional') }})</label>
+                <input type="number" id="monthly_budget" name="monthly_budget" step="0.01" min="0" 
+                       value="{{ category.monthly_budget if category.monthly_budget else '' }}"
+                       placeholder="e.g., 500">
+                <small style="color: var(--text-secondary);">{{ _('budget.monthly_limit_desc') }}</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="budget_alert_threshold">{{ _('budget.alert_threshold') }} (%)</label>
+                <input type="number" id="budget_alert_threshold" name="budget_alert_threshold" 
+                       min="50" max="200" step="5"
+                       value="{{ (category.budget_alert_threshold * 100)|int if category.budget_alert_threshold else 100 }}">
+                <small style="color: var(--text-secondary);">{{ _('budget.alert_threshold_desc') }}</small>
+            </div>
+            
+            {% if category.monthly_budget %}
+            <div style="background: rgba(99, 102, 241, 0.1); padding: 1rem; border-radius: 8px; margin-top: 1rem;">
+                {% set status = category.get_budget_status() %}
+                <p style="margin: 0; font-size: 0.9rem;">
+                    <strong>{{ _('budget.current_month') }}:</strong><br>
+                    {{ _('budget.spent') }}: {{ status.spent|currency }}<br>
+                    {{ _('budget.budget') }}: {{ status.budget|currency }}<br>
+                    <span style="color: {% if status.over_budget %}#ef4444{% else %}#10b981{% endif %};">
+                        {{ _('budget.remaining') }}: {{ status.remaining|currency }}
+                    </span>
+                </p>
+            </div>
+            {% endif %}
+            
+            <div class="form-actions">
+                <a href="{{ url_for('main.view_category', category_id=category.id) }}" class="btn btn-secondary">Cancel</a>
+                <button type="submit" class="btn btn-primary">💾 Save Changes</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

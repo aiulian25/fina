@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+
+{% block title %}Edit Profile - Finance Tracker{% endblock %}
+
+{% block content %}
+<div class="form-container">
+    <div class="glass-card form-card">
+        <h1>✏️ {{ _('settings.edit_profile') }}</h1>
+        
+        <form method="POST" class="form">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            
+            <div class="form-group">
+                <label for="username">{{ _('auth.username') }}</label>
+                <input type="text" id="username" name="username" value="{{ current_user.username }}" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="email">{{ _('auth.email') }}</label>
+                <input type="email" id="email" name="email" value="{{ current_user.email }}" required>
+            </div>
+            
+            <div class="form-group">
+                <label for="currency">{{ _('settings.currency') }}</label>
+                <select id="currency" name="currency" class="metric-select">
+                    <option value="USD" {% if current_user.currency == 'USD' %}selected{% endif %}>$ USD</option>
+                    <option value="EUR" {% if current_user.currency == 'EUR' %}selected{% endif %}>€ EUR</option>
+                    <option value="RON" {% if current_user.currency == 'RON' %}selected{% endif %}>RON (Lei)</option>
+                    <option value="GBP" {% if current_user.currency == 'GBP' %}selected{% endif %}>£ GBP</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="language">{{ _('settings.language') }}</label>
+                <select id="language" name="language" class="metric-select">
+                    {% for lang in languages %}
+                    <option value="{{ lang.code }}" {% if current_user.language == lang.code %}selected{% endif %}>
+                        {{ lang.flag }} {{ lang.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="new_password">{{ _('auth.password') }} (leave blank to keep current)</label>
+                <input type="password" id="new_password" name="new_password" minlength="6">
+            </div>
+            
+            <hr style="margin: 2rem 0; border: none; border-top: 1px solid var(--glass-border);">
+            
+            <h3 style="margin-bottom: 1rem;">📧 {{ _('budget.alert_settings') }}</h3>
+            
+            <div class="form-group">
+                <label style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                    <input type="checkbox" id="budget_alerts_enabled" name="budget_alerts_enabled" 
+                           {% if current_user.budget_alerts_enabled %}checked{% endif %} style="width: auto;">
+                    <span>{{ _('budget.enable_alerts') }}</span>
+                </label>
+                <small style="color: var(--text-secondary);">{{ _('budget.enable_alerts_desc') }}</small>
+            </div>
+            
+            <div class="form-group">
+                <label for="alert_email">{{ _('budget.alert_email') }} ({{ _('common.optional') }})</label>
+                <input type="email" id="alert_email" name="alert_email" 
+                       value="{{ current_user.alert_email or '' }}"
+                       placeholder="{{ current_user.email }}">
+                <small style="color: var(--text-secondary);">{{ _('budget.alert_email_desc') }}</small>
+            </div>
+            
+            <div class="form-actions">
+                <a href="{{ url_for('settings.index') }}" class="btn btn-secondary">{{ _('settings.cancel') }}</a>
+                <button type="submit" class="btn btn-primary">💾 {{ _('settings.save') }}</button>
+            </div>
+        </form>
+    </div>
+</div>
+{% endblock %}

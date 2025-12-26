@@ -1,0 +1,592 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('search.title') }} - Finance Tracker{% endblock %}
+
+{% block content %}
+<div class="search-page">
+    <div class="glass-card">
+        <div class="search-header">
+            <h1>🔍 {{ _('search.title') }}</h1>
+            <p class="search-subtitle">{{ _('search.subtitle') }}</p>
+        </div>
+        
+        <!-- Search Form -->
+        <form method="GET" action="{{ url_for('main.search_page') }}" class="search-form">
+            <div class="search-input-wrapper">
+                <input type="text" 
+                       name="q" 
+                       id="searchInput"
+                       value="{{ query }}" 
+                       placeholder="{{ _('search.placeholder') }}"
+                       autocomplete="off"
+                       autofocus>
+                <button type="submit" class="btn-search">
+                    <span class="desktop-text">{{ _('search.button') }}</span>
+                    <span class="mobile-icon">🔍</span>
+                </button>
+            </div>
+            <div id="searchSuggestions" class="search-suggestions"></div>
+        </form>
+        
+        {% if results %}
+        <div class="search-results">
+            <div class="results-summary">
+                <h2>{{ _('search.results_for') }} "<strong>{{ query }}</strong>"</h2>
+                <p class="results-count">{{ results.total }} {{ _('search.results_found') }}</p>
+            </div>
+            
+            <!-- Expenses Results -->
+            {% if results.expenses %}
+            <div class="result-section">
+                <h3 class="section-title">💸 {{ _('search.expenses') }} ({{ results.expenses|length }})</h3>
+                <div class="result-list">
+                    {% for expense in results.expenses %}
+                    <a href="{{ expense.url }}" class="result-item">
+                        <div class="result-icon" style="background: {{ expense.category_color }}20; color: {{ expense.category_color }};">
+                            💸
+                        </div>
+                        <div class="result-content">
+                            <div class="result-title">{{ expense.description }}</div>
+                            <div class="result-meta">
+                                <span class="meta-badge" style="background: {{ expense.category_color }}20; color: {{ expense.category_color }};">
+                                    {{ expense.category_name }}
+                                </span>
+                                <span>{{ expense.date }}</span>
+                                {% if expense.paid_by %}
+                                <span>👤 {{ expense.paid_by }}</span>
+                                {% endif %}
+                                {% if expense.tags %}
+                                <span>🏷️ {{ expense.tags }}</span>
+                                {% endif %}
+                                {% if expense.has_receipt %}
+                                <span>📎</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="result-amount">{{ expense.amount|currency }}</div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Categories Results -->
+            {% if results.categories %}
+            <div class="result-section">
+                <h3 class="section-title">📁 {{ _('search.categories') }} ({{ results.categories|length }})</h3>
+                <div class="result-list">
+                    {% for category in results.categories %}
+                    <a href="{{ category.url }}" class="result-item">
+                        <div class="result-icon" style="background: {{ category.color }}20; color: {{ category.color }};">
+                            📁
+                        </div>
+                        <div class="result-content">
+                            <div class="result-title">{{ category.name }}</div>
+                            <div class="result-meta">
+                                {% if category.description %}
+                                <span>{{ category.description[:50] }}{% if category.description|length > 50 %}...{% endif %}</span>
+                                {% endif %}
+                                <span>{{ category.expense_count }} {{ _('search.expenses_count') }}</span>
+                            </div>
+                        </div>
+                        <div class="result-amount">{{ category.total_spent|currency }}</div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Subscriptions Results -->
+            {% if results.subscriptions %}
+            <div class="result-section">
+                <h3 class="section-title">🔄 {{ _('search.subscriptions') }} ({{ results.subscriptions|length }})</h3>
+                <div class="result-list">
+                    {% for sub in results.subscriptions %}
+                    <a href="{{ sub.url }}" class="result-item">
+                        <div class="result-icon" style="background: #10b98120; color: #10b981;">
+                            🔄
+                        </div>
+                        <div class="result-content">
+                            <div class="result-title">{{ sub.name }}</div>
+                            <div class="result-meta">
+                                <span class="meta-badge">{{ sub.frequency }}</span>
+                                {% if sub.next_due %}
+                                <span>📅 {{ sub.next_due }}</span>
+                                {% endif %}
+                                <span>{{ sub.category_name }}</span>
+                                {% if not sub.is_active %}
+                                <span class="inactive-badge">{{ _('search.inactive') }}</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        <div class="result-amount">{{ sub.amount|currency }}</div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Tags Results -->
+            {% if results.tags %}
+            <div class="result-section">
+                <h3 class="section-title">🏷️ {{ _('search.tags') }} ({{ results.tags|length }})</h3>
+                <div class="result-list">
+                    {% for tag in results.tags %}
+                    <a href="{{ tag.url }}" class="result-item">
+                        <div class="result-icon" style="background: {{ tag.color }}20; color: {{ tag.color }};">
+                            🏷️
+                        </div>
+                        <div class="result-content">
+                            <div class="result-title">{{ tag.name }}</div>
+                            <div class="result-meta">
+                                <span>{{ tag.expense_count }} {{ _('search.expenses_count') }}</span>
+                            </div>
+                        </div>
+                    </a>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+            
+            {% if results.total == 0 %}
+            <div class="no-results">
+                <div class="empty-icon">🔍</div>
+                <h3>{{ _('search.no_results') }}</h3>
+                <p>{{ _('search.no_results_message') }}</p>
+                <ul class="search-tips">
+                    <li>{{ _('search.tip_spelling') }}</li>
+                    <li>{{ _('search.tip_keywords') }}</li>
+                    <li>{{ _('search.tip_date') }}</li>
+                    <li>{{ _('search.tip_amount') }}</li>
+                </ul>
+            </div>
+            {% endif %}
+        </div>
+        {% elif query %}
+        <div class="no-results">
+            <div class="empty-icon">🔍</div>
+            <h3>{{ _('search.no_results') }}</h3>
+            <p>{{ _('search.no_results_message') }}</p>
+        </div>
+        {% else %}
+        <div class="search-welcome">
+            <div class="search-icon">🔍</div>
+            <h2>{{ _('search.welcome_title') }}</h2>
+            <p>{{ _('search.welcome_message') }}</p>
+            <div class="search-examples">
+                <h4>{{ _('search.examples_title') }}</h4>
+                <div class="example-chips">
+                    <button type="button" class="example-chip" onclick="searchFor('groceries')">🛒 groceries</button>
+                    <button type="button" class="example-chip" onclick="searchFor('45.99')">💰 45.99</button>
+                    <button type="button" class="example-chip" onclick="searchFor('2024-12-15')">📅 2024-12-15</button>
+                    <button type="button" class="example-chip" onclick="searchFor('netflix')">🔄 netflix</button>
+                    <button type="button" class="example-chip" onclick="searchFor('restaurant')">🏷️ restaurant</button>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<style>
+.search-page {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+.search-header {
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.search-header h1 {
+    margin-bottom: 0.5rem;
+    font-size: 2rem;
+}
+
+.search-subtitle {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+.search-form {
+    margin-bottom: 2rem;
+    position: relative;
+}
+
+.search-input-wrapper {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.search-input-wrapper input {
+    flex: 1;
+    padding: 1rem 1.5rem;
+    font-size: 1rem;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-primary);
+    transition: all 0.3s;
+}
+
+.search-input-wrapper input:focus {
+    border-color: #667eea;
+    background: rgba(255, 255, 255, 0.08);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.btn-search {
+    padding: 1rem 2rem;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border: none;
+    border-radius: 12px;
+    font-size: 1rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+}
+
+.btn-search:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 16px rgba(102, 126, 234, 0.3);
+}
+
+.btn-search .mobile-icon {
+    display: none;
+}
+
+.search-suggestions {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 80px;
+    background: rgba(30, 30, 50, 0.98);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    margin-top: 0.5rem;
+    max-height: 300px;
+    overflow-y: auto;
+    z-index: 1000;
+    display: none;
+}
+
+.search-suggestions.active {
+    display: block;
+}
+
+.suggestion-item {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    transition: background 0.2s;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.suggestion-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.suggestion-item:last-child {
+    border-bottom: none;
+}
+
+.results-summary {
+    margin-bottom: 2rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.results-summary h2 {
+    margin-bottom: 0.5rem;
+}
+
+.results-count {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
+}
+
+.result-section {
+    margin-bottom: 2rem;
+}
+
+.section-title {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    color: var(--text-primary);
+}
+
+.result-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.result-item {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    transition: all 0.2s;
+    text-decoration: none;
+    color: inherit;
+}
+
+.result-item:hover {
+    background: rgba(255, 255, 255, 0.08);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+.result-icon {
+    width: 48px;
+    height: 48px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 12px;
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.result-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.result-title {
+    font-size: 1.05rem;
+    font-weight: 600;
+    margin-bottom: 0.25rem;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.result-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    color: var(--text-secondary);
+}
+
+.meta-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 6px;
+    font-size: 0.8rem;
+    font-weight: 500;
+}
+
+.inactive-badge {
+    padding: 0.25rem 0.5rem;
+    background: rgba(239, 68, 68, 0.2);
+    color: #ef4444;
+    border-radius: 6px;
+    font-size: 0.8rem;
+}
+
+.result-amount {
+    font-size: 1.2rem;
+    font-weight: 700;
+    color: var(--text-primary);
+    flex-shrink: 0;
+}
+
+.no-results, .search-welcome {
+    text-align: center;
+    padding: 3rem 1rem;
+}
+
+.empty-icon, .search-icon {
+    font-size: 4rem;
+    margin-bottom: 1rem;
+    opacity: 0.5;
+}
+
+.no-results h3 {
+    margin-bottom: 0.5rem;
+}
+
+.search-tips {
+    text-align: left;
+    display: inline-block;
+    margin-top: 1.5rem;
+}
+
+.search-tips li {
+    color: var(--text-secondary);
+    margin-bottom: 0.5rem;
+}
+
+.search-examples {
+    margin-top: 2rem;
+}
+
+.search-examples h4 {
+    margin-bottom: 1rem;
+    color: var(--text-secondary);
+}
+
+.example-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    justify-content: center;
+}
+
+.example-chip {
+    padding: 0.75rem 1.25rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all 0.2s;
+    font-size: 0.95rem;
+}
+
+.example-chip:hover {
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.2);
+    transform: translateY(-2px);
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .search-header h1 {
+        font-size: 1.5rem;
+    }
+    
+    .search-input-wrapper {
+        flex-direction: row;
+    }
+    
+    .search-input-wrapper input {
+        padding: 0.875rem 1rem;
+        font-size: 0.95rem;
+    }
+    
+    .btn-search {
+        padding: 0.875rem 1rem;
+        min-width: 60px;
+    }
+    
+    .btn-search .desktop-text {
+        display: none;
+    }
+    
+    .btn-search .mobile-icon {
+        display: inline;
+        font-size: 1.2rem;
+    }
+    
+    .result-item {
+        flex-wrap: wrap;
+        padding: 0.875rem;
+    }
+    
+    .result-icon {
+        width: 40px;
+        height: 40px;
+        font-size: 1.2rem;
+    }
+    
+    .result-amount {
+        width: 100%;
+        text-align: right;
+        margin-top: 0.5rem;
+        padding-top: 0.5rem;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .result-meta {
+        font-size: 0.8rem;
+    }
+    
+    .search-suggestions {
+        right: 60px;
+    }
+}
+</style>
+
+<script>
+let searchTimeout;
+const searchInput = document.getElementById('searchInput');
+const suggestionsBox = document.getElementById('searchSuggestions');
+
+// Auto-suggest functionality
+if (searchInput) {
+    searchInput.addEventListener('input', function() {
+        clearTimeout(searchTimeout);
+        const query = this.value.trim();
+        
+        if (query.length < 2) {
+            suggestionsBox.classList.remove('active');
+            suggestionsBox.innerHTML = '';
+            return;
+        }
+        
+        searchTimeout = setTimeout(() => {
+            fetch(`/api/search/suggestions?q=${encodeURIComponent(query)}`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.suggestions && data.suggestions.length > 0) {
+                        displaySuggestions(data.suggestions);
+                    } else {
+                        suggestionsBox.classList.remove('active');
+                    }
+                })
+                .catch(error => {
+                    console.error('Suggestions error:', error);
+                });
+        }, 300);
+    });
+    
+    // Hide suggestions when clicking outside
+    document.addEventListener('click', function(e) {
+        if (!searchInput.contains(e.target) && !suggestionsBox.contains(e.target)) {
+            suggestionsBox.classList.remove('active');
+        }
+    });
+}
+
+function displaySuggestions(suggestions) {
+    let html = '';
+    suggestions.forEach(sugg => {
+        html += `<div class="suggestion-item" onclick="selectSuggestion('${escapeHtml(sugg.text)}')">`;
+        html += `<span>${sugg.icon} ${escapeHtml(sugg.text)}</span>`;
+        if (sugg.amount) {
+            html += ` <span style="float: right; color: var(--text-secondary);">${sugg.amount.toFixed(2)}</span>`;
+        }
+        html += `</div>`;
+    });
+    suggestionsBox.innerHTML = html;
+    suggestionsBox.classList.add('active');
+}
+
+function selectSuggestion(text) {
+    searchInput.value = text;
+    suggestionsBox.classList.remove('active');
+    searchInput.form.submit();
+}
+
+function searchFor(query) {
+    searchInput.value = query;
+    searchInput.form.submit();
+}
+
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+</script>
+{% endblock %}

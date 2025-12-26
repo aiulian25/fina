@@ -1,0 +1,320 @@
+{% extends "base.html" %}
+
+{% block title %}Income - FINA{% endblock %}
+
+{% block body %}
+<div class="flex h-screen w-full">
+    <!-- Side Navigation -->
+    <aside id="sidebar" class="hidden lg:flex w-64 flex-col bg-sidebar-light dark:bg-background-dark border-r border-border-light dark:border-[#233648] transition-all duration-300 shadow-sm dark:shadow-none">
+        <div class="p-6 flex flex-col h-full justify-between">
+            <div class="flex flex-col gap-8">
+                <!-- User Profile -->
+                <div class="flex gap-3 items-center">
+                    <img src="{{ current_user.avatar | avatar_url }}" alt="{{ current_user.username }}" class="size-10 rounded-full border-2 border-primary/30 object-cover">
+                    <div class="flex flex-col">
+                        <h1 class="text-text-main dark:text-white text-base font-bold leading-none">{{ current_user.username }}</h1>
+                        <p class="text-text-muted dark:text-[#92adc9] text-xs font-normal mt-1">
+                            {% if current_user.is_admin %}<span data-translate="user.admin">Admin</span>{% else %}<span data-translate="user.user">User</span>{% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Navigation Links -->
+                <nav class="flex flex-col gap-2">
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.dashboard') }}">
+                        <span class="material-symbols-outlined text-[20px]">dashboard</span>
+                        <span class="text-sm font-medium" data-translate="nav.dashboard">Dashboard</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.transactions') }}">
+                        <span class="material-symbols-outlined text-[20px]">receipt_long</span>
+                        <span class="text-sm font-medium" data-translate="nav.transactions">Transactions</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary border border-primary/10" href="{{ url_for('main.income') }}">
+                        <span class="material-symbols-outlined text-[20px]">payments</span>
+                        <span class="text-sm font-medium" data-translate="nav.income">Income</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.recurring') }}">
+                        <span class="material-symbols-outlined text-[20px]">repeat</span>
+                        <span class="text-sm font-medium" data-translate="nav.recurring">Recurring</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.import_page') }}">
+                        <span class="material-symbols-outlined text-[20px]">file_upload</span>
+                        <span class="text-sm font-medium" data-translate="nav.import">Import CSV</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.reports') }}">
+                        <span class="material-symbols-outlined text-[20px]">pie_chart</span>
+                        <span class="text-sm font-medium" data-translate="nav.reports">Reports</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.documents') }}">
+                        <span class="material-symbols-outlined text-[20px]">folder_open</span>
+                        <span class="text-sm font-medium" data-translate="nav.documents">Documents</span>
+                    </a>
+                    {% if current_user.is_admin %}
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="/admin">
+                        <span class="material-symbols-outlined text-[20px]">admin_panel_settings</span>
+                        <span class="text-sm font-medium" data-translate="nav.admin">Admin</span>
+                    </a>
+                    {% endif %}
+                </nav>
+            </div>
+            
+            <!-- Bottom Links -->
+            <div class="flex flex-col gap-2">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.settings') }}">
+                    <span class="material-symbols-outlined text-[20px]">settings</span>
+                    <span class="text-sm font-medium" data-translate="nav.settings">Settings</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-red-500 dark:hover:text-red-400 transition-colors" href="{{ url_for('auth.logout') }}">
+                    <span class="material-symbols-outlined text-[20px]">logout</span>
+                    <span class="text-sm font-medium" data-translate="nav.logout">Logout</span>
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col min-h-screen overflow-hidden">
+        <!-- Top Bar (Mobile) -->
+        <header class="lg:hidden bg-white dark:bg-card-dark border-b border-border-light dark:border-[#233648] p-4 flex items-center justify-between">
+            <button id="mobile-menu-toggle" class="text-text-main dark:text-white p-2 hover:bg-slate-100 dark:hover:bg-[#233648] rounded-lg transition-colors">
+                <span class="material-symbols-outlined text-[24px]">menu</span>
+            </button>
+            <h1 class="text-lg font-bold text-text-main dark:text-white" data-translate="income.title">Income</h1>
+            <div class="w-10"></div>
+        </header>
+
+        <!-- Content -->
+        <main class="flex-1 overflow-y-auto bg-background-light dark:bg-background-dark p-4 md:p-6 lg:p-8">
+            <div class="max-w-7xl mx-auto">
+                <!-- Header -->
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
+                    <div>
+                        <h1 class="text-2xl md:text-3xl font-bold text-text-main dark:text-white mb-2" data-translate="income.title">Income</h1>
+                        <p class="text-text-muted dark:text-[#92adc9]" data-translate="income.subtitle">Track your income sources</p>
+                    </div>
+                    <button onclick="openIncomeModal()" class="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-xl font-medium transition-all hover:shadow-lg">
+                        <span class="material-symbols-outlined text-[20px]">add</span>
+                        <span data-translate="income.addNew">Add Income</span>
+                    </button>
+                </div>
+
+                <!-- Income Table -->
+                <div class="bg-white dark:bg-card-dark rounded-2xl border border-border-light dark:border-[#233648] overflow-hidden shadow-sm">
+                    <div class="overflow-x-auto">
+                        <table class="w-full">
+                            <thead class="bg-slate-50 dark:bg-[#111a22] border-b border-border-light dark:border-[#233648]">
+                                <tr>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-text-muted dark:text-[#92adc9] uppercase tracking-wider" data-translate="income.tableDescription">Description</th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-text-muted dark:text-[#92adc9] uppercase tracking-wider" data-translate="income.tableDate">Date</th>
+                                    <th class="px-6 py-4 text-left text-xs font-medium text-text-muted dark:text-[#92adc9] uppercase tracking-wider" data-translate="income.tableSource">Source</th>
+                                    <th class="px-6 py-4 text-right text-xs font-medium text-text-muted dark:text-[#92adc9] uppercase tracking-wider" data-translate="income.tableAmount">Amount</th>
+                                    <th class="px-6 py-4 text-right text-xs font-medium text-text-muted dark:text-[#92adc9] uppercase tracking-wider" data-translate="income.tableActions">Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="income-table-body">
+                                <!-- Income entries will be populated by JavaScript -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Mobile Menu Overlay -->
+<div id="mobile-menu" class="lg:hidden hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50">
+    <aside class="w-64 h-full bg-sidebar-light dark:bg-card-dark border-r border-border-light dark:border-[#233648] overflow-y-auto">
+        <div class="p-6 flex flex-col h-full justify-between">
+            <div class="flex flex-col gap-8">
+                <!-- Close Button -->
+                <button id="mobile-menu-close" class="self-end text-text-main dark:text-white p-2 hover:bg-slate-100 dark:hover:bg-[#233648] rounded-lg transition-colors">
+                    <span class="material-symbols-outlined text-[24px]">close</span>
+                </button>
+                
+                <!-- User Profile -->
+                <div class="flex gap-3 items-center">
+                    <img src="{{ current_user.avatar | avatar_url }}" alt="{{ current_user.username }}" class="size-10 rounded-full border-2 border-primary/30 object-cover">
+                    <div class="flex flex-col">
+                        <h1 class="text-text-main dark:text-white text-base font-bold leading-none">{{ current_user.username }}</h1>
+                        <p class="text-text-muted dark:text-[#92adc9] text-xs font-normal mt-1">
+                            {% if current_user.is_admin %}<span data-translate="user.admin">Admin</span>{% else %}<span data-translate="user.user">User</span>{% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Navigation Links -->
+                <nav class="flex flex-col gap-2">
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.dashboard') }}">
+                        <span class="material-symbols-outlined text-[20px]">dashboard</span>
+                        <span class="text-sm font-medium" data-translate="nav.dashboard">Dashboard</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.transactions') }}">
+                        <span class="material-symbols-outlined text-[20px]">receipt_long</span>
+                        <span class="text-sm font-medium" data-translate="nav.transactions">Transactions</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary border border-primary/10" href="{{ url_for('main.income') }}">
+                        <span class="material-symbols-outlined text-[20px]">payments</span>
+                        <span class="text-sm font-medium" data-translate="nav.income">Income</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.recurring') }}">
+                        <span class="material-symbols-outlined text-[20px]">repeat</span>
+                        <span class="text-sm font-medium" data-translate="nav.recurring">Recurring</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.import_page') }}">
+                        <span class="material-symbols-outlined text-[20px]">file_upload</span>
+                        <span class="text-sm font-medium" data-translate="nav.import">Import CSV</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.reports') }}">
+                        <span class="material-symbols-outlined text-[20px]">pie_chart</span>
+                        <span class="text-sm font-medium" data-translate="nav.reports">Reports</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.documents') }}">
+                        <span class="material-symbols-outlined text-[20px]">folder_open</span>
+                        <span class="text-sm font-medium" data-translate="nav.documents">Documents</span>
+                    </a>
+                    {% if current_user.is_admin %}
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="/admin">
+                        <span class="material-symbols-outlined text-[20px]">admin_panel_settings</span>
+                        <span class="text-sm font-medium" data-translate="nav.admin">Admin</span>
+                    </a>
+                    {% endif %}
+                </nav>
+            </div>
+            
+            <!-- Bottom Links -->
+            <div class="flex flex-col gap-2">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.settings') }}">
+                    <span class="material-symbols-outlined text-[20px]">settings</span>
+                    <span class="text-sm font-medium" data-translate="nav.settings">Settings</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-red-500 dark:hover:text-red-400 transition-colors" href="{{ url_for('auth.logout') }}">
+                    <span class="material-symbols-outlined text-[20px]">logout</span>
+                    <span class="text-sm font-medium" data-translate="nav.logout">Logout</span>
+                </a>
+            </div>
+        </div>
+    </aside>
+</div>
+
+<!-- Income Modal -->
+<div id="income-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onclick="if (event.target === this) closeIncomeModal()">
+    <div class="bg-white dark:bg-card-dark rounded-2xl max-w-lg w-full border border-border-light dark:border-[#233648] shadow-2xl">
+        <div class="p-6 border-b border-border-light dark:border-[#233648]">
+            <h3 id="income-modal-title" class="text-xl font-bold text-text-main dark:text-white" data-translate="income.add">Add Income</h3>
+        </div>
+        
+        <form id="income-form" class="p-6">
+            <div class="space-y-4">
+                <!-- Amount -->
+                <div>
+                    <label for="income-amount" class="block text-sm font-medium text-text-main dark:text-white mb-2" data-translate="form.amount">Amount</label>
+                    <input type="number" id="income-amount" step="0.01" min="0" required 
+                           class="w-full bg-slate-50 dark:bg-background-dark border border-border-light dark:border-[#233648] rounded-lg px-4 py-3 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary">
+                </div>
+                
+                <!-- Source -->
+                <div>
+                    <label for="income-source" class="block text-sm font-medium text-text-main dark:text-white mb-2" data-translate="income.source">Source</label>
+                    <select id="income-source" required class="income-source-select w-full bg-slate-50 dark:bg-background-dark border border-border-light dark:border-[#233648] rounded-lg px-4 py-3 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary">
+                        <option value="">Select source...</option>
+                    </select>
+                </div>
+                
+                <!-- Description -->
+                <div>
+                    <label for="income-description" class="block text-sm font-medium text-text-main dark:text-white mb-2" data-translate="form.description">Description</label>
+                    <input type="text" id="income-description" required 
+                           class="w-full bg-slate-50 dark:bg-background-dark border border-border-light dark:border-[#233648] rounded-lg px-4 py-3 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary">
+                </div>
+                
+                <!-- Date -->
+                <div>
+                    <label for="income-date" class="block text-sm font-medium text-text-main dark:text-white mb-2" data-translate="form.date">Date</label>
+                    <input type="date" id="income-date" required 
+                           class="w-full bg-slate-50 dark:bg-background-dark border border-border-light dark:border-[#233648] rounded-lg px-4 py-3 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary">
+                </div>
+                
+                <!-- Frequency (Recurring) -->
+                <div>
+                    <label for="income-frequency" class="block text-sm font-medium text-text-main dark:text-white mb-2" data-translate="income.frequency">Payment Frequency</label>
+                    <select id="income-frequency" class="w-full bg-slate-50 dark:bg-background-dark border border-border-light dark:border-[#233648] rounded-lg px-4 py-3 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary">
+                        <option value="once" data-translate="income.once">One-time</option>
+                        <option value="weekly" data-translate="income.weekly">Weekly</option>
+                        <option value="biweekly" data-translate="income.biweekly">Every 2 Weeks</option>
+                        <option value="every4weeks" data-translate="income.every4weeks">Every 4 Weeks</option>
+                        <option value="monthly" data-translate="income.monthly">Monthly</option>
+                        <option value="custom" data-translate="income.custom">Custom (Freelance)</option>
+                    </select>
+                </div>
+                
+                <!-- Custom Frequency (shown when custom is selected) -->
+                <div id="custom-frequency-container" class="hidden">
+                    <label for="income-custom-days" class="block text-sm font-medium text-text-main dark:text-white mb-2" data-translate="income.customDays">Custom Days Interval</label>
+                    <input type="number" id="income-custom-days" min="1" placeholder="Number of days" 
+                           class="w-full bg-slate-50 dark:bg-background-dark border border-border-light dark:border-[#233648] rounded-lg px-4 py-3 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary">
+                    <p class="text-xs text-text-muted dark:text-[#92adc9] mt-1" data-translate="income.customHelp">Enter the number of days between payments</p>
+                </div>
+                
+                <!-- Auto-create recurring income -->
+                <div id="auto-create-container" class="bg-slate-50 dark:bg-[#111a22] rounded-lg p-4 border border-border-light dark:border-[#233648]">
+                    <label class="flex items-start gap-3 cursor-pointer">
+                        <input type="checkbox" id="income-auto-create" class="mt-1 w-4 h-4 rounded border-gray-300 text-primary focus:ring-primary focus:ring-offset-0">
+                        <div class="flex flex-col">
+                            <span class="text-sm font-medium text-text-main dark:text-white" data-translate="income.autoCreate">Automatically create income entries</span>
+                            <p class="text-xs text-text-muted dark:text-[#92adc9] mt-1" data-translate="income.autoCreateHelp">When enabled, income entries will be created automatically based on the frequency. You can edit or cancel at any time.</p>
+                        </div>
+                    </label>
+                </div>
+                
+                <!-- Tags -->
+                <div>
+                    <label for="income-tags" class="block text-sm font-medium text-text-main dark:text-white mb-2" data-translate="form.tags">Tags (comma separated)</label>
+                    <input type="text" id="income-tags" 
+                           class="w-full bg-slate-50 dark:bg-background-dark border border-border-light dark:border-[#233648] rounded-lg px-4 py-3 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary">
+                </div>
+            </div>
+            
+            <div class="flex gap-3 mt-6">
+                <button type="submit" class="flex-1 bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-xl font-medium transition-all">
+                    <span data-translate="income.save">Save Income</span>
+                </button>
+                <button type="button" onclick="closeIncomeModal()" class="flex-1 bg-slate-100 dark:bg-[#111a22] hover:bg-slate-200 dark:hover:bg-[#1a2632] text-text-main dark:text-white px-6 py-3 rounded-xl font-medium transition-all">
+                    <span data-translate="common.cancel">Cancel</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/income.js') }}"></script>
+<script>
+// Mobile menu toggle
+document.addEventListener('DOMContentLoaded', () => {
+    const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const mobileMenuClose = document.getElementById('mobile-menu-close');
+    
+    if (mobileMenuToggle && mobileMenu) {
+        mobileMenuToggle.addEventListener('click', () => {
+            mobileMenu.classList.remove('hidden');
+        });
+    }
+    
+    if (mobileMenuClose && mobileMenu) {
+        mobileMenuClose.addEventListener('click', () => {
+            mobileMenu.classList.add('hidden');
+        });
+    }
+    
+    // Close mobile menu when clicking outside
+    if (mobileMenu) {
+        mobileMenu.addEventListener('click', (e) => {
+            if (e.target === mobileMenu) {
+                mobileMenu.classList.add('hidden');
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

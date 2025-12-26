@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+
+{% block title %}Backup Codes - FINA{% endblock %}
+
+{% block body %}
+<div class="min-h-screen flex items-center justify-center p-4 bg-background-light dark:bg-background-dark">
+    <div class="max-w-2xl w-full">
+        <!-- Success Header -->
+        <div class="text-center mb-8">
+            <div class="inline-flex items-center justify-center w-16 h-16 bg-green-100 dark:bg-green-500/20 rounded-full mb-4">
+                <span class="material-symbols-outlined text-green-600 dark:text-green-400 text-[32px]">verified_user</span>
+            </div>
+            <h1 class="text-2xl font-bold text-text-main dark:text-white mb-2" data-translate="twofa.setupSuccess">Two-Factor Authentication Enabled!</h1>
+            <p class="text-text-muted dark:text-[#92adc9]" data-translate="twofa.backupCodesDesc">Save these backup codes in a secure location</p>
+        </div>
+        
+        <div class="bg-card-light dark:bg-card-dark border border-border-light dark:border-[#233648] rounded-2xl p-6 md:p-8 shadow-sm">
+            <!-- Warning Alert -->
+            <div class="bg-yellow-50 dark:bg-yellow-500/10 border border-yellow-200 dark:border-yellow-500/30 rounded-lg p-4 mb-6">
+                <div class="flex gap-3">
+                    <span class="material-symbols-outlined text-yellow-600 dark:text-yellow-400 text-[20px] flex-shrink-0">warning</span>
+                    <div class="flex-1">
+                        <h3 class="font-semibold text-yellow-800 dark:text-yellow-400 mb-1" data-translate="twofa.important">Important!</h3>
+                        <p class="text-sm text-yellow-700 dark:text-yellow-300" data-translate="twofa.backupCodesWarning">Each backup code can only be used once. Store them securely - you'll need them if you lose access to your authenticator app.</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Backup Codes Grid -->
+            <div class="bg-background-light dark:bg-background-dark border border-border-light dark:border-[#233648] rounded-xl p-6 mb-6">
+                <h3 class="text-sm font-medium text-text-muted dark:text-[#92adc9] uppercase tracking-wide mb-4" data-translate="twofa.yourBackupCodes">Your Backup Codes</h3>
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {% for code in backup_codes %}
+                    <div class="flex items-center gap-3 bg-card-light dark:bg-card-dark border border-border-light dark:border-[#233648] rounded-lg p-3">
+                        <span class="text-text-muted dark:text-[#92adc9] text-sm font-medium">{{ loop.index }}.</span>
+                        <code class="flex-1 text-primary font-mono font-bold text-base tracking-wider">{{ code }}</code>
+                        <button onclick="copyCode('{{ code }}')" class="text-text-muted dark:text-[#92adc9] hover:text-primary transition-colors" title="Copy">
+                            <span class="material-symbols-outlined text-[20px]">content_copy</span>
+                        </button>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Actions -->
+            <div class="flex flex-col sm:flex-row gap-3">
+                <a href="{{ url_for('auth.download_backup_codes_pdf') }}" class="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">download</span>
+                    <span data-translate="twofa.downloadPDF">Download as PDF</span>
+                </a>
+                <button onclick="printCodes()" class="flex-1 inline-flex items-center justify-center gap-2 px-6 py-3 bg-background-light dark:bg-background-dark border border-border-light dark:border-[#233648] text-text-main dark:text-white rounded-lg font-medium hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
+                    <span class="material-symbols-outlined text-[20px]">print</span>
+                    <span data-translate="twofa.print">Print Codes</span>
+                </button>
+            </div>
+            
+            <div class="mt-6 text-center">
+                <a href="{{ url_for('main.settings') }}" class="inline-flex items-center gap-2 text-text-muted dark:text-[#92adc9] hover:text-primary transition-colors text-sm font-medium">
+                    <span data-translate="twofa.continueToSettings">Continue to Settings</span>
+                    <span class="material-symbols-outlined text-[16px]">arrow_forward</span>
+                </a>
+            </div>
+        </div>
+        
+        <!-- Info Section -->
+        <div class="mt-6 bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 rounded-lg p-4">
+            <div class="flex gap-3">
+                <span class="material-symbols-outlined text-blue-600 dark:text-blue-400 text-[20px] flex-shrink-0">info</span>
+                <div class="text-sm text-blue-700 dark:text-blue-300">
+                    <p class="font-medium mb-1" data-translate="twofa.howToUse">How to use backup codes:</p>
+                    <ul class="list-disc list-inside space-y-1 text-blue-600 dark:text-blue-400">
+                        <li data-translate="twofa.useWhen">Use a backup code when you can't access your authenticator app</li>
+                        <li data-translate="twofa.enterCode">Enter the code in the 2FA field when logging in</li>
+                        <li data-translate="twofa.oneTimeUse">Each code works only once - it will be deleted after use</li>
+                        <li data-translate="twofa.regenerate">You can regenerate codes anytime from Settings</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function copyCode(code) {
+    navigator.clipboard.writeText(code).then(() => {
+        // Show success notification
+        const notification = document.createElement('div');
+        notification.className = 'fixed top-4 right-4 z-50 px-4 py-3 rounded-lg shadow-lg flex items-center gap-3 bg-green-500 text-white animate-slideIn';
+        notification.innerHTML = `
+            <span class="material-symbols-outlined text-[20px]">check_circle</span>
+            <span class="text-sm font-medium">Code copied to clipboard!</span>
+        `;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+            notification.classList.add('animate-slideOut');
+            setTimeout(() => document.body.removeChild(notification), 300);
+        }, 2000);
+    });
+}
+
+function printCodes() {
+    window.print();
+}
+</script>
+
+<style>
+@media print {
+    body * {
+        visibility: hidden;
+    }
+    .bg-card-light, .bg-card-dark {
+        visibility: visible;
+        position: absolute;
+        left: 0;
+        top: 0;
+    }
+    .bg-card-light *, .bg-card-dark * {
+        visibility: visible;
+    }
+    button, .mt-6, .bg-blue-50, .dark\:bg-blue-500\/10 {
+        display: none !important;
+    }
+}
+</style>
+{% endblock %}

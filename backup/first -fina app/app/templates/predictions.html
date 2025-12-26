@@ -1,0 +1,355 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('predictions.title') }} - FINA{% endblock %}
+
+{% block content %}
+<div class="container-fluid px-4">
+    <!-- Header -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <h1 class="h3 mb-2">
+                <i class="fas fa-chart-line me-2"></i>
+                {{ _('predictions.title') }}
+            </h1>
+            <p class="text-muted">{{ _('predictions.subtitle') }}</p>
+        </div>
+    </div>
+
+    {% if predictions.total_months < 3 %}
+    <!-- Not enough data warning -->
+    <div class="row">
+        <div class="col-12">
+            <div class="alert alert-info">
+                <h5 class="alert-heading">
+                    <i class="fas fa-info-circle me-2"></i>
+                    {{ _('predictions.no_data') }}
+                </h5>
+                <p class="mb-0">{{ _('predictions.no_data_desc') }}</p>
+            </div>
+        </div>
+    </div>
+    {% else %}
+
+    <!-- Summary Cards -->
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="text-muted mb-2">{{ _('predictions.total_predicted') }}</h6>
+                    <h3 class="mb-0">{{ predictions.total.amount|round(2) }} RON</h3>
+                    <small class="text-muted">
+                        {{ _('predictions.based_on', n=predictions.total_months) }}
+                    </small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="text-muted mb-2">{{ _('predictions.confidence') }}</h6>
+                    <h3 class="mb-0">
+                        {% if predictions.total.confidence == 'high' %}
+                            <span class="badge bg-success">{{ _('predictions.confidence_high') }}</span>
+                        {% elif predictions.total.confidence == 'medium' %}
+                            <span class="badge bg-warning">{{ _('predictions.confidence_medium') }}</span>
+                        {% else %}
+                            <span class="badge bg-secondary">{{ _('predictions.confidence_low') }}</span>
+                        {% endif %}
+                    </h3>
+                    <small class="text-muted">{{ predictions.total.months_of_data }} {{ _('predictions.month') }}</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="text-muted mb-2">{{ _('predictions.trend') }}</h6>
+                    <h3 class="mb-0">
+                        {% if predictions.total.trend == 'increasing' %}
+                            <i class="fas fa-arrow-up text-danger"></i>
+                            {{ _('predictions.trend_increasing') }}
+                        {% elif predictions.total.trend == 'decreasing' %}
+                            <i class="fas fa-arrow-down text-success"></i>
+                            {{ _('predictions.trend_decreasing') }}
+                        {% else %}
+                            <i class="fas fa-minus text-info"></i>
+                            {{ _('predictions.trend_stable') }}
+                        {% endif %}
+                    </h3>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Smart Insights -->
+    {% if insights %}
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-lightbulb me-2"></i>
+                        {{ _('predictions.insights') }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <ul class="list-unstyled mb-0">
+                        {% for insight in insights %}
+                        <li class="mb-2">
+                            <i class="fas fa-check-circle text-success me-2"></i>
+                            {{ insight }}
+                        </li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Predictions Chart -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{{ _('predictions.forecast') }}</h5>
+                </div>
+                <div class="card-body">
+                    <canvas id="predictionsChart" height="100"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Category Breakdown -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">{{ _('predictions.by_category') }}</h5>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>{{ _('common.category') }}</th>
+                                    <th>{{ _('predictions.amount') }}</th>
+                                    <th>{{ _('predictions.confidence') }}</th>
+                                    <th>{{ _('predictions.trend') }}</th>
+                                    <th>{{ _('common.actions') }}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for category_name, prediction in predictions.by_category.items() %}
+                                <tr>
+                                    <td>
+                                        <i class="fas fa-tag me-2"></i>
+                                        {{ category_name }}
+                                    </td>
+                                    <td>
+                                        <strong>{{ prediction.predicted_amount|round(2) }} RON</strong>
+                                    </td>
+                                    <td>
+                                        {% if prediction.confidence == 'high' %}
+                                            <span class="badge bg-success">{{ _('predictions.confidence_high') }}</span>
+                                        {% elif prediction.confidence == 'medium' %}
+                                            <span class="badge bg-warning">{{ _('predictions.confidence_medium') }}</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">{{ _('predictions.confidence_low') }}</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if prediction.trend == 'increasing' %}
+                                            <i class="fas fa-arrow-up text-danger"></i>
+                                            {{ _('predictions.trend_increasing') }}
+                                        {% elif prediction.trend == 'decreasing' %}
+                                            <i class="fas fa-arrow-down text-success"></i>
+                                            {{ _('predictions.trend_decreasing') }}
+                                        {% else %}
+                                            <i class="fas fa-minus text-info"></i>
+                                            {{ _('predictions.trend_stable') }}
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <button class="btn btn-sm btn-outline-primary" 
+                                                onclick="showCategoryForecast({{ prediction.category_id }}, '{{ category_name }}')">
+                                            {{ _('predictions.view_details') }}
+                                        </button>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Methodology Info -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card bg-light">
+                <div class="card-body">
+                    <h6 class="mb-2">
+                        <i class="fas fa-info-circle me-2"></i>
+                        {{ _('predictions.methodology') }}
+                    </h6>
+                    <p class="mb-0 text-muted small">
+                        {{ _('predictions.methodology_desc') }}
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    {% endif %}
+</div>
+
+<!-- Category Forecast Modal -->
+<div class="modal fade" id="categoryForecastModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="categoryForecastTitle"></h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <canvas id="categoryForecastChart" height="100"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+// Predictions data
+const predictionsData = {{ predictions|tojson }};
+
+// Main predictions chart
+const ctx = document.getElementById('predictionsChart');
+if (ctx && predictionsData.by_category) {
+    const categories = Object.keys(predictionsData.by_category);
+    const amounts = categories.map(cat => predictionsData.by_category[cat].predicted_amount);
+    const colors = [
+        'rgba(255, 99, 132, 0.7)',
+        'rgba(54, 162, 235, 0.7)',
+        'rgba(255, 206, 86, 0.7)',
+        'rgba(75, 192, 192, 0.7)',
+        'rgba(153, 102, 255, 0.7)',
+        'rgba(255, 159, 64, 0.7)',
+        'rgba(201, 203, 207, 0.7)'
+    ];
+
+    new Chart(ctx, {
+        type: 'bar',
+        data: {
+            labels: categories,
+            datasets: [{
+                label: '{{ _("predictions.total_predicted") }}',
+                data: amounts,
+                backgroundColor: colors.slice(0, categories.length),
+                borderColor: colors.slice(0, categories.length).map(c => c.replace('0.7', '1')),
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            return context.parsed.y.toFixed(2) + ' RON';
+                        }
+                    }
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: true,
+                    ticks: {
+                        callback: function(value) {
+                            return value + ' RON';
+                        }
+                    }
+                }
+            }
+        }
+    });
+}
+
+// Show category forecast
+async function showCategoryForecast(categoryId, categoryName) {
+    try {
+        const response = await fetch(`/api/predictions/category/${categoryId}`);
+        const data = await response.json();
+        
+        if (data.error) {
+            alert(data.error);
+            return;
+        }
+        
+        // Update modal title
+        document.getElementById('categoryForecastTitle').textContent = 
+            '{{ _("predictions.forecast") }}: ' + categoryName;
+        
+        // Create chart
+        const modalCtx = document.getElementById('categoryForecastChart');
+        
+        // Destroy existing chart if any
+        if (window.categoryChart) {
+            window.categoryChart.destroy();
+        }
+        
+        window.categoryChart = new Chart(modalCtx, {
+            type: 'line',
+            data: {
+                labels: data.forecast.map(f => f.month),
+                datasets: [{
+                    label: '{{ _("predictions.amount") }}',
+                    data: data.forecast.map(f => f.amount),
+                    borderColor: 'rgb(75, 192, 192)',
+                    backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                    tension: 0.1,
+                    fill: true
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.parsed.y.toFixed(2) + ' RON';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: {
+                            callback: function(value) {
+                                return value + ' RON';
+                            }
+                        }
+                    }
+                }
+            }
+        });
+        
+        // Show modal
+        new bootstrap.Modal(document.getElementById('categoryForecastModal')).show();
+        
+    } catch (error) {
+        console.error('Error fetching forecast:', error);
+        alert('{{ _("common.error") }}');
+    }
+}
+</script>
+{% endblock %}

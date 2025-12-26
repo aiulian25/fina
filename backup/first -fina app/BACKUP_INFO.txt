@@ -1,0 +1,65 @@
+FINA Finance Tracker - Backup Information
+==========================================
+
+Backup Name: fina-2
+Backup Date: $(date '+%Y-%m-%d %H:%M:%S')
+Backup Location: /home/iulian/projects/finance-tracker/backup/fina-2
+
+Contents:
+---------
+✓ Complete application source code (app/)
+✓ All templates with bank import feature
+✓ All routes including bank import
+✓ Complete translation system (EN, RO, ES)
+✓ Database migrations
+✓ Docker configuration files
+✓ Documentation (docs/)
+✓ Utility scripts (scripts/)
+✓ Configuration files
+
+Excluded:
+---------
+✗ Git history (.git/)
+✗ Python cache (__pycache__/)
+✗ Database files (instance/)
+✗ User uploads (app/static/uploads/)
+✗ Environment variables (.env)
+✗ Backup folders (backup/)
+
+Features Included:
+------------------
+✓ Bank Statement Import (PDF/CSV parsing)
+✓ Multi-language support (English, Romanian, Spanish)
+✓ OCR Receipt scanning
+✓ Smart predictions
+✓ Budget alerts
+✓ Subscriptions management
+✓ Search functionality
+✓ PWA support
+✓ Custom recurring expenses
+✓ CSRF protection
+✓ User authentication with 2FA
+
+New Features in This Backup:
+-----------------------------
+✓ Bank import module (app/bank_import.py)
+✓ Bank import routes (upload, review, confirm)
+✓ Bank import templates with drag-and-drop
+✓ 156+ new translations for bank import
+✓ PyPDF2 integration for PDF parsing
+✓ CSV auto-detection and parsing
+✓ Multi-bank format support
+✓ Transaction deduplication
+✓ Security validations
+✓ Organized folder structure (scripts/, docs/)
+
+File Statistics:
+----------------
+Python files: 27
+Templates: 27
+Documentation: 18
+Scripts: 6
+Total files: 96
+Total directories: 16
+
+Backup completed successfully on 2025-12-17 20:26:31

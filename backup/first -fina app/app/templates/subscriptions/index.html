@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block title %}{{ _('subscription.title') }} - FINA{% endblock %}
+
+{% block content %}
+<div class="subscriptions-page">
+    <div class="page-header">
+        <h1>🔄 {{ _('subscription.title') }}</h1>
+        <div class="header-actions">
+            <form method="POST" action="{{ url_for('subscriptions.auto_create_expenses') }}" style="display: inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-secondary" title="{{ _('subscription.auto_create_tooltip') }}">⚡ {{ _('subscription.create_due') }}</button>
+            </form>
+            <form method="POST" action="{{ url_for('subscriptions.detect') }}" style="display: inline;">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-secondary">🔍 {{ _('subscription.detect') }}</button>
+            </form>
+            <a href="{{ url_for('subscriptions.create') }}" class="btn btn-primary">➕ {{ _('subscription.add') }}</a>
+        </div>
+    </div>
+    
+    <!-- Summary Cards -->
+    <div class="stats-container" style="margin-bottom: 2rem;">
+        <div class="glass-card stat-card">
+            <h3>{{ _('subscription.active') }}</h3>
+            <p class="stat-value">{{ subscriptions|length }}</p>
+        </div>
+        
+        <div class="glass-card stat-card">
+            <h3>{{ _('subscription.monthly_cost') }}</h3>
+            <p class="stat-value">{{ monthly_cost|currency }}</p>
+        </div>
+        
+        <div class="glass-card stat-card">
+            <h3>{{ _('subscription.yearly_cost') }}</h3>
+            <p class="stat-value">{{ yearly_cost|currency }}</p>
+        </div>
+    </div>
+    
+    <!-- Suggestions -->
+    {% if suggestions %}
+    <div class="glass-card suggestions-section" style="margin-bottom: 2rem;">
+        <h2>💡 {{ _('subscription.suggestions') }}</h2>
+        <p style="color: var(--text-secondary); margin-bottom: 1rem;">
+            {{ _('subscription.suggestions_desc') }}
+        </p>
+        
+        {% for suggestion in suggestions %}
+        <div class="suggestion-card glass-card" style="margin-bottom: 1rem; padding: 1rem; border-left: 3px solid #f59e0b;">
+            <div class="suggestion-content">
+                <div class="suggestion-header">
+                    <h3>{{ suggestion.suggested_name }}</h3>
+                    <span class="confidence-badge" style="background: rgba(245, 158, 11, 0.2); padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.85rem;">
+                        {{ suggestion.confidence_score|round(0)|int }}% {{ _('subscription.confidence') }}
+                    </span>
+                </div>
+                
+                <div class="suggestion-details" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 1rem; margin: 1rem 0;">
+                    <div>
+                        <small style="color: var(--text-secondary);">{{ _('expense.amount') }}</small>
+                        <p style="font-weight: 600;">{{ suggestion.average_amount|currency }}</p>
+                    </div>
+                    <div>
+                        <small style="color: var(--text-secondary);">{{ _('subscription.frequency') }}</small>
+                        <p style="font-weight: 600;">{{ _(('subscription.freq_' + suggestion.detected_frequency)) }}</p>
+                    </div>
+                    <div>
+                        <small style="color: var(--text-secondary);">{{ _('subscription.occurrences') }}</small>
+                        <p style="font-weight: 600;">{{ suggestion.occurrence_count }} {{ _('subscription.times') }}</p>
+                    </div>
+                    <div>
+                        <small style="color: var(--text-secondary);">{{ _('subscription.period') }}</small>
+                        <p style="font-weight: 600;">{{ suggestion.first_occurrence.strftime('%b %Y') }} - {{ suggestion.last_occurrence.strftime('%b %Y') }}</p>
+                    </div>
+                </div>
+                
+                <div class="suggestion-actions" style="display: flex; gap: 0.5rem;">
+                    <form method="POST" action="{{ url_for('subscriptions.accept_suggestion', pattern_id=suggestion.id) }}" style="display: inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-primary btn-sm">✅ {{ _('subscription.accept') }}</button>
+                    </form>
+                    <form method="POST" action="{{ url_for('subscriptions.dismiss_suggestion', pattern_id=suggestion.id) }}" style="display: inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-secondary btn-sm">❌ {{ _('subscription.dismiss') }}</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+    
+    <!-- Active Subscriptions -->
+    {% if subscriptions %}
+    <div class="glass-card">
+        <h2>{{ _('subscription.active_list') }}</h2>
+        
+        <div class="subscriptions-list">
+            {% for sub in subscriptions %}
+            <div class="subscription-item" style="display: flex; justify-content: space-between; align-items: center; padding: 1rem; border-bottom: 1px solid var(--glass-border);">
+                <div class="subscription-info" style="flex: 1;">
+                    <h3 style="margin: 0;">
+                        {{ sub.name }}
+                        {% if sub.auto_create_expense %}
+                        <span style="background: rgba(34, 197, 94, 0.2); color: #4ade80; padding: 0.2rem 0.5rem; border-radius: 5px; font-size: 0.75rem; margin-left: 0.5rem;" title="{{ _('subscription.auto_create_tooltip') }}">⚡ {{ _('subscription.auto') }}</span>
+                        {% endif %}
+                    </h3>
+                    <div style="display: flex; gap: 2rem; margin-top: 0.5rem; color: var(--text-secondary); font-size: 0.9rem; flex-wrap: wrap;">
+                        <span>💰 {{ sub.amount|currency }} / 
+                            {% if sub.frequency == 'custom' %}
+                                {{ _('subscription.every') }} {{ sub.custom_interval_days }} {{ _('subscription.days') }}
+                            {% else %}
+                                {{ _(('subscription.freq_' + sub.frequency)) }}
+                            {% endif %}
+                        </span>
+                        {% if sub.next_due_date %}
+                        <span>📅 {{ _('subscription.next_payment') }}: {{ sub.next_due_date.strftime('%b %d, %Y') }}</span>
+                        {% endif %}
+                        <span>📊 {{ _('subscription.annual') }}: {{ sub.get_annual_cost()|currency }}</span>
+                        {% if sub.total_occurrences %}
+                        <span>🔢 {{ sub.occurrences_count }}/{{ sub.total_occurrences }} {{ _('subscription.times') }}</span>
+                        {% endif %}
+                    </div>
+                    {% if sub.notes %}
+                    <p style="margin-top: 0.5rem; font-size: 0.85rem; color: var(--text-secondary);">{{ sub.notes }}</p>
+                    {% endif %}
+                </div>
+                
+                <div class="subscription-actions" style="display: flex; gap: 0.5rem;">
+                    <a href="{{ url_for('subscriptions.edit', subscription_id=sub.id) }}" class="btn btn-secondary btn-sm">{{ _('common.edit') }}</a>
+                    <form method="POST" action="{{ url_for('subscriptions.toggle', subscription_id=sub.id) }}" style="display: inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-secondary btn-sm">
+                            {% if sub.is_active %}⏸️{% else %}▶️{% endif %}
+                        </button>
+                    </form>
+                    <form method="POST" action="{{ url_for('subscriptions.delete', subscription_id=sub.id) }}" onsubmit="return confirm('{{ _('subscription.delete_confirm') }}');" style="display: inline;">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                        <button type="submit" class="btn btn-secondary btn-sm">🗑️</button>
+                    </form>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="glass-card empty-state">
+        <h2>{{ _('subscription.no_subscriptions') }}</h2>
+        <p>{{ _('subscription.no_subscriptions_desc') }}</p>
+        <div style="display: flex; gap: 1rem; justify-content: center; margin-top: 1rem;">
+            <form method="POST" action="{{ url_for('subscriptions.detect') }}">
+                <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+                <button type="submit" class="btn btn-primary">🔍 {{ _('subscription.detect') }}</button>
+            </form>
+            <a href="{{ url_for('subscriptions.create') }}" class="btn btn-secondary">➕ {{ _('subscription.add_manual') }}</a>
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<style>
+.subscriptions-page {
+    max-width: 1200px;
+    margin: 0 auto;
+}
+
+.page-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.header-actions {
+    display: flex;
+    gap: 0.5rem;
+}
+
+.btn-sm {
+    padding: 0.5rem 1rem;
+    font-size: 0.9rem;
+}
+
+.subscription-item:last-child {
+    border-bottom: none;
+}
+
+@media (max-width: 768px) {
+    .page-header {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .subscription-item {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 1rem;
+    }
+    
+    .subscription-actions {
+        width: 100%;
+        justify-content: flex-end;
+    }
+}
+</style>
+{% endblock %}

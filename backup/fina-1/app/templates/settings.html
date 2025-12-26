@@ -1,0 +1,223 @@
+{% extends "base.html" %}
+
+{% block title %}Settings - FINA{% endblock %}
+
+{% block body %}
+<div class="flex h-screen w-full">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="hidden lg:flex w-64 flex-col bg-sidebar-light dark:bg-background-dark border-r border-border-light dark:border-[#233648]">
+        <div class="p-6 flex flex-col h-full justify-between">
+            <div class="flex flex-col gap-8">
+                <div class="flex gap-3 items-center">
+                    <img id="sidebar-avatar" src="{{ current_user.avatar | avatar_url }}" alt="{{ current_user.username }}" class="size-10 rounded-full border-2 border-primary/30 object-cover">
+                    <div class="flex flex-col">
+                        <h1 class="text-text-main dark:text-white text-base font-bold leading-none">{{ current_user.username }}</h1>
+                        <p class="text-text-muted dark:text-[#92adc9] text-xs font-normal mt-1">
+                            {% if current_user.is_admin %}<span data-translate="user.admin">Admin</span>{% else %}<span data-translate="user.user">User</span>{% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                <nav class="flex flex-col gap-2">
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-background-light dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.dashboard') }}">
+                        <span class="material-symbols-outlined text-[20px]">dashboard</span>
+                        <span class="text-sm font-medium" data-translate="nav.dashboard">Dashboard</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-background-light dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.transactions') }}">
+                        <span class="material-symbols-outlined text-[20px]">receipt_long</span>
+                        <span class="text-sm font-medium" data-translate="nav.transactions">Transactions</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-background-light dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.reports') }}">
+                        <span class="material-symbols-outlined text-[20px]">pie_chart</span>
+                        <span class="text-sm font-medium" data-translate="nav.reports">Reports</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-background-light dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.documents') }}">
+                        <span class="material-symbols-outlined text-[20px]">folder_open</span>
+                        <span class="text-sm font-medium" data-translate="nav.documents">Documents</span>
+                    </a>
+                </nav>
+            </div>
+            
+            <div class="flex flex-col gap-2">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/20 text-primary border border-primary/10" href="{{ url_for('main.settings') }}">
+                    <span class="material-symbols-outlined text-[20px]">settings</span>
+                    <span class="text-sm font-medium" data-translate="nav.settings">Settings</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-background-light dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('auth.logout') }}">
+                    <span class="material-symbols-outlined text-[20px]">logout</span>
+                    <span class="text-sm font-medium" data-translate="nav.logout">Log out</span>
+                </a>
+            </div>
+        </div>
+    </aside>
+    
+    <main class="flex-1 flex flex-col h-full overflow-hidden relative bg-background-light dark:bg-background-dark">
+        <header class="h-16 flex items-center justify-between px-6 lg:px-8 border-b border-border-light dark:border-[#233648] bg-card-light/95 dark:bg-background-dark/80 backdrop-blur z-10 shrink-0">
+            <div class="flex items-center gap-4">
+                <button id="menu-toggle" class="lg:hidden text-text-main dark:text-white">
+                    <span class="material-symbols-outlined">menu</span>
+                </button>
+                <h2 class="text-text-main dark:text-white text-lg font-bold" data-translate="settings.title">Settings</h2>
+            </div>
+        </header>
+        
+        <div class="flex-1 overflow-y-auto p-6 lg:p-8 scroll-smooth">
+            <div class="max-w-4xl mx-auto flex flex-col gap-6 pb-10">
+                
+                <!-- Avatar Section -->
+                <div class="bg-card-light dark:bg-card-dark border border-border-light dark:border-[#233648] rounded-xl p-6 shadow-sm">
+                    <h3 class="text-lg font-semibold text-text-main dark:text-white mb-4" data-translate="settings.avatar">Profile Avatar</h3>
+                    
+                    <div class="flex flex-col md:flex-row gap-6">
+                        <div class="flex flex-col items-center gap-4">
+                            <img id="current-avatar" src="{{ current_user.avatar | avatar_url }}" alt="Current Avatar" class="size-24 rounded-full border-4 border-primary/20 object-cover shadow-md">
+                            <input type="file" id="avatar-upload" class="hidden" accept="image/png,image/jpeg,image/jpg,image/gif,image/webp">
+                            <button id="upload-avatar-btn" class="px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors flex items-center gap-2">
+                                <span class="material-symbols-outlined text-[18px]">upload</span>
+                                <span data-translate="settings.uploadAvatar">Upload Custom</span>
+                            </button>
+                            <p class="text-xs text-text-muted dark:text-[#92adc9] text-center max-w-[200px]" data-translate="settings.avatarDesc">PNG, JPG, GIF, WEBP. Max 20MB</p>
+                        </div>
+                        
+                        <div class="flex-1">
+                            <p class="text-sm text-text-muted dark:text-[#92adc9] mb-3" data-translate="settings.defaultAvatars">Or choose a default avatar:</p>
+                            <div class="grid grid-cols-3 sm:grid-cols-6 gap-3">
+                                <button class="default-avatar-btn p-2 rounded-lg border-2 border-transparent hover:border-primary transition-all" data-avatar="icons/avatars/avatar-1.svg">
+                                    <img src="{{ url_for('static', filename='icons/avatars/avatar-1.svg') }}" alt="Avatar 1" class="w-full h-full rounded-full">
+                                </button>
+                                <button class="default-avatar-btn p-2 rounded-lg border-2 border-transparent hover:border-primary transition-all" data-avatar="icons/avatars/avatar-2.svg">
+                                    <img src="{{ url_for('static', filename='icons/avatars/avatar-2.svg') }}" alt="Avatar 2" class="w-full h-full rounded-full">
+                                </button>
+                                <button class="default-avatar-btn p-2 rounded-lg border-2 border-transparent hover:border-primary transition-all" data-avatar="icons/avatars/avatar-3.svg">
+                                    <img src="{{ url_for('static', filename='icons/avatars/avatar-3.svg') }}" alt="Avatar 3" class="w-full h-full rounded-full">
+                                </button>
+                                <button class="default-avatar-btn p-2 rounded-lg border-2 border-transparent hover:border-primary transition-all" data-avatar="icons/avatars/avatar-4.svg">
+                                    <img src="{{ url_for('static', filename='icons/avatars/avatar-4.svg') }}" alt="Avatar 4" class="w-full h-full rounded-full">
+                                </button>
+                                <button class="default-avatar-btn p-2 rounded-lg border-2 border-transparent hover:border-primary transition-all" data-avatar="icons/avatars/avatar-5.svg">
+                                    <img src="{{ url_for('static', filename='icons/avatars/avatar-5.svg') }}" alt="Avatar 5" class="w-full h-full rounded-full">
+                                </button>
+                                <button class="default-avatar-btn p-2 rounded-lg border-2 border-transparent hover:border-primary transition-all" data-avatar="icons/avatars/avatar-6.svg">
+                                    <img src="{{ url_for('static', filename='icons/avatars/avatar-6.svg') }}" alt="Avatar 6" class="w-full h-full rounded-full">
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Profile Settings -->
+                <div class="bg-card-light dark:bg-card-dark border border-border-light dark:border-[#233648] rounded-xl p-6 shadow-sm">
+                    <h3 class="text-lg font-semibold text-text-main dark:text-white mb-4" data-translate="settings.profile">Profile Information</h3>
+                    
+                    <div class="flex flex-col gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-text-main dark:text-white mb-2" data-translate="form.username">Username</label>
+                            <input type="text" id="username" value="{{ current_user.username }}" class="w-full bg-background-light dark:bg-background-dark border border-border-light dark:border-[#233648] rounded-lg px-4 py-2.5 text-text-main dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-text-main dark:text-white mb-2" data-translate="form.email">Email</label>
+                            <input type="email" id="email" value="{{ current_user.email }}" class="w-full bg-background-light dark:bg-background-dark border border-border-light dark:border-[#233648] rounded-lg px-4 py-2.5 text-text-main dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all">
+                        </div>
+                        
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-text-main dark:text-white mb-2" data-translate="form.language">Language</label>
+                                <select id="language" class="w-full bg-background-light dark:bg-background-dark border border-border-light dark:border-[#233648] rounded-lg px-4 py-2.5 text-text-main dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all">
+                                    <option value="en" {% if current_user.language == 'en' %}selected{% endif %}>English</option>
+                                    <option value="ro" {% if current_user.language == 'ro' %}selected{% endif %}>Română</option>
+                                </select>
+                            </div>
+                            
+                            <div>
+                                <label class="block text-sm font-medium text-text-main dark:text-white mb-2" data-translate="form.currency">Currency</label>
+                                <select id="currency" class="w-full bg-background-light dark:bg-background-dark border border-border-light dark:border-[#233648] rounded-lg px-4 py-2.5 text-text-main dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all">
+                                    <option value="USD" {% if current_user.currency == 'USD' %}selected{% endif %}>USD ($)</option>
+                                    <option value="EUR" {% if current_user.currency == 'EUR' %}selected{% endif %}>EUR (€)</option>
+                                    <option value="RON" {% if current_user.currency == 'RON' %}selected{% endif %}>RON (lei)</option>
+                                    <option value="GBP" {% if current_user.currency == 'GBP' %}selected{% endif %}>GBP (£)</option>
+                                </select>
+                            </div>
+                        </div>
+                        
+                        <button id="save-profile-btn" class="w-full md:w-auto px-6 py-2.5 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-2">
+                            <span class="material-symbols-outlined text-[18px]">save</span>
+                            <span data-translate="settings.saveProfile">Save Profile</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- Password Change -->
+                <div class="bg-card-light dark:bg-card-dark border border-border-light dark:border-[#233648] rounded-xl p-6 shadow-sm">
+                    <h3 class="text-lg font-semibold text-text-main dark:text-white mb-4" data-translate="settings.changePassword">Change Password</h3>
+                    
+                    <div class="flex flex-col gap-4">
+                        <div>
+                            <label class="block text-sm font-medium text-text-main dark:text-white mb-2" data-translate="settings.currentPassword">Current Password</label>
+                            <input type="password" id="current-password" class="w-full bg-background-light dark:bg-background-dark border border-border-light dark:border-[#233648] rounded-lg px-4 py-2.5 text-text-main dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-text-main dark:text-white mb-2" data-translate="settings.newPassword">New Password</label>
+                            <input type="password" id="new-password" class="w-full bg-background-light dark:bg-background-dark border border-border-light dark:border-[#233648] rounded-lg px-4 py-2.5 text-text-main dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all">
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-text-main dark:text-white mb-2" data-translate="settings.confirmPassword">Confirm New Password</label>
+                            <input type="password" id="confirm-password" class="w-full bg-background-light dark:bg-background-dark border border-border-light dark:border-[#233648] rounded-lg px-4 py-2.5 text-text-main dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent outline-none transition-all">
+                        </div>
+                        
+                        <button id="change-password-btn" class="w-full md:w-auto px-6 py-2.5 bg-primary text-white rounded-lg font-medium hover:bg-primary/90 transition-colors flex items-center justify-center gap-2">
+                            <span class="material-symbols-outlined text-[18px]">lock_reset</span>
+                            <span data-translate="settings.updatePassword">Update Password</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- 2FA Settings -->
+                <div class="bg-card-light dark:bg-card-dark border border-border-light dark:border-[#233648] rounded-xl p-6 shadow-sm">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="text-lg font-semibold text-text-main dark:text-white mb-1" data-translate="settings.twoFactor">Two-Factor Authentication</h3>
+                            <p class="text-sm text-text-muted dark:text-[#92adc9]">
+                                {% if current_user.two_factor_enabled %}
+                                <span data-translate="settings.twoFactorEnabled">2FA is currently enabled for your account</span>
+                                {% else %}
+                                <span data-translate="settings.twoFactorDisabled">Add an extra layer of security to your account</span>
+                                {% endif %}
+                            </p>
+                        </div>
+                        <span class="inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-sm font-medium {% if current_user.two_factor_enabled %}bg-green-100 dark:bg-green-500/20 text-green-700 dark:text-green-400{% else %}bg-slate-100 dark:bg-white/10 text-text-muted dark:text-[#92adc9]{% endif %}">
+                            <span class="material-symbols-outlined text-[16px]">{% if current_user.two_factor_enabled %}verified_user{% else %}lock{% endif %}</span>
+                            <span data-translate="{% if current_user.two_factor_enabled %}settings.enabled{% else %}settings.disabled{% endif %}">{% if current_user.two_factor_enabled %}Enabled{% else %}Disabled{% endif %}</span>
+                        </span>
+                    </div>
+                    
+                    <div class="flex flex-col sm:flex-row gap-3">
+                        {% if current_user.two_factor_enabled %}
+                        <a href="{{ url_for('auth.setup_2fa') }}" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-background-light dark:bg-background-dark border border-border-light dark:border-[#233648] text-text-main dark:text-white rounded-lg text-sm font-medium hover:bg-slate-100 dark:hover:bg-white/5 transition-colors">
+                            <span class="material-symbols-outlined text-[18px]">refresh</span>
+                            <span data-translate="settings.regenerateCodes">Regenerate Backup Codes</span>
+                        </a>
+                        <form method="POST" action="{{ url_for('auth.disable_2fa') }}" class="inline-block">
+                            <button type="submit" onclick="return confirm('Are you sure you want to disable 2FA?')" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-red-600 dark:text-red-400 rounded-lg text-sm font-medium hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors">
+                                <span class="material-symbols-outlined text-[18px]">lock_open</span>
+                                <span data-translate="settings.disable2FA">Disable 2FA</span>
+                            </button>
+                        </form>
+                        {% else %}
+                        <a href="{{ url_for('auth.setup_2fa') }}" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors">
+                            <span class="material-symbols-outlined text-[18px]">lock</span>
+                            <span data-translate="settings.enable2FA">Enable 2FA</span>
+                        </a>
+                        {% endif %}
+                    </div>
+                </div>
+                
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="{{ url_for('static', filename='js/settings.js') }}"></script>
+{% endblock %}

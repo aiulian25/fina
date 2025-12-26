@@ -1,0 +1,57 @@
+# Backup files
+backups/
+*.tar
+*.tar.gz
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+
+# Virtual environment
+venv/
+env/
+ENV/
+
+# Database
+instance/
+*.db
+*.sqlite
+*.sqlite3
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Docker
+.dockerignore
+Dockerfile
+docker-compose.yml
+
+# Logs
+*.log
+
+# Environment files
+.env.local
+.env.*.local
+
+# Scripts
+*.sh
+
+# Temporary files
+tmp/
+temp/
+*.tmp

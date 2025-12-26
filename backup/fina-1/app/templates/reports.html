@@ -1,0 +1,214 @@
+{% extends "base.html" %}
+
+{% block title %}Reports - FINA{% endblock %}
+
+{% block extra_css %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+{% endblock %}
+
+{% block body %}
+<div class="flex h-screen w-full">
+    <!-- Sidebar -->
+    <aside id="sidebar" class="hidden lg:flex w-64 flex-col bg-sidebar-light dark:bg-background-dark border-r border-border-light dark:border-[#233648]">
+        <div class="p-6 flex flex-col h-full justify-between">
+            <div class="flex flex-col gap-8">
+                <div class="flex gap-3 items-center">
+                    <img src="{{ current_user.avatar | avatar_url }}" alt="{{ current_user.username }}" class="size-10 rounded-full border-2 border-primary/30 object-cover">
+                    <div class="flex flex-col">
+                        <h1 class="text-text-main dark:text-white text-base font-bold leading-none">{{ current_user.username }}</h1>
+                        <p class="text-text-muted dark:text-[#92adc9] text-xs font-normal mt-1">
+                            {% if current_user.is_admin %}<span data-translate="user.admin">Admin</span>{% else %}<span data-translate="user.user">User</span>{% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                <nav class="flex flex-col gap-2">
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-background-light dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.dashboard') }}">
+                        <span class="material-symbols-outlined text-[20px]">dashboard</span>
+                        <span class="text-sm font-medium" data-translate="nav.dashboard">Dashboard</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-background-light dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.transactions') }}">
+                        <span class="material-symbols-outlined text-[20px]">receipt_long</span>
+                        <span class="text-sm font-medium" data-translate="nav.transactions">Transactions</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/20 text-primary border border-primary/10" href="{{ url_for('main.reports') }}">
+                        <span class="material-symbols-outlined text-[20px]">pie_chart</span>
+                        <span class="text-sm font-medium" data-translate="nav.reports">Reports</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-background-light dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.documents') }}">
+                        <span class="material-symbols-outlined text-[20px]">folder_open</span>
+                        <span class="text-sm font-medium" data-translate="nav.documents">Documents</span>
+                    </a>
+                </nav>
+            </div>
+            
+            <div class="flex flex-col gap-2">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-background-light dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.settings') }}">
+                    <span class="material-symbols-outlined text-[20px]">settings</span>
+                    <span class="text-sm font-medium" data-translate="nav.settings">Settings</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-background-light dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('auth.logout') }}">
+                    <span class="material-symbols-outlined text-[20px]">logout</span>
+                    <span class="text-sm font-medium" data-translate="nav.logout">Log out</span>
+                </a>
+            </div>
+        </div>
+    </aside>
+    
+    <main class="flex-1 flex flex-col h-full overflow-hidden relative bg-background-light dark:bg-background-dark">
+        <header class="h-16 flex items-center justify-between px-6 lg:px-8 border-b border-border-light dark:border-[#233648] bg-card-light/95 dark:bg-background-dark/80 backdrop-blur z-10 shrink-0">
+            <div class="flex items-center gap-4">
+                <button id="menu-toggle" class="lg:hidden text-text-main dark:text-white">
+                    <span class="material-symbols-outlined">menu</span>
+                </button>
+                <h2 class="text-text-main dark:text-white text-lg font-bold" data-translate="reports.title">Financial Reports</h2>
+            </div>
+            <div class="flex items-center gap-3">
+                <button id="export-report-btn" class="flex items-center gap-2 px-3 py-1.5 text-sm font-medium text-text-muted dark:text-[#92adc9] hover:text-text-main dark:hover:text-white hover:bg-background-light dark:hover:bg-white/5 rounded-lg border border-transparent hover:border-border-light dark:hover:border-[#233648] transition-all">
+                    <span class="material-symbols-outlined text-[18px]">download</span>
+                    <span class="hidden sm:inline" data-translate="reports.export">Export CSV</span>
+                </button>
+            </div>
+        </header>
+        
+        <div class="flex-1 overflow-y-auto p-6 lg:p-8 scroll-smooth">
+            <div class="max-w-7xl mx-auto flex flex-col gap-6 pb-10">
+                <!-- Period Selection -->
+                <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-card-light dark:bg-card-dark p-4 rounded-xl border border-border-light dark:border-[#233648] shadow-sm">
+                    <div class="flex items-center gap-3">
+                        <h3 class="text-sm font-semibold text-text-muted dark:text-[#92adc9] uppercase tracking-wider" data-translate="reports.analysisPeriod">Analysis Period:</h3>
+                        <div class="flex bg-background-light dark:bg-background-dark rounded-lg p-1 border border-border-light dark:border-[#233648]">
+                            <button class="period-btn active px-3 py-1 text-sm font-medium rounded transition-colors" data-period="30">
+                                <span data-translate="reports.last30Days">Last 30 Days</span>
+                            </button>
+                            <button class="period-btn px-3 py-1 text-sm font-medium rounded transition-colors" data-period="90">
+                                <span data-translate="reports.quarter">Quarter</span>
+                            </button>
+                            <button class="period-btn px-3 py-1 text-sm font-medium rounded transition-colors" data-period="365">
+                                <span data-translate="reports.ytd">YTD</span>
+                            </button>
+                        </div>
+                    </div>
+                    <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                        <select id="category-filter" class="px-3 py-2 bg-background-light dark:bg-background-dark border border-border-light dark:border-[#233648] rounded-lg text-text-muted dark:text-[#92adc9] hover:text-text-main dark:hover:text-white hover:border-primary/50 transition-colors text-sm w-full lg:w-48">
+                            <option value=""><span data-translate="reports.allCategories">All Categories</span></option>
+                        </select>
+                        <button id="generate-report-btn" class="flex-1 sm:flex-none bg-primary hover:bg-blue-600 text-white h-10 px-4 rounded-lg text-sm font-semibold shadow-lg shadow-primary/20 transition-all flex items-center justify-center gap-2">
+                            <span class="material-symbols-outlined text-[18px]">autorenew</span>
+                            <span data-translate="reports.generate">Generate Report</span>
+                        </button>
+                    </div>
+                </div>
+                
+                <!-- KPI Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                    <div class="bg-card-light dark:bg-card-dark p-5 rounded-xl border border-border-light dark:border-[#233648] shadow-sm hover:border-primary/30 transition-colors group">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="flex flex-col">
+                                <span class="text-text-muted dark:text-[#92adc9] text-xs font-medium uppercase tracking-wider" data-translate="reports.totalSpent">Total Spent</span>
+                                <h4 id="total-spent" class="text-2xl font-bold text-text-main dark:text-white mt-1">$0.00</h4>
+                            </div>
+                            <div class="p-2 bg-primary/10 rounded-lg text-primary group-hover:bg-primary group-hover:text-white transition-colors">
+                                <span class="material-symbols-outlined text-[20px]">payments</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 text-xs">
+                            <span id="spent-change" class="flex items-center font-medium px-1.5 py-0.5 rounded"></span>
+                            <span class="text-text-muted dark:text-[#92adc9]" data-translate="reports.vsLastMonth">vs last period</span>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-card-light dark:bg-card-dark p-5 rounded-xl border border-border-light dark:border-[#233648] shadow-sm hover:border-accent/30 transition-colors group">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="flex flex-col">
+                                <span class="text-text-muted dark:text-[#92adc9] text-xs font-medium uppercase tracking-wider" data-translate="reports.topCategory">Top Category</span>
+                                <h4 id="top-category" class="text-2xl font-bold text-text-main dark:text-white mt-1">None</h4>
+                            </div>
+                            <div class="p-2 bg-accent/10 rounded-lg text-accent group-hover:bg-accent group-hover:text-white transition-colors">
+                                <span class="material-symbols-outlined text-[20px]">category</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 text-xs">
+                            <span id="top-category-amount" class="text-text-main dark:text-white font-semibold">$0</span>
+                            <span class="text-text-muted dark:text-[#92adc9]" data-translate="reports.spentThisPeriod">spent this period</span>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-card-light dark:bg-card-dark p-5 rounded-xl border border-border-light dark:border-[#233648] shadow-sm hover:border-warning/30 transition-colors group">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="flex flex-col">
+                                <span class="text-text-muted dark:text-[#92adc9] text-xs font-medium uppercase tracking-wider" data-translate="reports.avgDaily">Avg. Daily</span>
+                                <h4 id="avg-daily" class="text-2xl font-bold text-text-main dark:text-white mt-1">$0.00</h4>
+                            </div>
+                            <div class="p-2 bg-warning/10 rounded-lg text-warning group-hover:bg-warning group-hover:text-white transition-colors">
+                                <span class="material-symbols-outlined text-[20px]">calendar_today</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 text-xs">
+                            <span id="avg-change" class="flex items-center font-medium px-1.5 py-0.5 rounded"></span>
+                            <span class="text-text-muted dark:text-[#92adc9]" data-translate="reports.vsLastMonth">vs last period</span>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-card-light dark:bg-card-dark p-5 rounded-xl border border-border-light dark:border-[#233648] shadow-sm hover:border-success/30 transition-colors group">
+                        <div class="flex justify-between items-start mb-4">
+                            <div class="flex flex-col">
+                                <span class="text-text-muted dark:text-[#92adc9] text-xs font-medium uppercase tracking-wider" data-translate="reports.savingsRate">Savings Rate</span>
+                                <h4 id="savings-rate" class="text-2xl font-bold text-text-main dark:text-white mt-1">0%</h4>
+                            </div>
+                            <div class="p-2 bg-success/10 rounded-lg text-success group-hover:bg-success group-hover:text-white transition-colors">
+                                <span class="material-symbols-outlined text-[20px]">savings</span>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 text-xs">
+                            <span class="text-success flex items-center font-medium bg-success/10 px-1.5 py-0.5 rounded">
+                                <span class="material-symbols-outlined text-[14px] mr-0.5">arrow_upward</span>
+                                <span data-translate="reports.placeholder">Placeholder</span>
+                            </span>
+                            <span class="text-text-muted dark:text-[#92adc9]" data-translate="reports.vsLastMonth">vs last period</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Charts Row -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Spending Trend Chart -->
+                    <div class="lg:col-span-2 bg-card-light dark:bg-card-dark p-6 rounded-xl border border-border-light dark:border-[#233648] shadow-sm flex flex-col">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-lg font-bold text-text-main dark:text-white" data-translate="reports.spendingTrend">Spending Trend</h3>
+                        </div>
+                        <div class="flex-1 min-h-[300px]">
+                            <canvas id="trend-chart"></canvas>
+                        </div>
+                    </div>
+                    
+                    <!-- Category Breakdown -->
+                    <div class="lg:col-span-1 bg-card-light dark:bg-card-dark p-6 rounded-xl border border-border-light dark:border-[#233648] shadow-sm flex flex-col">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-lg font-bold text-text-main dark:text-white" data-translate="reports.categoryBreakdown">Category Breakdown</h3>
+                        </div>
+                        <div class="flex-1 flex items-center justify-center">
+                            <canvas id="category-pie-chart" class="max-h-[300px]"></canvas>
+                        </div>
+                        <div id="category-legend" class="mt-6 grid grid-cols-2 gap-3 text-sm">
+                            <!-- Legend items will be populated by JS -->
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Monthly Comparison -->
+                <div class="bg-card-light dark:bg-card-dark p-6 rounded-xl border border-border-light dark:border-[#233648] shadow-sm">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-lg font-bold text-text-main dark:text-white" data-translate="reports.monthlySpending">Monthly Spending</h3>
+                    </div>
+                    <div class="h-64">
+                        <canvas id="monthly-chart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<script src="{{ url_for('static', filename='js/reports.js') }}"></script>
+{% endblock %}

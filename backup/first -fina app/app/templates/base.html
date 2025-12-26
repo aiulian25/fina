@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}FINA{% endblock %}</title>
+    
+    <!-- PWA Meta Tags -->
+    <meta name="description" content="FINA - Track your expenses, manage categories, and visualize spending patterns">
+    <meta name="theme-color" content="#5b5fc7">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="FINA">
+    <meta name="mobile-web-app-capable" content="yes">
+    
+    <!-- Manifest -->
+    <link rel="manifest" href="{{ url_for('static', filename='manifest.json') }}">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" sizes="32x32" href="{{ url_for('static', filename='images/fina-logo.png') }}">
+    <link rel="icon" type="image/png" sizes="16x16" href="{{ url_for('static', filename='images/fina-logo.png') }}">
+    <link rel="shortcut icon" href="{{ url_for('static', filename='images/fina-logo.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/fina-logo.png') }}">
+    <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/fina-logo.png') }}">
+    
+    <!-- Stylesheets -->
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+<body>
+    {% if current_user.is_authenticated %}
+    <nav class="glass-nav">
+        <div class="nav-container">
+            <a href="{{ url_for('main.dashboard') }}" class="nav-brand">
+                <img src="{{ url_for('static', filename='images/fina-logo.png') }}" alt="FINA" class="nav-logo">
+                <span>FINA</span>
+            </a>
+            
+            <!-- Global Search Bar -->
+            <div class="nav-search">
+                <form method="GET" action="{{ url_for('main.search_page') }}" class="nav-search-form">
+                    <input type="text" 
+                           name="q" 
+                           class="nav-search-input" 
+                           placeholder="{{ _('search.quick_search') }}"
+                           autocomplete="off">
+                    <button type="submit" class="nav-search-btn">🔍</button>
+                </form>
+            </div>
+            
+            <div class="nav-links">
+                <a href="{{ url_for('main.create_category') }}">{{ _('nav.new_category') }}</a>
+                <a href="{{ url_for('subscriptions.index') }}">{{ _('nav.subscriptions') }}</a>
+                <a href="{{ url_for('main.bank_import') }}">
+                    <i class="fas fa-file-import"></i> {{ _('bank.import_title') }}
+                </a>
+                <a href="{{ url_for('main.predictions') }}">
+                    <i class="fas fa-chart-line"></i> {{ _('predictions.title') }}
+                </a>
+                <a href="{{ url_for('settings.index') }}">{{ _('nav.settings') }}</a>
+                <div class="language-switcher">
+                    <button class="language-btn" onclick="toggleLanguageMenu()">
+                        {% if get_lang() == 'ro' %}🇷🇴{% elif get_lang() == 'es' %}🇪🇸{% else %}🇬🇧{% endif %}
+                    </button>
+                    <div class="language-menu" id="language-menu">
+                        <a href="{{ url_for('language.switch_language', lang='en') }}" class="language-option">🇬🇧 English</a>
+                        <a href="{{ url_for('language.switch_language', lang='ro') }}" class="language-option">🇷🇴 Română</a>
+                        <a href="{{ url_for('language.switch_language', lang='es') }}" class="language-option">🇪🇸 Español</a>
+                    </div>
+                </div>
+                <a href="{{ url_for('auth.logout') }}">{{ _('nav.logout') }}</a>
+            </div>
+        </div>
+    </nav>
+    {% endif %}
+    
+    <div class="container">
+        {% with messages = get_flashed_messages(with_categories=true) %}
+            {% if messages %}
+                {% for category, message in messages %}
+                <div class="alert alert-{{ category }} glass-card">
+                    {{ message }}
+                </div>
+                {% endfor %}
+            {% endif %}
+        {% endwith %}
+        
+        {% block content %}{% endblock %}
+    </div>
+    
+    <!-- PWA Install Prompt -->
+    <div id="pwa-install-prompt" class="pwa-prompt glass-card" style="display: none;">
+        <div class="pwa-prompt-content">
+            <img src="{{ url_for('static', filename='images/fina-logo.png') }}" alt="FINA" class="pwa-icon">
+            <div class="pwa-prompt-text">
+                <h3>{{ _('pwa.install_title') }}</h3>
+                <p>{{ _('pwa.install_description') }}</p>
+            </div>
+            <div class="pwa-prompt-actions">
+                <button id="pwa-install-btn" class="btn btn-primary">{{ _('pwa.install') }}</button>
+                <button id="pwa-dismiss-btn" class="btn btn-secondary">{{ _('pwa.not_now') }}</button>
+            </div>
+        </div>
+    </div>
+    
+    <script src="{{ url_for('static', filename='js/script.js') }}"></script>
+    {% block scripts %}{% endblock %}
+</body>
+</html>

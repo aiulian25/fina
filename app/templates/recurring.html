@@ -1,0 +1,241 @@
+{% extends "base.html" %}
+
+{% block title %}Recurring Expenses - FINA{% endblock %}
+
+{% block body %}
+<div class="flex h-screen w-full">
+    <!-- Side Navigation -->
+    <aside id="sidebar" class="hidden lg:flex w-64 flex-col bg-sidebar-light dark:bg-background-dark border-r border-border-light dark:border-[#233648] transition-all duration-300 shadow-sm dark:shadow-none">
+        <div class="p-6 flex flex-col h-full justify-between">
+            <div class="flex flex-col gap-8">
+                <!-- User Profile -->
+                <div class="flex gap-3 items-center">
+                    <div class="relative">
+                        <img src="{{ current_user.avatar | avatar_url }}" alt="Avatar" class="size-12 rounded-full object-cover border-2 border-primary">
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <h2 class="text-sm font-semibold text-text-main dark:text-white truncate">{{ current_user.username }}</h2>
+                        <p class="text-xs text-text-muted dark:text-[#92adc9] flex items-center gap-1">
+                            {% if current_user.is_admin %}<span data-translate="user.admin">Admin</span>{% else %}<span data-translate="user.user">User</span>{% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Navigation Links -->
+                <nav class="flex flex-col gap-2">
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.dashboard') }}">
+                        <span class="material-symbols-outlined text-[20px]">dashboard</span>
+                        <span class="text-sm font-medium" data-translate="nav.dashboard">Dashboard</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.transactions') }}">
+                        <span class="material-symbols-outlined text-[20px]">receipt_long</span>
+                        <span class="text-sm font-medium" data-translate="nav.transactions">Transactions</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.income') }}">
+                        <span class="material-symbols-outlined text-[20px]">payments</span>
+                        <span class="text-sm font-medium" data-translate="nav.income">Income</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary border border-primary/10" href="{{ url_for('main.recurring') }}">
+                        <span class="material-symbols-outlined text-[20px]">repeat</span>
+                        <span class="text-sm font-medium" data-translate="nav.recurring">Recurring</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-background-light dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.import_page') }}">
+                        <span class="material-symbols-outlined text-[20px]">file_upload</span>
+                        <span class="text-sm font-medium" data-translate="nav.import">Import CSV</span>
+                    </a>                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.reports') }}">
+                        <span class="material-symbols-outlined text-[20px]">pie_chart</span>
+                        <span class="text-sm font-medium" data-translate="nav.reports">Reports</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.documents') }}">
+                        <span class="material-symbols-outlined text-[20px]">folder_open</span>
+                        <span class="text-sm font-medium" data-translate="nav.documents">Documents</span>
+                    </a>
+                    {% if current_user.is_admin %}
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="/admin">
+                        <span class="material-symbols-outlined text-[20px]">admin_panel_settings</span>
+                        <span class="text-sm font-medium" data-translate="nav.admin">Admin</span>
+                    </a>
+                    {% endif %}
+                </nav>
+            </div>
+            
+            <!-- Bottom Links -->
+            <div class="flex flex-col gap-2">
+                <button id="theme-toggle" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors">
+                    <span class="material-symbols-outlined text-[20px]" id="theme-icon">light_mode</span>
+                    <span class="text-sm font-medium" id="theme-text" data-translate="dashboard.lightMode">Light Mode</span>
+                </button>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.settings') }}">
+                    <span class="material-symbols-outlined text-[20px]">settings</span>
+                    <span class="text-sm font-medium" data-translate="nav.settings">Settings</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('auth.logout') }}">
+                    <span class="material-symbols-outlined text-[20px]">logout</span>
+                    <span class="text-sm font-medium" data-translate="nav.logout">Log out</span>
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col overflow-hidden">
+        <div class="flex-1 overflow-auto bg-background-light dark:bg-background-dark">
+    <!-- Header -->
+    <div class="bg-white dark:bg-[#0f1419] border-b border-gray-200 dark:border-white/10 sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-6 py-4">
+            <div class="flex items-center justify-between">
+                <div>
+                    <h1 class="text-2xl font-bold text-text-main dark:text-white" data-translate="recurring.title">Recurring Expenses</h1>
+                    <p class="text-text-muted dark:text-[#92adc9] text-sm mt-1" data-translate="recurring.subtitle">Manage subscriptions and recurring bills</p>
+                </div>
+                <div class="flex items-center gap-3">
+                    <button onclick="detectRecurringPatterns()" id="detect-btn"
+                            class="px-4 py-2 bg-blue-500 hover:bg-blue-600 text-white rounded-lg transition-colors flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[20px]">auto_awesome</span>
+                        <span data-translate="recurring.detect">Detect Patterns</span>
+                    </button>
+                    <button onclick="showAddRecurringModal()"
+                            class="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg transition-colors flex items-center gap-2">
+                        <span class="material-symbols-outlined text-[20px]">add</span>
+                        <span data-translate="recurring.addNew">Add Recurring</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-6 py-8">
+        <!-- Suggestions Section (Hidden by default) -->
+        <div id="suggestions-section" class="hidden mb-8">
+            <div class="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-xl p-6 mb-4">
+                <div class="flex items-start gap-3 mb-4">
+                    <span class="material-symbols-outlined text-blue-400 text-[28px]">auto_awesome</span>
+                    <div>
+                        <h2 class="text-lg font-semibold text-text-main dark:text-white mb-1" data-translate="recurring.suggestionsTitle">Detected Recurring Patterns</h2>
+                        <p class="text-text-muted dark:text-[#92adc9] text-sm" data-translate="recurring.suggestionsDesc">We found these potential recurring expenses based on your transaction history</p>
+                    </div>
+                </div>
+                <div id="suggestions-list" class="space-y-3"></div>
+            </div>
+        </div>
+
+        <!-- Recurring Expenses List -->
+        <div class="bg-white dark:bg-[#0f1419] border border-gray-200 dark:border-white/10 rounded-xl overflow-hidden">
+            <div id="recurring-list" class="p-6"></div>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Recurring Modal -->
+<div id="add-recurring-modal" class="hidden fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-[#0f1419] rounded-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+        <div class="sticky top-0 bg-white dark:bg-[#0f1419] border-b border-gray-200 dark:border-white/10 px-6 py-4 flex items-center justify-between">
+            <h2 id="modal-title" class="text-xl font-bold text-text-main dark:text-white" data-translate="recurring.add">Add Recurring Expense</h2>
+            <button onclick="closeRecurringModal()" class="text-text-muted dark:text-[#92adc9] hover:text-text-main dark:hover:text-white transition-colors">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        
+        <form id="recurring-form" class="p-6 space-y-5">
+            <input type="hidden" id="recurring-id">
+            
+            <div>
+                <label class="block text-sm font-medium text-text-main dark:text-white mb-2" data-translate="recurring.name">
+                    Name
+                </label>
+                <input type="text" id="recurring-name" required
+                       class="w-full px-4 py-2.5 bg-gray-50 dark:bg-[#1a2632] border border-gray-200 dark:border-white/10 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-text-main dark:text-white"
+                       placeholder="e.g., Netflix Subscription">
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-text-main dark:text-white mb-2" data-translate="form.amount">
+                        Amount
+                    </label>
+                    <input type="number" id="recurring-amount" step="0.01" min="0" required
+                           class="w-full px-4 py-2.5 bg-gray-50 dark:bg-[#1a2632] border border-gray-200 dark:border-white/10 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-text-main dark:text-white">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium text-text-main dark:text-white mb-2" data-translate="form.category">
+                        Category
+                    </label>
+                    <select id="recurring-category" required
+                            class="w-full px-4 py-2.5 bg-gray-50 dark:bg-[#1a2632] border border-gray-200 dark:border-white/10 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-text-main dark:text-white">
+                    </select>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium text-text-main dark:text-white mb-2" data-translate="recurring.frequency">
+                        Frequency
+                    </label>
+                    <select id="recurring-frequency" required
+                            class="w-full px-4 py-2.5 bg-gray-50 dark:bg-[#1a2632] border border-gray-200 dark:border-white/10 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-text-main dark:text-white">
+                        <option value="daily" data-translate="recurring.frequency.daily">Daily</option>
+                        <option value="weekly" data-translate="recurring.frequency.weekly">Weekly</option>
+                        <option value="monthly" selected data-translate="recurring.frequency.monthly">Monthly</option>
+                        <option value="yearly" data-translate="recurring.frequency.yearly">Yearly</option>
+                    </select>
+                </div>
+                
+                <div id="day-container" class="hidden">
+                    <label id="day-label" class="block text-sm font-medium text-text-main dark:text-white mb-2">
+                        Day
+                    </label>
+                    <input type="number" id="recurring-day" min="1" max="28"
+                           class="w-full px-4 py-2.5 bg-gray-50 dark:bg-[#1a2632] border border-gray-200 dark:border-white/10 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-text-main dark:text-white">
+                </div>
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-text-main dark:text-white mb-2" data-translate="recurring.nextDue">
+                    Next Due Date
+                </label>
+                <input type="date" id="recurring-next-due" required
+                       class="w-full px-4 py-2.5 bg-gray-50 dark:bg-[#1a2632] border border-gray-200 dark:border-white/10 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-text-main dark:text-white">
+            </div>
+            
+            <div>
+                <label class="block text-sm font-medium text-text-main dark:text-white mb-2" data-translate="recurring.notes">
+                    Notes (optional)
+                </label>
+                <textarea id="recurring-notes" rows="2"
+                          class="w-full px-4 py-2.5 bg-gray-50 dark:bg-[#1a2632] border border-gray-200 dark:border-white/10 rounded-lg focus:ring-2 focus:ring-primary focus:border-transparent text-text-main dark:text-white resize-none"></textarea>
+            </div>
+            
+            <div class="flex items-center gap-2 p-4 bg-blue-500/5 border border-blue-500/20 rounded-lg">
+                <input type="checkbox" id="recurring-auto-create"
+                       class="size-5 rounded border-gray-300 text-primary focus:ring-primary">
+                <div class="flex-1">
+                    <label for="recurring-auto-create" class="text-sm font-medium text-text-main dark:text-white cursor-pointer" data-translate="recurring.autoCreate">
+                        Auto-create expenses
+                    </label>
+                    <p class="text-xs text-text-muted dark:text-[#92adc9]" data-translate="recurring.autoCreateDesc">
+                        Automatically create an expense when due date arrives
+                    </p>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-3 pt-4">
+                <button type="submit" id="recurring-submit-btn"
+                        class="flex-1 px-6 py-3 bg-primary hover:bg-primary-dark text-white rounded-lg font-medium transition-colors">
+                    <span data-translate="actions.save">Save</span>
+                </button>
+                <button type="button" onclick="closeRecurringModal()"
+                        class="px-6 py-3 bg-gray-100 dark:bg-[#1a2632] hover:bg-gray-200 dark:hover:bg-[#243040] text-text-main dark:text-white rounded-lg font-medium transition-colors">
+                    <span data-translate="actions.cancel">Cancel</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+        </div>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/recurring.js') }}"></script>
+{% endblock %}
