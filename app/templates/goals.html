@@ -1,0 +1,527 @@
+{% extends "base.html" %}
+
+{% block title %}Savings Goals - FINA{% endblock %}
+
+{% block body %}
+<div class="flex h-screen w-full">
+    <!-- Side Navigation -->
+    <aside id="sidebar" class="hidden lg:flex w-64 flex-col bg-sidebar-light dark:bg-background-dark border-r border-border-light dark:border-[#233648] transition-all duration-300 shadow-sm dark:shadow-none">
+        <div class="p-6 flex flex-col h-full justify-between">
+            <div class="flex flex-col gap-8">
+                <!-- User Profile -->
+                <div class="flex gap-3 items-center">
+                    <img src="{{ current_user.avatar | avatar_url }}" alt="{{ current_user.username }}" class="size-10 rounded-full border-2 border-primary/30 object-cover">
+                    <div class="flex flex-col">
+                        <h1 class="text-text-main dark:text-white text-base font-bold leading-none">{{ current_user.username }}</h1>
+                        <p class="text-text-muted dark:text-[#92adc9] text-xs font-normal mt-1">
+                            {% if current_user.is_admin %}<span data-translate="user.admin">Admin</span>{% else %}<span data-translate="user.user">User</span>{% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Navigation Links -->
+                <nav class="flex flex-col gap-2">
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.dashboard') }}">
+                        <span class="material-symbols-outlined text-[20px]">dashboard</span>
+                        <span class="text-sm font-medium" data-translate="nav.dashboard">Dashboard</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.transactions') }}">
+                        <span class="material-symbols-outlined text-[20px]">receipt_long</span>
+                        <span class="text-sm font-medium" data-translate="nav.transactions">Transactions</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.income') }}">
+                        <span class="material-symbols-outlined text-[20px]">payments</span>
+                        <span class="text-sm font-medium" data-translate="nav.income">Income</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary border border-primary/10" href="{{ url_for('main.goals') }}">
+                        <span class="material-symbols-outlined text-[20px]">savings</span>
+                        <span class="text-sm font-medium" data-translate="nav.goals">Savings Goals</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.subscriptions') }}">
+                        <span class="material-symbols-outlined text-[20px]">subscriptions</span>
+                        <span class="text-sm font-medium" data-translate="nav.subscriptions">Subscriptions</span>
+                    </a>                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.analyzer') }}">
+                        <span class="material-symbols-outlined text-[20px]">psychology</span>
+                        <span class="text-sm font-medium" data-translate="nav.analyzer">Expense Analyzer</span>
+                    </a>                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.insights') }}">
+                        <span class="material-symbols-outlined text-[20px]">insights</span>
+                        <span class="text-sm font-medium" data-translate="nav.insights">Smart Insights</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.challenges') }}">
+                        <span class="material-symbols-outlined text-[20px]">emoji_events</span>
+                        <span class="text-sm font-medium" data-translate="nav.challenges">Challenges</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.forecast') }}">
+                        <span class="material-symbols-outlined text-[20px]">auto_graph</span>
+                        <span class="text-sm font-medium" data-translate="nav.forecast">Forecast</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.recurring') }}">
+                        <span class="material-symbols-outlined text-[20px]">repeat</span>
+                        <span class="text-sm font-medium" data-translate="nav.recurring">Recurring</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.import_page') }}">
+                        <span class="material-symbols-outlined text-[20px]">file_upload</span>
+                        <span class="text-sm font-medium" data-translate="nav.import">Import CSV</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.reports') }}">
+                        <span class="material-symbols-outlined text-[20px]">pie_chart</span>
+                        <span class="text-sm font-medium" data-translate="nav.reports">Reports</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.documents') }}">
+                        <span class="material-symbols-outlined text-[20px]">folder_open</span>
+                        <span class="text-sm font-medium" data-translate="nav.documents">Documents</span>
+                    </a>
+                    {% if current_user.is_admin %}
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="/admin">
+                        <span class="material-symbols-outlined text-[20px]">admin_panel_settings</span>
+                        <span class="text-sm font-medium" data-translate="nav.admin">Admin</span>
+                    </a>
+                    {% endif %}
+                </nav>
+            </div>
+            
+            <!-- Bottom Links -->
+            <div class="flex flex-col gap-2">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.settings') }}">
+                    <span class="material-symbols-outlined text-[20px]">settings</span>
+                    <span class="text-sm font-medium" data-translate="nav.settings">Settings</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-red-500 dark:hover:text-red-400 transition-colors" href="{{ url_for('auth.logout') }}">
+                    <span class="material-symbols-outlined text-[20px]">logout</span>
+                    <span class="text-sm font-medium" data-translate="nav.logout">Logout</span>
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col min-h-screen overflow-hidden">
+        <!-- Top Bar (Mobile) -->
+        <header class="lg:hidden bg-white dark:bg-card-dark border-b border-border-light dark:border-[#233648] p-4 flex items-center justify-between">
+            <button id="mobile-menu-toggle" class="text-text-main dark:text-white p-2 hover:bg-slate-100 dark:hover:bg-[#233648] rounded-lg transition-colors">
+                <span class="material-symbols-outlined text-[24px]">menu</span>
+            </button>
+            <h1 class="text-lg font-bold text-text-main dark:text-white" data-translate="goals.title">Savings Goals</h1>
+            <div class="w-10"></div>
+        </header>
+
+        <!-- Content -->
+        <main class="flex-1 overflow-y-auto bg-background-light dark:bg-background-dark p-4 md:p-6 lg:p-8">
+            <div class="max-w-7xl mx-auto">
+                <!-- Header -->
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
+                    <div>
+                        <h1 class="text-2xl md:text-3xl font-bold text-text-main dark:text-white mb-2" data-translate="goals.title">Savings Goals</h1>
+                        <p class="text-text-muted dark:text-[#92adc9]" data-translate="goals.subtitle">Track your savings and reach your financial goals</p>
+                    </div>
+                    <button onclick="openGoalModal()" class="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-xl font-medium transition-all hover:shadow-lg">
+                        <span class="material-symbols-outlined text-[20px]">add</span>
+                        <span data-translate="goals.addNew">Add Goal</span>
+                    </button>
+                </div>
+
+                <!-- Summary Cards -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <!-- Total Saved -->
+                    <div class="bg-white dark:bg-card-dark rounded-2xl p-5 border border-border-light dark:border-[#233648]">
+                        <div class="flex items-center gap-3">
+                            <div class="p-3 bg-emerald-100 dark:bg-emerald-900/30 rounded-xl">
+                                <span class="material-symbols-outlined text-emerald-600 dark:text-emerald-400 text-[24px]">savings</span>
+                            </div>
+                            <div>
+                                <p class="text-xs text-text-muted dark:text-[#92adc9] uppercase tracking-wider" data-translate="goals.totalSaved">Total Saved</p>
+                                <p id="total-saved" class="text-xl font-bold text-text-main dark:text-white">$0</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Total Target -->
+                    <div class="bg-white dark:bg-card-dark rounded-2xl p-5 border border-border-light dark:border-[#233648]">
+                        <div class="flex items-center gap-3">
+                            <div class="p-3 bg-blue-100 dark:bg-blue-900/30 rounded-xl">
+                                <span class="material-symbols-outlined text-blue-600 dark:text-blue-400 text-[24px]">flag</span>
+                            </div>
+                            <div>
+                                <p class="text-xs text-text-muted dark:text-[#92adc9] uppercase tracking-wider" data-translate="goals.totalTarget">Total Target</p>
+                                <p id="total-target" class="text-xl font-bold text-text-main dark:text-white">$0</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Active Goals -->
+                    <div class="bg-white dark:bg-card-dark rounded-2xl p-5 border border-border-light dark:border-[#233648]">
+                        <div class="flex items-center gap-3">
+                            <div class="p-3 bg-amber-100 dark:bg-amber-900/30 rounded-xl">
+                                <span class="material-symbols-outlined text-amber-600 dark:text-amber-400 text-[24px]">track_changes</span>
+                            </div>
+                            <div>
+                                <p class="text-xs text-text-muted dark:text-[#92adc9] uppercase tracking-wider" data-translate="goals.activeGoals">Active Goals</p>
+                                <p id="active-goals-count" class="text-xl font-bold text-text-main dark:text-white">0</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Completed Goals -->
+                    <div class="bg-white dark:bg-card-dark rounded-2xl p-5 border border-border-light dark:border-[#233648]">
+                        <div class="flex items-center gap-3">
+                            <div class="p-3 bg-purple-100 dark:bg-purple-900/30 rounded-xl">
+                                <span class="material-symbols-outlined text-purple-600 dark:text-purple-400 text-[24px]">emoji_events</span>
+                            </div>
+                            <div>
+                                <p class="text-xs text-text-muted dark:text-[#92adc9] uppercase tracking-wider" data-translate="goals.completedGoals">Completed</p>
+                                <p id="completed-goals-count" class="text-xl font-bold text-text-main dark:text-white">0</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Add Suggestions -->
+                <div id="suggestions-section" class="mb-6">
+                    <h3 class="text-sm font-medium text-text-muted dark:text-[#92adc9] mb-3" data-translate="goals.suggestedGoals">Suggested Goals</h3>
+                    <div class="flex flex-wrap gap-2">
+                        <button onclick="openGoalModalWithCategory('vacation')" class="inline-flex items-center gap-2 px-4 py-2 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded-full text-sm font-medium hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-colors">
+                            <span class="material-symbols-outlined text-[18px]">flight_takeoff</span>
+                            <span data-translate="goals.category.vacation">Vacation</span>
+                        </button>
+                        <button onclick="openGoalModalWithCategory('emergency')" class="inline-flex items-center gap-2 px-4 py-2 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded-full text-sm font-medium hover:bg-red-200 dark:hover:bg-red-900/50 transition-colors">
+                            <span class="material-symbols-outlined text-[18px]">health_and_safety</span>
+                            <span data-translate="goals.category.emergency">Emergency Fund</span>
+                        </button>
+                        <button onclick="openGoalModalWithCategory('car')" class="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-sm font-medium hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors">
+                            <span class="material-symbols-outlined text-[18px]">directions_car</span>
+                            <span data-translate="goals.category.car">New Car</span>
+                        </button>
+                        <button onclick="openGoalModalWithCategory('house')" class="inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded-full text-sm font-medium hover:bg-emerald-200 dark:hover:bg-emerald-900/50 transition-colors">
+                            <span class="material-symbols-outlined text-[18px]">home</span>
+                            <span data-translate="goals.category.house">House</span>
+                        </button>
+                        <button onclick="openGoalModalWithCategory('gadget')" class="inline-flex items-center gap-2 px-4 py-2 bg-teal-100 dark:bg-teal-900/30 text-teal-700 dark:text-teal-300 rounded-full text-sm font-medium hover:bg-teal-200 dark:hover:bg-teal-900/50 transition-colors">
+                            <span class="material-symbols-outlined text-[18px]">devices</span>
+                            <span data-translate="goals.category.gadget">Gadget</span>
+                        </button>
+                        <button onclick="openGoalModalWithCategory('custom')" class="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-700/30 text-slate-700 dark:text-slate-300 rounded-full text-sm font-medium hover:bg-slate-200 dark:hover:bg-slate-700/50 transition-colors">
+                            <span class="material-symbols-outlined text-[18px]">add</span>
+                            <span data-translate="goals.category.custom">Custom</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Filter Tabs -->
+                <div class="flex gap-2 mb-6 overflow-x-auto pb-2">
+                    <button onclick="filterGoals('all')" id="filter-all" class="filter-btn active px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-primary text-white">
+                        <span data-translate="goals.filterAll">All Goals</span>
+                    </button>
+                    <button onclick="filterGoals('active')" id="filter-active" class="filter-btn px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-slate-100 dark:bg-[#233648] text-text-muted dark:text-[#92adc9] hover:bg-slate-200 dark:hover:bg-[#2d4559]">
+                        <span data-translate="goals.filterActive">Active</span>
+                    </button>
+                    <button onclick="filterGoals('completed')" id="filter-completed" class="filter-btn px-4 py-2 rounded-lg text-sm font-medium transition-colors bg-slate-100 dark:bg-[#233648] text-text-muted dark:text-[#92adc9] hover:bg-slate-200 dark:hover:bg-[#2d4559]">
+                        <span data-translate="goals.filterCompleted">Completed</span>
+                    </button>
+                </div>
+
+                <!-- Goals Grid -->
+                <div id="goals-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    <!-- Goals will be populated by JavaScript -->
+                </div>
+
+                <!-- Empty State -->
+                <div id="empty-state" class="hidden text-center py-16">
+                    <div class="inline-flex items-center justify-center w-20 h-20 bg-slate-100 dark:bg-[#233648] rounded-full mb-4">
+                        <span class="material-symbols-outlined text-4xl text-text-muted dark:text-[#92adc9]">savings</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-text-main dark:text-white mb-2" data-translate="goals.noGoals">No savings goals yet</h3>
+                    <p class="text-text-muted dark:text-[#92adc9] mb-6" data-translate="goals.noGoalsDesc">Start your financial journey by creating your first savings goal</p>
+                    <button onclick="openGoalModal()" class="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-xl font-medium transition-all">
+                        <span class="material-symbols-outlined text-[20px]">add</span>
+                        <span data-translate="goals.createFirst">Create Your First Goal</span>
+                    </button>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Mobile Menu Overlay -->
+<div id="mobile-menu" class="lg:hidden hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50">
+    <aside class="w-64 h-full bg-sidebar-light dark:bg-card-dark border-r border-border-light dark:border-[#233648] overflow-y-auto">
+        <div class="p-6 flex flex-col h-full justify-between">
+            <div class="flex flex-col gap-8">
+                <!-- Close Button -->
+                <button id="mobile-menu-close" class="self-end text-text-main dark:text-white p-2 hover:bg-slate-100 dark:hover:bg-[#233648] rounded-lg transition-colors">
+                    <span class="material-symbols-outlined text-[24px]">close</span>
+                </button>
+                
+                <!-- User Profile -->
+                <div class="flex gap-3 items-center">
+                    <img src="{{ current_user.avatar | avatar_url }}" alt="{{ current_user.username }}" class="size-10 rounded-full border-2 border-primary/30 object-cover">
+                    <div class="flex flex-col">
+                        <h1 class="text-text-main dark:text-white text-base font-bold leading-none">{{ current_user.username }}</h1>
+                        <p class="text-text-muted dark:text-[#92adc9] text-xs font-normal mt-1">
+                            {% if current_user.is_admin %}<span data-translate="user.admin">Admin</span>{% else %}<span data-translate="user.user">User</span>{% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Navigation Links -->
+                <nav class="flex flex-col gap-2">
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.dashboard') }}">
+                        <span class="material-symbols-outlined text-[20px]">dashboard</span>
+                        <span class="text-sm font-medium" data-translate="nav.dashboard">Dashboard</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.transactions') }}">
+                        <span class="material-symbols-outlined text-[20px]">receipt_long</span>
+                        <span class="text-sm font-medium" data-translate="nav.transactions">Transactions</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.income') }}">
+                        <span class="material-symbols-outlined text-[20px]">payments</span>
+                        <span class="text-sm font-medium" data-translate="nav.income">Income</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary border border-primary/10" href="{{ url_for('main.goals') }}">
+                        <span class="material-symbols-outlined text-[20px]">savings</span>
+                        <span class="text-sm font-medium" data-translate="nav.goals">Savings Goals</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.subscriptions') }}">
+                        <span class="material-symbols-outlined text-[20px]">subscriptions</span>
+                        <span class="text-sm font-medium" data-translate="nav.subscriptions">Subscriptions</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.analyzer') }}">
+                        <span class="material-symbols-outlined text-[20px]">psychology</span>
+                        <span class="text-sm font-medium" data-translate="nav.analyzer">Expense Analyzer</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.insights') }}">
+                        <span class="material-symbols-outlined text-[20px]">insights</span>
+                        <span class="text-sm font-medium" data-translate="nav.insights">Smart Insights</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.recurring') }}">
+                        <span class="material-symbols-outlined text-[20px]">repeat</span>
+                        <span class="text-sm font-medium" data-translate="nav.recurring">Recurring</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.import_page') }}">
+                        <span class="material-symbols-outlined text-[20px]">file_upload</span>
+                        <span class="text-sm font-medium" data-translate="nav.import">Import CSV</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.reports') }}">
+                        <span class="material-symbols-outlined text-[20px]">pie_chart</span>
+                        <span class="text-sm font-medium" data-translate="nav.reports">Reports</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.documents') }}">
+                        <span class="material-symbols-outlined text-[20px]">folder_open</span>
+                        <span class="text-sm font-medium" data-translate="nav.documents">Documents</span>
+                    </a>
+                    {% if current_user.is_admin %}
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="/admin">
+                        <span class="material-symbols-outlined text-[20px]">admin_panel_settings</span>
+                        <span class="text-sm font-medium" data-translate="nav.admin">Admin</span>
+                    </a>
+                    {% endif %}
+                </nav>
+            </div>
+            
+            <!-- Bottom Links -->
+            <div class="flex flex-col gap-2">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.settings') }}">
+                    <span class="material-symbols-outlined text-[20px]">settings</span>
+                    <span class="text-sm font-medium" data-translate="nav.settings">Settings</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-red-500 dark:hover:text-red-400 transition-colors" href="{{ url_for('auth.logout') }}">
+                    <span class="material-symbols-outlined text-[20px]">logout</span>
+                    <span class="text-sm font-medium" data-translate="nav.logout">Logout</span>
+                </a>
+            </div>
+        </div>
+    </aside>
+</div>
+
+<!-- Goal Modal (Create/Edit) -->
+<div id="goal-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onclick="if (event.target === this) closeGoalModal()">
+    <div class="bg-white dark:bg-card-dark rounded-2xl max-w-lg w-full border border-border-light dark:border-[#233648] shadow-2xl max-h-[90vh] overflow-y-auto">
+        <div class="p-6 border-b border-border-light dark:border-[#233648] sticky top-0 bg-white dark:bg-card-dark">
+            <h3 id="goal-modal-title" class="text-xl font-bold text-text-main dark:text-white" data-translate="goals.addGoal">Add Savings Goal</h3>
+        </div>
+        
+        <form id="goal-form" class="p-6">
+            <input type="hidden" id="goal-id">
+            
+            <div class="space-y-4">
+                <!-- Category Selection -->
+                <div>
+                    <label class="block text-sm font-medium text-text-main dark:text-white mb-2" data-translate="goals.selectCategory">Select Category</label>
+                    <div id="category-grid" class="grid grid-cols-3 gap-2">
+                        <!-- Category options will be generated by JS -->
+                    </div>
+                    <input type="hidden" id="goal-category" value="custom">
+                </div>
+                
+                <!-- Name -->
+                <div>
+                    <label for="goal-name" class="block text-sm font-medium text-text-main dark:text-white mb-2" data-translate="goals.goalName">Goal Name</label>
+                    <input type="text" id="goal-name" required 
+                           placeholder="e.g., Summer vacation to Hawaii"
+                           data-translate-placeholder="goals.goalNamePlaceholder"
+                           class="w-full bg-slate-50 dark:bg-background-dark border border-border-light dark:border-[#233648] rounded-lg px-4 py-3 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary">
+                </div>
+                
+                <!-- Target Amount -->
+                <div>
+                    <label for="goal-target" class="block text-sm font-medium text-text-main dark:text-white mb-2" data-translate="goals.targetAmount">Target Amount</label>
+                    <input type="number" id="goal-target" step="0.01" min="1" required 
+                           placeholder="5000"
+                           class="w-full bg-slate-50 dark:bg-background-dark border border-border-light dark:border-[#233648] rounded-lg px-4 py-3 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary">
+                </div>
+                
+                <!-- Current Amount (optional) -->
+                <div>
+                    <label for="goal-current" class="block text-sm font-medium text-text-main dark:text-white mb-2" data-translate="goals.currentAmount">Current Amount (optional)</label>
+                    <input type="number" id="goal-current" step="0.01" min="0" value="0"
+                           placeholder="0"
+                           class="w-full bg-slate-50 dark:bg-background-dark border border-border-light dark:border-[#233648] rounded-lg px-4 py-3 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary">
+                    <p class="text-xs text-text-muted dark:text-[#92adc9] mt-1" data-translate="goals.currentAmountHelp">If you've already saved some money towards this goal</p>
+                </div>
+                
+                <!-- Target Date -->
+                <div>
+                    <label for="goal-date" class="block text-sm font-medium text-text-main dark:text-white mb-2" data-translate="goals.targetDate">Target Date (optional)</label>
+                    <input type="date" id="goal-date" 
+                           class="w-full bg-slate-50 dark:bg-background-dark border border-border-light dark:border-[#233648] rounded-lg px-4 py-3 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary">
+                    <p class="text-xs text-text-muted dark:text-[#92adc9] mt-1" data-translate="goals.targetDateHelp">When do you want to reach this goal?</p>
+                </div>
+                
+                <!-- Description -->
+                <div>
+                    <label for="goal-description" class="block text-sm font-medium text-text-main dark:text-white mb-2" data-translate="goals.description">Description (optional)</label>
+                    <textarea id="goal-description" rows="2"
+                              placeholder="Add notes about your goal..."
+                              data-translate-placeholder="goals.descriptionPlaceholder"
+                              class="w-full bg-slate-50 dark:bg-background-dark border border-border-light dark:border-[#233648] rounded-lg px-4 py-3 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary resize-none"></textarea>
+                </div>
+                
+                <!-- Color Picker -->
+                <div>
+                    <label class="block text-sm font-medium text-text-main dark:text-white mb-2" data-translate="goals.color">Color</label>
+                    <div class="flex gap-2 flex-wrap">
+                        <button type="button" onclick="selectColor('#2b8cee')" class="color-btn w-8 h-8 rounded-full bg-[#2b8cee] border-2 border-transparent hover:scale-110 transition-transform" data-color="#2b8cee"></button>
+                        <button type="button" onclick="selectColor('#10b981')" class="color-btn w-8 h-8 rounded-full bg-[#10b981] border-2 border-transparent hover:scale-110 transition-transform" data-color="#10b981"></button>
+                        <button type="button" onclick="selectColor('#f59e0b')" class="color-btn w-8 h-8 rounded-full bg-[#f59e0b] border-2 border-transparent hover:scale-110 transition-transform" data-color="#f59e0b"></button>
+                        <button type="button" onclick="selectColor('#ef4444')" class="color-btn w-8 h-8 rounded-full bg-[#ef4444] border-2 border-transparent hover:scale-110 transition-transform" data-color="#ef4444"></button>
+                        <button type="button" onclick="selectColor('#8b5cf6')" class="color-btn w-8 h-8 rounded-full bg-[#8b5cf6] border-2 border-transparent hover:scale-110 transition-transform" data-color="#8b5cf6"></button>
+                        <button type="button" onclick="selectColor('#ec4899')" class="color-btn w-8 h-8 rounded-full bg-[#ec4899] border-2 border-transparent hover:scale-110 transition-transform" data-color="#ec4899"></button>
+                        <button type="button" onclick="selectColor('#14b8a6')" class="color-btn w-8 h-8 rounded-full bg-[#14b8a6] border-2 border-transparent hover:scale-110 transition-transform" data-color="#14b8a6"></button>
+                        <button type="button" onclick="selectColor('#6366f1')" class="color-btn w-8 h-8 rounded-full bg-[#6366f1] border-2 border-transparent hover:scale-110 transition-transform" data-color="#6366f1"></button>
+                    </div>
+                    <input type="hidden" id="goal-color" value="#2b8cee">
+                </div>
+            </div>
+            
+            <div class="flex gap-3 mt-6">
+                <button type="submit" class="flex-1 bg-primary hover:bg-primary/90 text-white px-6 py-3 rounded-xl font-medium transition-all">
+                    <span data-translate="goals.save">Save Goal</span>
+                </button>
+                <button type="button" onclick="closeGoalModal()" class="flex-1 bg-slate-100 dark:bg-[#111a22] hover:bg-slate-200 dark:hover:bg-[#1a2632] text-text-main dark:text-white px-6 py-3 rounded-xl font-medium transition-all">
+                    <span data-translate="common.cancel">Cancel</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Contribute Modal -->
+<div id="contribute-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4" onclick="if (event.target === this) closeContributeModal()">
+    <div class="bg-white dark:bg-card-dark rounded-2xl max-w-md w-full border border-border-light dark:border-[#233648] shadow-2xl">
+        <div class="p-6 border-b border-border-light dark:border-[#233648]">
+            <h3 id="contribute-modal-title" class="text-xl font-bold text-text-main dark:text-white" data-translate="goals.addMoney">Add Money</h3>
+            <p id="contribute-goal-name" class="text-sm text-text-muted dark:text-[#92adc9] mt-1"></p>
+        </div>
+        
+        <form id="contribute-form" class="p-6">
+            <input type="hidden" id="contribute-goal-id">
+            
+            <div class="space-y-4">
+                <!-- Quick Add Buttons -->
+                <div>
+                    <label class="block text-sm font-medium text-text-main dark:text-white mb-2" data-translate="goals.quickAdd">Quick Add</label>
+                    <div class="flex flex-wrap gap-2">
+                        <button type="button" onclick="setContributeAmount(10)" class="px-4 py-2 bg-slate-100 dark:bg-[#233648] text-text-main dark:text-white rounded-lg text-sm font-medium hover:bg-slate-200 dark:hover:bg-[#2d4559] transition-colors">+$10</button>
+                        <button type="button" onclick="setContributeAmount(25)" class="px-4 py-2 bg-slate-100 dark:bg-[#233648] text-text-main dark:text-white rounded-lg text-sm font-medium hover:bg-slate-200 dark:hover:bg-[#2d4559] transition-colors">+$25</button>
+                        <button type="button" onclick="setContributeAmount(50)" class="px-4 py-2 bg-slate-100 dark:bg-[#233648] text-text-main dark:text-white rounded-lg text-sm font-medium hover:bg-slate-200 dark:hover:bg-[#2d4559] transition-colors">+$50</button>
+                        <button type="button" onclick="setContributeAmount(100)" class="px-4 py-2 bg-slate-100 dark:bg-[#233648] text-text-main dark:text-white rounded-lg text-sm font-medium hover:bg-slate-200 dark:hover:bg-[#2d4559] transition-colors">+$100</button>
+                    </div>
+                </div>
+                
+                <!-- Amount Input -->
+                <div>
+                    <label for="contribute-amount" class="block text-sm font-medium text-text-main dark:text-white mb-2" data-translate="form.amount">Amount</label>
+                    <input type="number" id="contribute-amount" step="0.01" min="0.01" required 
+                           placeholder="Enter amount"
+                           class="w-full bg-slate-50 dark:bg-background-dark border border-border-light dark:border-[#233648] rounded-lg px-4 py-3 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary text-xl font-bold">
+                </div>
+                
+                <!-- Note -->
+                <div>
+                    <label for="contribute-note" class="block text-sm font-medium text-text-main dark:text-white mb-2" data-translate="goals.note">Note (optional)</label>
+                    <input type="text" id="contribute-note" 
+                           placeholder="e.g., Birthday money"
+                           data-translate-placeholder="goals.notePlaceholder"
+                           class="w-full bg-slate-50 dark:bg-background-dark border border-border-light dark:border-[#233648] rounded-lg px-4 py-3 text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary">
+                </div>
+            </div>
+            
+            <div class="flex gap-3 mt-6">
+                <button type="submit" class="flex-1 bg-emerald-600 hover:bg-emerald-700 text-white px-6 py-3 rounded-xl font-medium transition-all">
+                    <span data-translate="goals.addMoney">Add Money</span>
+                </button>
+                <button type="button" onclick="closeContributeModal()" class="flex-1 bg-slate-100 dark:bg-[#111a22] hover:bg-slate-200 dark:hover:bg-[#1a2632] text-text-main dark:text-white px-6 py-3 rounded-xl font-medium transition-all">
+                    <span data-translate="common.cancel">Cancel</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Milestone Celebration Modal -->
+<div id="milestone-modal" class="hidden fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-card-dark rounded-2xl max-w-sm w-full border border-border-light dark:border-[#233648] shadow-2xl text-center p-8">
+        <div class="relative mb-4">
+            <div class="absolute inset-0 flex items-center justify-center">
+                <div class="w-32 h-32 bg-yellow-400/20 rounded-full animate-ping"></div>
+            </div>
+            <span class="material-symbols-outlined text-7xl text-yellow-400 relative">emoji_events</span>
+        </div>
+        <h3 id="milestone-title" class="text-2xl font-bold text-text-main dark:text-white mb-2">🎉 Milestone Reached!</h3>
+        <p id="milestone-message" class="text-text-muted dark:text-[#92adc9] mb-6">You've reached 50% of your goal!</p>
+        <button onclick="closeMilestoneModal()" class="bg-primary hover:bg-primary/90 text-white px-8 py-3 rounded-xl font-medium transition-all">
+            <span data-translate="common.awesome">Awesome!</span>
+        </button>
+    </div>
+</div>
+
+<script src="{{ url_for('static', filename='js/goals.js') }}?v=1.0.0"></script>
+<script>
+// Mobile menu toggle
+document.addEventListener('DOMContentLoaded', () => {
+    const mobileMenuToggle = document.getElementById('mobile-menu-toggle');
+    const mobileMenu = document.getElementById('mobile-menu');
+    const mobileMenuClose = document.getElementById('mobile-menu-close');
+    
+    if (mobileMenuToggle && mobileMenu) {
+        mobileMenuToggle.addEventListener('click', () => {
+            mobileMenu.classList.remove('hidden');
+        });
+    }
+    
+    if (mobileMenuClose && mobileMenu) {
+        mobileMenuClose.addEventListener('click', () => {
+            mobileMenu.classList.add('hidden');
+        });
+    }
+    
+    // Close mobile menu when clicking outside
+    if (mobileMenu) {
+        mobileMenu.addEventListener('click', (e) => {
+            if (e.target === mobileMenu) {
+                mobileMenu.classList.add('hidden');
+            }
+        });
+    }
+});
+</script>
+{% endblock %}

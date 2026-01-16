@@ -1,6 +1,6 @@
 from flask import Blueprint, render_template, redirect, url_for, flash, request, session, send_file, make_response
 from flask_login import login_user, logout_user, login_required, current_user
-from app import db, bcrypt
+from app import db, bcrypt, limiter
 from app.models import User
 import pyotp
 import qrcode
@@ -48,11 +48,15 @@ def verify_backup_code(user, code):
     return False
 
 @bp.route('/login', methods=['GET', 'POST'])
+@limiter.limit("5 per minute", methods=["POST"])  # Rate limit login attempts
+@limiter.limit("20 per hour", methods=["POST"])   # Additional hourly limit
 def login():
     if current_user.is_authenticated:
         return redirect(url_for('main.dashboard'))
     
     if request.method == 'POST':
+        from app.utils import log_security_event
+        
         data = request.get_json() if request.is_json else request.form
         username = data.get('username')
         password = data.get('password')
@@ -61,6 +65,16 @@ def login():
         
         # Accept both username and email
         user = User.query.filter((User.username == username) | (User.email == username)).first()
+        
+        # Check if account is locked
+        if user and user.is_locked():
+            remaining = user.get_lockout_remaining_minutes()
+            error_msg = f'Account locked due to too many failed attempts. Try again in {remaining} minutes.'
+            log_security_event('LOGIN_BLOCKED', user.id, f'Account locked - {remaining} mins remaining', False, request)
+            if request.is_json:
+                return {'success': False, 'message': error_msg, 'locked': True, 'remaining_minutes': remaining}, 429
+            flash(error_msg, 'error')
+            return render_template('auth/login.html')
         
         if user and bcrypt.check_password_hash(user.password_hash, password):
             # Check 2FA if enabled
@@ -80,19 +94,124 @@ def login():
                     is_valid = verify_backup_code(user, two_factor_code)
                 
                 if not is_valid:
+                    log_security_event('2FA_FAILED', user.id, 'Invalid 2FA code', False, request)
                     if request.is_json:
                         return {'success': False, 'message': 'Invalid 2FA code'}, 401
                     flash('Invalid 2FA code', 'error')
                     return render_template('auth/login.html')
+                
+                log_security_event('2FA_USED', user.id, 'Successful 2FA verification', True, request)
+            
+            # Successful login - reset failed attempts
+            user.reset_failed_attempts()
+            
+            # Security: Regenerate session to prevent session fixation attacks
+            # Preserve CSRF token during session regeneration
+            csrf_token = session.get('csrf_token')
+            session.clear()
+            if csrf_token:
+                session['csrf_token'] = csrf_token
             
             login_user(user, remember=remember)
             session.permanent = remember
             
+            # Generate unique session token for tracking
+            session_token = secrets.token_hex(32)
+            session['session_token'] = session_token
+            
+            # Initialize session activity tracking
+            from datetime import datetime
+            session['last_activity'] = datetime.utcnow().isoformat()
+            session['login_time'] = datetime.utcnow().isoformat()
+            
+            # Create session record in database
+            from app.models import UserSession
+            try:
+                user_session = UserSession.create_session(user.id, request, session_token)
+                session['session_id'] = user_session.id
+            except Exception as e:
+                print(f"Failed to create session record: {e}")
+            
+            # Get IP for logging and notification
+            ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
+            if ip_address and ',' in ip_address:
+                ip_address = ip_address.split(',')[0].strip()
+            
+            log_security_event('LOGIN_SUCCESS', user.id, f'Login via {"remember me" if remember else "session"}', True, request)
+            
+            # Create login notification if security notifications enabled
+            if getattr(user, 'security_notifications', True):
+                from app.models import UserNotification
+                user_agent = request.headers.get('User-Agent', 'Unknown device')[:100]
+                UserNotification.create(
+                    user_id=user.id,
+                    notification_type='security',
+                    title='New Login Detected',
+                    message=f'New login from IP: {ip_address}. Device: {user_agent}'
+                )
+            
+            # Check if admin without 2FA - redirect to setup
+            redirect_url = url_for('main.dashboard')
+            if user.is_admin and not user.two_factor_enabled:
+                # Admin must set up 2FA
+                session['2fa_setup_required'] = True
+                redirect_url = url_for('auth.setup_2fa')
+                if getattr(user, 'security_notifications', True):
+                    from app.models import UserNotification
+                    UserNotification.create(
+                        user_id=user.id,
+                        notification_type='warning',
+                        title='2FA Required for Admin Accounts',
+                        message='As an admin, you are required to enable Two-Factor Authentication for security purposes.'
+                    )
+            
             if request.is_json:
-                return {'success': True, 'redirect': url_for('main.dashboard')}
+                return {'success': True, 'redirect': redirect_url, 'requires_2fa_setup': user.is_admin and not user.two_factor_enabled}
             
             next_page = request.args.get('next')
-            return redirect(next_page if next_page else url_for('main.dashboard'))
+            return redirect(next_page if next_page else redirect_url)
+        
+        # Failed login - record attempt if user exists
+        if user:
+            user.record_failed_login()
+            log_security_event('LOGIN_FAILED', user.id, f'Failed attempt #{user.failed_login_attempts}', False, request)
+            
+            # Notify user of failed attempt if they have security notifications on
+            if getattr(user, 'security_notifications', True) and user.failed_login_attempts >= 3:
+                ip_address = request.headers.get('X-Forwarded-For', request.remote_addr)
+                if ip_address and ',' in ip_address:
+                    ip_address = ip_address.split(',')[0].strip()
+                from app.models import UserNotification
+                UserNotification.create(
+                    user_id=user.id,
+                    notification_type='warning',
+                    title='Failed Login Attempts Detected',
+                    message=f'{user.failed_login_attempts} failed login attempts from IP: {ip_address}. If this wasn\'t you, consider changing your password.'
+                )
+            
+            # Check if account just got locked
+            if user.is_locked():
+                remaining = user.get_lockout_remaining_minutes()
+                log_security_event('ACCOUNT_LOCKED', user.id, f'Locked for {remaining} minutes after {user.MAX_FAILED_ATTEMPTS} failed attempts', False, request)
+                
+                # Notify user of account lockout
+                if getattr(user, 'security_notifications', True):
+                    from app.models import UserNotification
+                    UserNotification.create(
+                        user_id=user.id,
+                        notification_type='security',
+                        title='Account Locked',
+                        message=f'Your account has been locked for {remaining} minutes due to {user.MAX_FAILED_ATTEMPTS} failed login attempts.'
+                    )
+                
+                error_msg = f'Too many failed attempts. Account locked for {remaining} minutes.'
+                if request.is_json:
+                    return {'success': False, 'message': error_msg, 'locked': True, 'remaining_minutes': remaining}, 429
+                flash(error_msg, 'error')
+                return render_template('auth/login.html')
+        else:
+            # Log failed attempt for non-existent user (don't reveal user doesn't exist)
+            log_security_event('LOGIN_FAILED', None, f'Attempt for unknown user: {username}', False, request)
         
         if request.is_json:
             return {'success': False, 'message': 'Invalid username or password'}, 401
@@ -103,6 +222,7 @@ def login():
 
 
 @bp.route('/register', methods=['GET', 'POST'])
+@limiter.limit("3 per hour", methods=["POST"])  # Prevent mass account creation
 def register():
     if current_user.is_authenticated:
         return redirect(url_for('main.dashboard'))
@@ -114,6 +234,15 @@ def register():
         password = data.get('password')
         language = data.get('language', 'en')
         currency = data.get('currency', 'USD')
+        
+        # Validate password strength
+        from app.utils import validate_password
+        is_valid, error_msg = validate_password(password)
+        if not is_valid:
+            if request.is_json:
+                return {'success': False, 'message': error_msg}, 400
+            flash(error_msg, 'error')
+            return render_template('auth/register.html')
         
         # Check if user exists
         if User.query.filter_by(email=email).first():
@@ -149,7 +278,23 @@ def register():
         from app.utils import create_default_categories
         create_default_categories(user.id)
         
+        # Log registration
+        from app.utils import log_security_event
+        log_security_event('REGISTER', user.id, f'New user registered (admin={is_first_user})', True, request)
+        
+        # Security: Regenerate session to prevent session fixation
+        csrf_token = session.get('csrf_token')
+        session.clear()
+        if csrf_token:
+            session['csrf_token'] = csrf_token
+        
         login_user(user)
+        
+        # Initialize session tracking
+        session['last_activity'] = datetime.utcnow().isoformat()
+        session['login_time'] = datetime.utcnow().isoformat()
+        
+        log_security_event('LOGIN_SUCCESS', user.id, 'Auto-login after registration', True, request)
         
         if request.is_json:
             return {'success': True, 'redirect': url_for('main.dashboard')}
@@ -163,7 +308,27 @@ def register():
 @bp.route('/logout')
 @login_required
 def logout():
+    from app.utils import log_security_event
+    from app.models import UserSession
+    
+    user_id = current_user.id
+    session_token = session.get('session_token')
+    
+    # Mark session as revoked in database
+    if session_token:
+        try:
+            user_session = UserSession.query.filter_by(session_token=session_token).first()
+            if user_session:
+                user_session.revoke()
+        except Exception as e:
+            print(f"Failed to revoke session: {e}")
+    
+    log_security_event('LOGOUT', user_id, 'User logged out', True, request)
     logout_user()
+    
+    # Security: Completely clear session on logout to prevent session reuse
+    session.clear()
+    
     return redirect(url_for('auth.login'))
 
 
@@ -188,6 +353,20 @@ def setup_2fa():
             current_user.two_factor_enabled = True
             current_user.backup_codes = json.dumps(backup_codes_hashed)
             db.session.commit()
+            
+            # Log 2FA enabled
+            from app.utils import log_security_event
+            log_security_event('2FA_ENABLED', current_user.id, '2FA enabled with backup codes generated', True, request)
+            
+            # Security: Regenerate session after 2FA setup (security level increased)
+            csrf_token = session.get('csrf_token')
+            session.clear()
+            if csrf_token:
+                session['csrf_token'] = csrf_token
+            
+            # Re-establish session tracking
+            session['last_activity'] = datetime.utcnow().isoformat()
+            session['login_time'] = datetime.utcnow().isoformat()
             
             # Store plain backup codes in session for display
             session['backup_codes'] = backup_codes_plain
@@ -349,9 +528,13 @@ def download_backup_codes_pdf():
 @bp.route('/disable-2fa', methods=['POST'])
 @login_required
 def disable_2fa():
+    from app.utils import log_security_event
+    
     current_user.two_factor_enabled = False
     current_user.backup_codes = None
     db.session.commit()
+    
+    log_security_event('2FA_DISABLED', current_user.id, '2FA has been disabled', True, request)
     
     if request.is_json:
         return {'success': True, 'message': '2FA disabled'}

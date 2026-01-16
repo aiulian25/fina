@@ -248,13 +248,71 @@ function getValidIcon(iconName) {
     return 'category';
 }
 
+// Store selected year globally
+let selectedChartYear = new Date().getFullYear();
+
+// Load available years for charts
+async function loadAvailableYears() {
+    try {
+        const data = await apiCall('/api/available-years');
+        const selector = document.getElementById('chart-year-selector');
+        if (!selector) return;
+        
+        // Store current year
+        const currentYear = data.current_year || new Date().getFullYear();
+        
+        // Populate dropdown
+        selector.innerHTML = data.years.map(year => 
+            `<option value="${year}" ${year === currentYear ? 'selected' : ''}>${year}</option>`
+        ).join('');
+        
+        // Set initial year
+        selectedChartYear = currentYear;
+        
+        // Add change listener
+        selector.addEventListener('change', (e) => {
+            selectedChartYear = parseInt(e.target.value);
+            loadChartsForYear(selectedChartYear);
+        });
+    } catch (error) {
+        console.error('Failed to load available years:', error);
+    }
+}
+
+// Load chart data for a specific year
+async function loadChartsForYear(year) {
+    try {
+        const stats = await apiCall(`/api/dashboard-stats?year=${year}`);
+        
+        const categoryBreakdown = stats.category_breakdown || [];
+        const monthlyData = stats.monthly_data || [];
+        
+        // Update pie chart year label
+        const pieYearLabel = document.getElementById('pie-year-label');
+        if (pieYearLabel) {
+            const yearText = window.getTranslation ? window.getTranslation('dashboard.totalFor', 'Total for') : 'Total for';
+            pieYearLabel.textContent = `${yearText} ${year}`;
+        }
+        
+        // Reload charts with new data
+        loadCategoryChart(categoryBreakdown);
+        loadMonthlyChart(monthlyData);
+        
+    } catch (error) {
+        console.error('Failed to load chart data:', error);
+    }
+}
+
 // Load dashboard data
 async function loadDashboardData() {
     try {
-        const stats = await apiCall('/api/dashboard-stats');
+        // Load available years first
+        await loadAvailableYears();
+        
+        const stats = await apiCall(`/api/dashboard-stats?year=${selectedChartYear}`);
         
         // Store user currency globally for use across functions
-        window.userCurrency = stats.currency || 'GBP';
+        window.userCurrency = stats.currency || 'RON';
         
         // Ensure we have valid data with defaults
         const totalSpent = parseFloat(stats.total_spent || 0);
@@ -306,6 +364,13 @@ async function loadDashboardData() {
             ${Math.abs(percentChangeValue).toFixed(1)}%
         `;
         
+        // Update pie chart year label
+        const pieYearLabel = document.getElementById('pie-year-label');
+        if (pieYearLabel) {
+            const yearText = window.getTranslation ? window.getTranslation('dashboard.totalFor', 'Total for') : 'Total for';
+            pieYearLabel.textContent = `${yearText} ${selectedChartYear}`;
+        }
+        
         // Load charts with validated data
         loadCategoryChart(categoryBreakdown);
         loadMonthlyChart(monthlyData);
@@ -331,7 +396,7 @@ function loadCategoryChart(data) {
     
     if (!data || data.length === 0) {
         pieChart.style.background = 'conic-gradient(#233648 0% 100%)';
-        pieTotal.textContent = '0 lei';
+        pieTotal.textContent = formatCurrency(0);
         pieLegend.innerHTML = '<p class="col-span-2 text-center text-text-muted dark:text-[#92adc9] text-sm">' + 
             (window.getTranslation ? window.getTranslation('dashboard.noData', 'No data available') : 'No data available') + '</p>';
         return;
@@ -436,7 +501,7 @@ function loadMonthlyChart(data) {
                     displayColors: true,
                     callbacks: {
                         label: function(context) {
-                            const userCurrency = window.userCurrency || 'GBP';
+                            const userCurrency = window.userCurrency || 'RON';
                             return context.dataset.label + ': ' + formatCurrency(context.parsed.y, userCurrency);
                         }
                     }

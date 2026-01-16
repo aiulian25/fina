@@ -54,16 +54,13 @@
         padding: 12px 20px;
         font-size: 14px;
         transition: all 0.3s ease;
-    }
-    
-    .light .login-input {
+        /* Light theme (default) */
         background: #f8fafc;
         border: 1px solid #e2e8f0;
         color: #0f172a;
     }
     
-    .dark .login-input,
-    :root:not(.light) .login-input {
+    .dark .login-input {
         background: #1e293b;
         border: 1px solid #334155;
         color: #ffffff;
@@ -72,23 +69,18 @@
     .login-input:focus {
         outline: none;
         border-color: #3b82f6;
-    }
-    
-    .light .login-input:focus {
         background: #ffffff;
     }
     
-    .dark .login-input:focus,
-    :root:not(.light) .login-input:focus {
+    .dark .login-input:focus {
         background: #1e293b;
     }
     
-    .light .login-input::placeholder {
+    .login-input::placeholder {
         color: #94a3b8;
     }
     
-    .dark .login-input::placeholder,
-    :root:not(.light) .login-input::placeholder {
+    .dark .login-input::placeholder {
         color: #64748b;
     }
     
@@ -96,21 +88,13 @@
     .login-input:-webkit-autofill:hover,
     .login-input:-webkit-autofill:focus {
         transition: background-color 5000s ease-in-out 0s;
-    }
-    
-    .light .login-input:-webkit-autofill,
-    .light .login-input:-webkit-autofill:hover,
-    .light .login-input:-webkit-autofill:focus {
         -webkit-text-fill-color: #0f172a;
         -webkit-box-shadow: 0 0 0px 1000px #f8fafc inset;
     }
     
     .dark .login-input:-webkit-autofill,
     .dark .login-input:-webkit-autofill:hover,
-    .dark .login-input:-webkit-autofill:focus,
-    :root:not(.light) .login-input:-webkit-autofill,
-    :root:not(.light) .login-input:-webkit-autofill:hover,
-    :root:not(.light) .login-input:-webkit-autofill:focus {
+    .dark .login-input:-webkit-autofill:focus {
         -webkit-text-fill-color: #ffffff;
         -webkit-box-shadow: 0 0 0px 1000px #1e293b inset;
     }
@@ -231,11 +215,15 @@ document.getElementById('login-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
     const data = Object.fromEntries(formData);
+    const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '';
     
     try {
         const response = await fetch('/auth/login', {
             method: 'POST',
-            headers: {'Content-Type': 'application/json'},
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': csrfToken
+            },
             body: JSON.stringify(data)
         });
         

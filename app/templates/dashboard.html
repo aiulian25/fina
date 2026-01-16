@@ -71,6 +71,30 @@
                         <span class="material-symbols-outlined text-[20px]">payments</span>
                         <span class="text-sm font-medium" data-translate="nav.income">Income</span>
                     </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.goals') }}">
+                        <span class="material-symbols-outlined text-[20px]">savings</span>
+                        <span class="text-sm font-medium" data-translate="nav.goals">Savings Goals</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.subscriptions') }}">
+                        <span class="material-symbols-outlined text-[20px]">subscriptions</span>
+                        <span class="text-sm font-medium" data-translate="nav.subscriptions">Subscriptions</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.analyzer') }}">
+                        <span class="material-symbols-outlined text-[20px]">psychology</span>
+                        <span class="text-sm font-medium" data-translate="nav.analyzer">Expense Analyzer</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.insights') }}">
+                        <span class="material-symbols-outlined text-[20px]">insights</span>
+                        <span class="text-sm font-medium" data-translate="nav.insights">Smart Insights</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.challenges') }}">
+                        <span class="material-symbols-outlined text-[20px]">emoji_events</span>
+                        <span class="text-sm font-medium" data-translate="nav.challenges">Challenges</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.forecast') }}">
+                        <span class="material-symbols-outlined text-[20px]">auto_graph</span>
+                        <span class="text-sm font-medium" data-translate="nav.forecast">Forecast</span>
+                    </a>
                     <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.recurring') }}">
                         <span class="material-symbols-outlined text-[20px]">repeat</span>
                         <span class="text-sm font-medium" data-translate="nav.recurring">Recurring</span>
@@ -154,7 +178,7 @@
                         </div>
                         <div>
                             <p class="text-text-muted dark:text-[#92adc9] text-sm font-medium" data-translate="dashboard.total_income">Total Income</p>
-                            <h3 id="total-income" class="text-green-600 dark:text-green-400 text-3xl font-bold mt-2 tracking-tight">$0.00</h3>
+                            <h3 id="total-income" class="text-green-600 dark:text-green-400 text-3xl font-bold mt-2 tracking-tight">0.00</h3>
                         </div>
                         <p class="text-text-muted dark:text-[#5f7a96] text-xs mt-4" data-translate="dashboard.this_month">this month</p>
                     </div>
@@ -166,7 +190,7 @@
                         </div>
                         <div>
                             <p class="text-text-muted dark:text-[#92adc9] text-sm font-medium" data-translate="dashboard.total_spent">Total Spent</p>
-                            <h3 id="total-spent" class="text-red-600 dark:text-red-400 text-3xl font-bold mt-2 tracking-tight">$0.00</h3>
+                            <h3 id="total-spent" class="text-red-600 dark:text-red-400 text-3xl font-bold mt-2 tracking-tight">0.00</h3>
                         </div>
                         <div class="flex items-center gap-2 mt-4">
                             <span id="percent-change" class="bg-green-500/10 text-green-600 dark:text-green-400 text-xs font-semibold px-2 py-1 rounded-full flex items-center gap-1">
@@ -184,7 +208,7 @@
                         </div>
                         <div>
                             <p class="text-text-muted dark:text-[#92adc9] text-sm font-medium" data-translate="dashboard.profit_loss">Profit/Loss</p>
-                            <h3 id="profit-loss" class="text-text-main dark:text-white text-3xl font-bold mt-2 tracking-tight">$0.00</h3>
+                            <h3 id="profit-loss" class="text-text-main dark:text-white text-3xl font-bold mt-2 tracking-tight">0.00</h3>
                         </div>
                         <p class="text-text-muted dark:text-[#5f7a96] text-xs mt-4" data-translate="dashboard.this_month">this month</p>
                     </div>
@@ -203,7 +227,9 @@
                 <div class="grid grid-cols-1 lg:grid-cols-3 gap-4 lg:gap-6">
                     <!-- Spending by Category - Smaller, Compact -->
                     <div class="p-5 rounded-xl bg-white dark:bg-card-dark border border-border-light dark:border-[#233648] shadow-sm dark:shadow-none flex flex-col">
-                        <h3 class="text-text-main dark:text-white text-base font-bold mb-1" data-translate="dashboard.spending_by_category">Spending by Category</h3>
+                        <div class="flex items-center justify-between mb-1">
+                            <h3 class="text-text-main dark:text-white text-base font-bold" data-translate="dashboard.spending_by_category">Spending by Category</h3>
+                        </div>
                         <p class="text-text-muted dark:text-[#92adc9] text-xs mb-4" data-translate="dashboard.categoryBreakdownDesc">Breakdown by category</p>
                         <div class="flex items-center justify-center relative mb-4">
                             <!-- CSS Conic Gradient Pie Chart - Smaller Size -->
@@ -211,8 +237,8 @@
                                 <div id="pie-chart" class="size-40 rounded-full relative transition-all duration-500" style="background: conic-gradient(#233648 0% 100%);">
                                     <!-- Inner hole for donut effect -->
                                     <div class="absolute inset-3 bg-white dark:bg-card-dark rounded-full flex flex-col items-center justify-center z-10 border border-border-light dark:border-[#233648]">
-                                        <span class="text-text-muted dark:text-[#92adc9] text-[10px] font-medium" data-translate="dashboard.totalThisYear">Total This Year</span>
-                                        <span id="pie-total" class="text-text-main dark:text-white text-base font-bold">0 lei</span>
+                                        <span id="pie-year-label" class="text-text-muted dark:text-[#92adc9] text-[10px] font-medium" data-translate="dashboard.totalThisYear">Total This Year</span>
+                                        <span id="pie-total" class="text-text-main dark:text-white text-base font-bold">0.00</span>
                                     </div>
                                 </div>
                             </div>
@@ -224,9 +250,20 @@
                     </div>
                     
                     <!-- Monthly Trend - Larger Space for 12 Months -->
-                    <div class="lg:col-span-2 p-6 rounded-xl bg-white dark:bg-card-dark border border-border-light dark:border-[#233648] shadow-sm dark:shadow-none">
-                        <h3 class="text-text-main dark:text-white text-lg font-bold mb-4" data-translate="dashboard.monthly_trend">Monthly Trend</h3>
-                        <canvas id="monthly-chart" class="w-full" style="max-height: 320px;"></canvas>
+                    <div class="lg:col-span-2 p-6 rounded-xl bg-white dark:bg-card-dark border border-border-light dark:border-[#233648] shadow-sm dark:shadow-none flex flex-col">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                            <h3 class="text-text-main dark:text-white text-lg font-bold" data-translate="dashboard.monthly_trend">Monthly Trend</h3>
+                            <!-- Year Selector -->
+                            <div class="flex items-center gap-2">
+                                <label class="text-text-muted dark:text-[#92adc9] text-xs font-medium" data-translate="dashboard.year">Year:</label>
+                                <select id="chart-year-selector" class="px-3 py-1.5 text-sm bg-background-light dark:bg-background-dark border border-border-light dark:border-[#233648] rounded-lg text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 cursor-pointer min-w-[100px]">
+                                    <!-- Options populated by JS -->
+                                </select>
+                            </div>
+                        </div>
+                        <div class="flex-1 min-h-0">
+                            <canvas id="monthly-chart" class="w-full" style="max-height: 320px;"></canvas>
+                        </div>
                     </div>
                 </div>
                 

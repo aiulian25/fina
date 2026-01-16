@@ -4,9 +4,16 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FINA - Personal Finance Manager</title>
+    <meta name="description" content="FINA - Your smart personal finance manager. Track expenses, manage budgets, scan receipts with OCR, and achieve your financial goals.">
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <style>
+        * { font-family: 'Inter', sans-serif; }
+        html, body { 
+            overflow-x: hidden; 
+            max-width: 100vw;
+        }
         .material-icons {
             font-family: 'Material Icons';
             font-weight: normal;
@@ -14,108 +21,876 @@
             font-size: 24px;
             display: inline-block;
         }
+        
+        /* Animations */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        @keyframes fadeInRight {
+            from { opacity: 0; transform: translateX(30px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-20px); }
+        }
+        
+        @keyframes pulse-glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.3); }
+            50% { box-shadow: 0 0 40px rgba(59, 130, 246, 0.6); }
+        }
+        
+        @keyframes gradient-shift {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .animate-fade-in-up { animation: fadeInUp 0.8s ease-out forwards; }
+        .animate-fade-in-right { animation: fadeInRight 0.8s ease-out forwards; }
+        .animate-float { animation: float 6s ease-in-out infinite; }
+        .animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+        .animate-gradient {
+            background: linear-gradient(-45deg, #3b82f6, #8b5cf6, #06b6d4, #3b82f6);
+            background-size: 400% 400%;
+            animation: gradient-shift 8s ease infinite;
+        }
+        
+        .delay-100 { animation-delay: 0.1s; }
+        .delay-200 { animation-delay: 0.2s; }
+        .delay-300 { animation-delay: 0.3s; }
+        .delay-400 { animation-delay: 0.4s; }
+        .opacity-0 { opacity: 0; }
+        
+        .feature-card { transition: all 0.3s ease; }
+        .feature-card:hover { transform: translateY(-8px); box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3); }
+        .feature-card:hover .feature-icon { transform: scale(1.1); }
+        .feature-icon { transition: transform 0.3s ease; }
+        
+        .stat-number {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .glass {
+            background: rgba(30, 41, 59, 0.5);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .gradient-text {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6, #06b6d4);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .hero-decoration {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(80px);
+            opacity: 0.3;
+        }
+        
+        .lang-dropdown { position: relative; }
+        .lang-dropdown-content {
+            display: none;
+            position: absolute;
+            right: 0;
+            top: calc(100% + 4px);
+            min-width: 140px;
+            z-index: 50;
+        }
+        .lang-dropdown-content.show { display: block; }
+        
+        .reveal {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease;
+        }
+        .reveal.active { opacity: 1; transform: translateY(0); }
     </style>
     <script>
-        tailwind.config = {
-            darkMode: 'class'
-        }
+        tailwind.config = { darkMode: 'class' }
     </script>
 </head>
-<body class="bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 min-h-screen text-white">
+<body class="bg-slate-900 min-h-screen text-white overflow-x-hidden">
+    <script>
+        const landingTranslations = {
+            en: {
+                'nav.features': 'Features',
+                'nav.howItWorks': 'How it Works',
+                'nav.security': 'Security',
+                'nav.login': 'Login',
+                'nav.getStarted': 'Get Started Free',
+                'hero.title1': 'Take Control of Your',
+                'hero.title2': 'Financial Future',
+                'hero.subtitle': 'FINA is your intelligent personal finance companion. Track expenses effortlessly, set smart budgets, scan receipts with AI-powered OCR, and gain deep insights into your spending habits.',
+                'hero.cta1': 'Start Free Today',
+                'hero.cta2': 'Learn More',
+                'hero.trusted': 'Trusted by smart savers worldwide',
+                'stats.expenses': 'Expenses Tracked',
+                'stats.users': 'Happy Users',
+                'stats.saved': 'Money Saved',
+                'stats.uptime': 'Uptime',
+                'features.title': 'Everything You Need to',
+                'features.titleHighlight': 'Master Your Money',
+                'features.subtitle': 'Powerful features designed to simplify your financial life and help you achieve your goals faster.',
+                'features.expense.title': 'Smart Expense Tracking',
+                'features.expense.desc': 'Automatically categorize and track every expense. Get real-time notifications when approaching budget limits.',
+                'features.ocr.title': 'AI Receipt Scanner',
+                'features.ocr.desc': 'Simply snap a photo of your receipt. Our OCR technology extracts amount, date, and merchant automatically.',
+                'features.budget.title': 'Intelligent Budgets',
+                'features.budget.desc': 'Set monthly or category-specific budgets. Receive smart alerts before overspending.',
+                'features.reports.title': 'Visual Analytics',
+                'features.reports.desc': 'Beautiful charts and reports show exactly where your money goes. Compare months and track trends.',
+                'features.recurring.title': 'Recurring Management',
+                'features.recurring.desc': 'Never forget a bill again. Track recurring expenses and income with automatic reminders.',
+                'features.documents.title': 'Document Vault',
+                'features.documents.desc': 'Securely store receipts, invoices, and financial documents. Search and access anytime.',
+                'features.tags.title': 'Smart Tags',
+                'features.tags.desc': 'AI-powered auto-tagging learns your patterns. Organize expenses your way with custom tags.',
+                'features.multi.title': 'Multi-Currency',
+                'features.multi.desc': 'Track expenses in any currency. Perfect for travelers and international transactions.',
+                'how.title': 'Get Started in',
+                'how.titleHighlight': '3 Simple Steps',
+                'how.step1.title': 'Create Your Account',
+                'how.step1.desc': 'Sign up in seconds. No credit card required. Choose your preferred language and currency.',
+                'how.step2.title': 'Add Your Expenses',
+                'how.step2.desc': 'Log expenses manually or scan receipts. Import from CSV. Set up recurring transactions.',
+                'how.step3.title': 'Gain Insights',
+                'how.step3.desc': 'Watch your financial picture come together. Get actionable insights and reach your goals.',
+                'security.title': 'Your Security is Our',
+                'security.titleHighlight': 'Top Priority',
+                'security.subtitle': 'Bank-level security measures protect your financial data.',
+                'security.encryption': 'End-to-End Encryption',
+                'security.encryptionDesc': 'All data is encrypted in transit and at rest using industry-standard AES-256.',
+                'security.2fa': 'Two-Factor Authentication',
+                'security.2faDesc': 'Add an extra layer of security with TOTP-based 2FA using your favorite authenticator app.',
+                'security.privacy': 'Privacy First',
+                'security.privacyDesc': 'We never sell your data. Your financial information stays private and secure.',
+                'security.backup': 'Automatic Backups',
+                'security.backupDesc': 'Your data is automatically backed up. Never lose your financial history.',
+                'cta.title': 'Ready to Transform Your',
+                'cta.titleHighlight': 'Financial Life?',
+                'cta.subtitle': 'Join thousands of users who have taken control of their finances with FINA.',
+                'cta.button': 'Create Free Account',
+                'cta.note': 'No credit card required • Free forever • Cancel anytime',
+                'footer.tagline': 'Your intelligent personal finance companion.',
+                'footer.product': 'Product',
+                'footer.features': 'Features',
+                'footer.security': 'Security',
+                'footer.pricing': 'Pricing',
+                'footer.support': 'Support',
+                'footer.help': 'Help Center',
+                'footer.contact': 'Contact Us',
+                'footer.faq': 'FAQ',
+                'footer.legal': 'Legal',
+                'footer.privacy': 'Privacy Policy',
+                'footer.terms': 'Terms of Service',
+                'footer.rights': 'All rights reserved.',
+                'footer.madeWith': 'Made with',
+                'footer.forYou': 'for smart savers'
+            },
+            ro: {
+                'nav.features': 'Funcții',
+                'nav.howItWorks': 'Cum Funcționează',
+                'nav.security': 'Securitate',
+                'nav.login': 'Conectare',
+                'nav.getStarted': 'Începe Gratuit',
+                'hero.title1': 'Preia Controlul',
+                'hero.title2': 'Viitorului Tău Financiar',
+                'hero.subtitle': 'FINA este partenerul tău inteligent pentru finanțe personale. Urmărește cheltuielile fără efort, stabilește bugete inteligente, scanează chitanțe cu OCR și obține perspective profunde asupra obiceiurilor tale de cheltuieli.',
+                'hero.cta1': 'Începe Gratuit Azi',
+                'hero.cta2': 'Află Mai Multe',
+                'hero.trusted': 'Folosit de economi inteligenți din întreaga lume',
+                'stats.expenses': 'Cheltuieli Urmărite',
+                'stats.users': 'Utilizatori Mulțumiți',
+                'stats.saved': 'Bani Economisiți',
+                'stats.uptime': 'Disponibilitate',
+                'features.title': 'Tot ce ai nevoie pentru a',
+                'features.titleHighlight': 'Stăpâni Banii Tăi',
+                'features.subtitle': 'Funcții puternice create să simplifice viața ta financiară și să te ajute să îți atingi obiectivele mai rapid.',
+                'features.expense.title': 'Urmărire Inteligentă',
+                'features.expense.desc': 'Categorizează și urmărește automat fiecare cheltuială. Primește notificări în timp real când te apropii de limite.',
+                'features.ocr.title': 'Scanner AI pentru Chitanțe',
+                'features.ocr.desc': 'Fotografiază chitanța. Tehnologia OCR extrage automat suma, data și comerciantul.',
+                'features.budget.title': 'Bugete Inteligente',
+                'features.budget.desc': 'Stabilește bugete lunare sau pe categorii. Primește alerte înainte să cheltuiești prea mult.',
+                'features.reports.title': 'Analiză Vizuală',
+                'features.reports.desc': 'Grafice și rapoarte frumoase arată exact unde se duc banii tăi. Compară lunile și urmărește tendințele.',
+                'features.recurring.title': 'Gestiune Recurente',
+                'features.recurring.desc': 'Nu mai uita niciodată o factură. Urmărește cheltuielile și veniturile recurente cu memento-uri automate.',
+                'features.documents.title': 'Seif pentru Documente',
+                'features.documents.desc': 'Stochează în siguranță chitanțe, facturi și documente financiare. Caută și accesează oricând.',
+                'features.tags.title': 'Etichete Inteligente',
+                'features.tags.desc': 'Auto-etichetarea AI învață tiparele tale. Organizează cheltuielile după preferințe cu etichete personalizate.',
+                'features.multi.title': 'Multi-Valută',
+                'features.multi.desc': 'Urmărește cheltuielile în orice monedă. Perfect pentru călători și tranzacții internaționale.',
+                'how.title': 'Începe în',
+                'how.titleHighlight': '3 Pași Simpli',
+                'how.step1.title': 'Creează-ți Contul',
+                'how.step1.desc': 'Înregistrare în câteva secunde. Nu e nevoie de card. Alege limba și moneda preferată.',
+                'how.step2.title': 'Adaugă Cheltuielile',
+                'how.step2.desc': 'Înregistrează manual sau scanează chitanțe. Importă din CSV. Configurează tranzacții recurente.',
+                'how.step3.title': 'Obține Perspective',
+                'how.step3.desc': 'Privește cum se conturează tabloul financiar. Obține informații acționabile și atinge-ți obiectivele.',
+                'security.title': 'Securitatea Ta este',
+                'security.titleHighlight': 'Prioritatea Noastră',
+                'security.subtitle': 'Măsuri de securitate la nivel bancar protejează datele tale financiare.',
+                'security.encryption': 'Criptare End-to-End',
+                'security.encryptionDesc': 'Toate datele sunt criptate în tranzit și în repaus folosind AES-256 standard industrial.',
+                'security.2fa': 'Autentificare în Doi Pași',
+                'security.2faDesc': 'Adaugă un nivel extra de securitate cu 2FA bazat pe TOTP folosind aplicația ta preferată.',
+                'security.privacy': 'Confidențialitate pe Primul Loc',
+                'security.privacyDesc': 'Nu vindem niciodată datele tale. Informațiile tale financiare rămân private și sigure.',
+                'security.backup': 'Backup Automat',
+                'security.backupDesc': 'Datele tale sunt salvate automat. Nu pierzi niciodată istoricul financiar.',
+                'cta.title': 'Gata să-ți Transformi',
+                'cta.titleHighlight': 'Viața Financiară?',
+                'cta.subtitle': 'Alătură-te miilor de utilizatori care au preluat controlul finanțelor cu FINA.',
+                'cta.button': 'Creează Cont Gratuit',
+                'cta.note': 'Nu e nevoie de card • Gratuit pentru totdeauna • Anulează oricând',
+                'footer.tagline': 'Partenerul tău inteligent pentru finanțe personale.',
+                'footer.product': 'Produs',
+                'footer.features': 'Funcții',
+                'footer.security': 'Securitate',
+                'footer.pricing': 'Prețuri',
+                'footer.support': 'Suport',
+                'footer.help': 'Centru de Ajutor',
+                'footer.contact': 'Contactează-ne',
+                'footer.faq': 'Întrebări Frecvente',
+                'footer.legal': 'Legal',
+                'footer.privacy': 'Politica de Confidențialitate',
+                'footer.terms': 'Termeni și Condiții',
+                'footer.rights': 'Toate drepturile rezervate.',
+                'footer.madeWith': 'Făcut cu',
+                'footer.forYou': 'pentru economi inteligenți'
+            }
+        };
+        
+        let currentLang = localStorage.getItem('language') || 'en';
+        
+        function t(key) {
+            return landingTranslations[currentLang]?.[key] || landingTranslations['en'][key] || key;
+        }
+        
+        function setLanguage(lang) {
+            currentLang = lang;
+            localStorage.setItem('language', lang);
+            updatePageLanguage();
+        }
+        
+        function updatePageLanguage() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                el.textContent = t(key);
+            });
+            document.documentElement.lang = currentLang;
+            const langBtn = document.getElementById('langBtn');
+            if (langBtn) {
+                langBtn.innerHTML = '<span class="material-icons text-sm mr-1">language</span> ' + currentLang.toUpperCase();
+            }
+        }
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            updatePageLanguage();
+            initScrollReveal();
+            initCounterAnimation();
+            initLanguageDropdown();
+            initMobileMenu();
+        });
+        
+        function initMobileMenu() {
+            const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+            const mobileMenu = document.getElementById('mobileMenu');
+            
+            if (mobileMenuBtn && mobileMenu) {
+                mobileMenuBtn.addEventListener('click', () => {
+                    mobileMenu.classList.toggle('hidden');
+                    const icon = mobileMenuBtn.querySelector('.material-icons');
+                    icon.textContent = mobileMenu.classList.contains('hidden') ? 'menu' : 'close';
+                });
+                
+                // Close menu when clicking a link
+                mobileMenu.querySelectorAll('a').forEach(link => {
+                    link.addEventListener('click', () => {
+                        mobileMenu.classList.add('hidden');
+                        mobileMenuBtn.querySelector('.material-icons').textContent = 'menu';
+                    });
+                });
+            }
+        }
+        
+        function initLanguageDropdown() {
+            const langBtn = document.getElementById('langBtn');
+            const langDropdown = document.getElementById('langDropdown');
+            
+            if (langBtn && langDropdown) {
+                langBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    langDropdown.classList.toggle('show');
+                });
+                
+                document.addEventListener('click', (e) => {
+                    if (!langDropdown.contains(e.target) && !langBtn.contains(e.target)) {
+                        langDropdown.classList.remove('show');
+                    }
+                });
+            }
+        }
+        
+        function selectLanguage(lang) {
+            setLanguage(lang);
+            document.getElementById('langDropdown').classList.remove('show');
+        }
+        
+        function initScrollReveal() {
+            const reveals = document.querySelectorAll('.reveal');
+            function checkReveal() {
+                reveals.forEach(el => {
+                    const windowHeight = window.innerHeight;
+                    const elementTop = el.getBoundingClientRect().top;
+                    if (elementTop < windowHeight - 150) {
+                        el.classList.add('active');
+                    }
+                });
+            }
+            window.addEventListener('scroll', checkReveal);
+            checkReveal();
+        }
+        
+        function initCounterAnimation() {
+            const counters = document.querySelectorAll('.counter');
+            counters.forEach(counter => {
+                const target = parseInt(counter.getAttribute('data-target'));
+                const suffix = counter.getAttribute('data-suffix') || '';
+                const duration = 2000;
+                const increment = target / (duration / 16);
+                let current = 0;
+                
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const updateCounter = () => {
+                                current += increment;
+                                if (current < target) {
+                                    counter.textContent = Math.ceil(current).toLocaleString() + suffix;
+                                    requestAnimationFrame(updateCounter);
+                                } else {
+                                    counter.textContent = target.toLocaleString() + suffix;
+                                }
+                            };
+                            updateCounter();
+                            observer.unobserve(counter);
+                        }
+                    });
+                }, { threshold: 0.5 });
+                observer.observe(counter);
+            });
+        }
+    </script>
+
     <!-- Navigation -->
-    <nav class="bg-slate-800/50 backdrop-blur-sm border-b border-slate-700/50">
+    <nav class="fixed top-0 left-0 right-0 z-50 glass">
         <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div class="flex justify-between h-16">
                 <div class="flex items-center">
-                    <span class="text-2xl font-bold text-blue-400">FINA</span>
+                    <a href="/" class="flex items-center space-x-2">
+                        <div class="w-10 h-10 rounded-xl animate-gradient flex items-center justify-center">
+                            <span class="text-white font-bold text-xl">F</span>
+                        </div>
+                        <span class="text-2xl font-bold text-white">FINA</span>
+                    </a>
                 </div>
-                <div class="flex items-center space-x-4">
-                    <a href="/auth/login" class="text-slate-300 hover:text-blue-400 transition">Login</a>
-                    <a href="/auth/register" class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition">Get Started</a>
+                
+                <!-- Desktop Navigation -->
+                <div class="hidden md:flex items-center space-x-8">
+                    <a href="#features" class="text-slate-300 hover:text-white transition" data-i18n="nav.features">Features</a>
+                    <a href="#how-it-works" class="text-slate-300 hover:text-white transition" data-i18n="nav.howItWorks">How it Works</a>
+                    <a href="#security" class="text-slate-300 hover:text-white transition" data-i18n="nav.security">Security</a>
+                </div>
+                
+                <div class="flex items-center gap-2">
+                    <!-- Language Dropdown - Desktop only -->
+                    <div class="lang-dropdown hidden md:block">
+                        <button id="langBtn" class="flex items-center text-slate-300 hover:text-white transition px-3 py-2 rounded-lg hover:bg-slate-700/50">
+                            <span class="material-icons text-sm mr-1">language</span> EN
+                        </button>
+                        <div id="langDropdown" class="lang-dropdown-content glass rounded-lg overflow-hidden shadow-xl">
+                            <button onclick="selectLanguage('en')" class="flex items-center w-full text-left px-4 py-3 text-slate-300 hover:bg-blue-600 hover:text-white transition">
+                                <span class="mr-2">🇬🇧</span> English
+                            </button>
+                            <button onclick="selectLanguage('ro')" class="flex items-center w-full text-left px-4 py-3 text-slate-300 hover:bg-blue-600 hover:text-white transition">
+                                <span class="mr-2">🇷🇴</span> Română
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Login Button - Always visible with icon -->
+                    <a href="/auth/login" class="flex items-center gap-1 text-slate-300 hover:text-white transition px-3 py-2 rounded-lg hover:bg-slate-700/50 border border-slate-600">
+                        <span class="material-icons text-lg">login</span>
+                        <span class="hidden sm:inline" data-i18n="nav.login">Login</span>
+                    </a>
+                    
+                    <!-- Get Started Button -->
+                    <a href="/auth/register" class="bg-blue-600 text-white px-3 sm:px-4 py-2 rounded-lg hover:bg-blue-700 transition font-medium text-sm sm:text-base whitespace-nowrap">
+                        <span class="sm:hidden">Sign Up</span>
+                        <span class="hidden sm:inline" data-i18n="nav.getStarted">Get Started Free</span>
+                    </a>
+                    
+                    <!-- Mobile Menu Button -->
+                    <button id="mobileMenuBtn" class="md:hidden p-2 text-slate-300 hover:text-white hover:bg-slate-700/50 rounded-lg transition border border-slate-600">
+                        <span class="material-icons">menu</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Mobile Menu -->
+        <div id="mobileMenu" class="hidden md:hidden glass border-t border-slate-700/50">
+            <div class="px-4 py-4 space-y-3">
+                <a href="#features" class="block text-slate-300 hover:text-white transition py-2 px-3 rounded-lg hover:bg-slate-700/50" data-i18n="nav.features">Features</a>
+                <a href="#how-it-works" class="block text-slate-300 hover:text-white transition py-2 px-3 rounded-lg hover:bg-slate-700/50" data-i18n="nav.howItWorks">How it Works</a>
+                <a href="#security" class="block text-slate-300 hover:text-white transition py-2 px-3 rounded-lg hover:bg-slate-700/50" data-i18n="nav.security">Security</a>
+                <div class="border-t border-slate-700/50 pt-3 mt-3">
+                    <div class="flex gap-2">
+                        <button onclick="selectLanguage('en')" class="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-slate-300 hover:bg-slate-700/50 transition">
+                            <span>🇬🇧</span> EN
+                        </button>
+                        <button onclick="selectLanguage('ro')" class="flex-1 flex items-center justify-center gap-2 py-2 px-3 rounded-lg text-slate-300 hover:bg-slate-700/50 transition">
+                            <span>🇷🇴</span> RO
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
     </nav>
 
     <!-- Hero Section -->
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div class="text-center">
-            <h1 class="text-5xl font-bold text-white mb-6">
-                Take Control of Your Finances
-            </h1>
-            <p class="text-xl text-slate-300 mb-8 max-w-2xl mx-auto">
-                FINA helps you track expenses, manage budgets, and achieve your financial goals with ease.
-            </p>
-            <div class="flex justify-center space-x-4">
-                <a href="/auth/register" class="bg-blue-600 text-white px-8 py-3 rounded-lg text-lg font-semibold hover:bg-blue-700 transition shadow-lg shadow-blue-500/50">
-                    Start Free
-                </a>
-                <a href="/auth/login" class="bg-slate-700 text-white px-8 py-3 rounded-lg text-lg font-semibold border-2 border-slate-600 hover:bg-slate-600 transition">
-                    Sign In
-                </a>
+    <section class="relative pt-32 pb-20 overflow-hidden">
+        <div class="hero-decoration w-96 h-96 bg-blue-500 -top-48 -left-48"></div>
+        <div class="hero-decoration w-96 h-96 bg-purple-500 top-1/2 -right-48"></div>
+        <div class="hero-decoration w-64 h-64 bg-cyan-500 bottom-0 left-1/3"></div>
+        
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative">
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <div class="text-center lg:text-left">
+                    <h1 class="text-4xl sm:text-5xl lg:text-6xl font-bold leading-tight opacity-0 animate-fade-in-up">
+                        <span class="text-white" data-i18n="hero.title1">Take Control of Your</span>
+                        <br>
+                        <span class="gradient-text" data-i18n="hero.title2">Financial Future</span>
+                    </h1>
+                    <p class="mt-6 text-lg sm:text-xl text-slate-300 max-w-xl mx-auto lg:mx-0 opacity-0 animate-fade-in-up delay-200" data-i18n="hero.subtitle">
+                        FINA is your intelligent personal finance companion. Track expenses effortlessly, set smart budgets, scan receipts with AI-powered OCR, and gain deep insights into your spending habits.
+                    </p>
+                    <div class="mt-8 flex flex-col sm:flex-row gap-4 justify-center lg:justify-start opacity-0 animate-fade-in-up delay-300">
+                        <a href="/auth/register" class="bg-blue-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-blue-700 transition shadow-lg shadow-blue-500/30 flex items-center justify-center group">
+                            <span data-i18n="hero.cta1">Start Free Today</span>
+                            <span class="material-icons ml-2 group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                        </a>
+                        <a href="#features" class="bg-slate-800/80 text-white px-8 py-4 rounded-xl text-lg font-semibold border border-slate-600 hover:bg-slate-700 transition flex items-center justify-center">
+                            <span class="material-icons mr-2">info</span>
+                            <span data-i18n="hero.cta2">Learn More</span>
+                        </a>
+                    </div>
+                    <p class="mt-6 text-slate-400 text-sm opacity-0 animate-fade-in-up delay-400" data-i18n="hero.trusted">
+                        Trusted by smart savers worldwide
+                    </p>
+                </div>
+                
+                <div class="relative opacity-0 animate-fade-in-right delay-300">
+                    <div class="animate-float">
+                        <div class="glass rounded-2xl p-6 shadow-2xl">
+                            <div class="flex items-center justify-between mb-4">
+                                <span class="text-slate-400 text-sm">Dashboard</span>
+                                <div class="flex space-x-2">
+                                    <div class="w-3 h-3 rounded-full bg-red-400"></div>
+                                    <div class="w-3 h-3 rounded-full bg-yellow-400"></div>
+                                    <div class="w-3 h-3 rounded-full bg-green-400"></div>
+                                </div>
+                            </div>
+                            
+                            <div class="grid grid-cols-3 gap-3 mb-4">
+                                <div class="bg-slate-800/80 rounded-xl p-3">
+                                    <span class="material-icons text-blue-400 text-2xl">account_balance_wallet</span>
+                                    <div class="text-white font-bold mt-1">£2,450</div>
+                                    <div class="text-slate-400 text-xs">This Month</div>
+                                </div>
+                                <div class="bg-slate-800/80 rounded-xl p-3">
+                                    <span class="material-icons text-green-400 text-2xl">trending_up</span>
+                                    <div class="text-white font-bold mt-1">+15%</div>
+                                    <div class="text-slate-400 text-xs">Savings</div>
+                                </div>
+                                <div class="bg-slate-800/80 rounded-xl p-3">
+                                    <span class="material-icons text-purple-400 text-2xl">category</span>
+                                    <div class="text-white font-bold mt-1">8</div>
+                                    <div class="text-slate-400 text-xs">Categories</div>
+                                </div>
+                            </div>
+                            
+                            <div class="bg-slate-800/80 rounded-xl p-4">
+                                <div class="flex items-center justify-between mb-3">
+                                    <span class="text-white font-medium">Spending Trend</span>
+                                    <span class="text-slate-400 text-sm">Jan 2026</span>
+                                </div>
+                                <div class="flex items-end space-x-2 h-24">
+                                    <div class="flex-1 bg-blue-500/30 rounded-t" style="height: 40%"></div>
+                                    <div class="flex-1 bg-blue-500/40 rounded-t" style="height: 60%"></div>
+                                    <div class="flex-1 bg-blue-500/50 rounded-t" style="height: 45%"></div>
+                                    <div class="flex-1 bg-blue-500/60 rounded-t" style="height: 80%"></div>
+                                    <div class="flex-1 bg-blue-500/70 rounded-t" style="height: 55%"></div>
+                                    <div class="flex-1 bg-blue-500/80 rounded-t" style="height: 90%"></div>
+                                    <div class="flex-1 bg-blue-600 rounded-t" style="height: 70%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="absolute -bottom-4 -left-4 glass rounded-xl p-3 animate-float" style="animation-delay: 1s">
+                        <div class="flex items-center space-x-2">
+                            <span class="material-icons text-green-400">check_circle</span>
+                            <span class="text-white text-sm font-medium">Receipt Scanned!</span>
+                        </div>
+                    </div>
+                    
+                    <div class="absolute -top-4 -right-4 glass rounded-xl p-3 animate-float" style="animation-delay: 2s">
+                        <div class="flex items-center space-x-2">
+                            <span class="material-icons text-yellow-400">notifications</span>
+                            <span class="text-white text-sm font-medium">Budget Alert</span>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
+    </section>
 
-        <!-- Features -->
-        <div class="grid md:grid-cols-3 gap-8 mt-20">
-            <div class="bg-slate-800/50 backdrop-blur-sm p-8 rounded-xl border border-slate-700/50 hover:border-blue-500/50 transition">
-                <span class="material-icons text-blue-400 text-5xl mb-4">account_balance_wallet</span>
-                <h3 class="text-2xl font-bold mb-3 text-white">Track Expenses</h3>
-                <p class="text-slate-300">Monitor your spending habits and categorize expenses effortlessly.</p>
-            </div>
-            <div class="bg-slate-800/50 backdrop-blur-sm p-8 rounded-xl border border-slate-700/50 hover:border-blue-500/50 transition">
-                <span class="material-icons text-blue-400 text-5xl mb-4">insights</span>
-                <h3 class="text-2xl font-bold mb-3 text-white">Visual Reports</h3>
-                <p class="text-slate-300">Get insights with beautiful charts and detailed financial reports.</p>
-            </div>
-            <div class="bg-slate-800/50 backdrop-blur-sm p-8 rounded-xl border border-slate-700/50 hover:border-blue-500/50 transition">
-                <span class="material-icons text-blue-400 text-5xl mb-4">description</span>
-                <h3 class="text-2xl font-bold mb-3 text-white">Document Management</h3>
-                <p class="text-slate-300">Store and organize receipts and financial documents securely.</p>
+    <!-- Stats Section -->
+    <section class="py-12 border-y border-slate-800">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-8">
+                <div class="text-center reveal">
+                    <div class="stat-number text-4xl font-bold counter" data-target="50000" data-suffix="+">0</div>
+                    <div class="text-slate-400 mt-1" data-i18n="stats.expenses">Expenses Tracked</div>
+                </div>
+                <div class="text-center reveal">
+                    <div class="stat-number text-4xl font-bold counter" data-target="1000" data-suffix="+">0</div>
+                    <div class="text-slate-400 mt-1" data-i18n="stats.users">Happy Users</div>
+                </div>
+                <div class="text-center reveal">
+                    <div class="stat-number text-4xl font-bold">€<span class="counter" data-target="250" data-suffix="K">0</span></div>
+                    <div class="text-slate-400 mt-1" data-i18n="stats.saved">Money Saved</div>
+                </div>
+                <div class="text-center reveal">
+                    <div class="stat-number text-4xl font-bold counter" data-target="99" data-suffix="%">0</div>
+                    <div class="text-slate-400 mt-1" data-i18n="stats.uptime">Uptime</div>
+                </div>
             </div>
         </div>
+    </section>
 
-        <!-- Additional Features -->
-        <div class="mt-16 bg-slate-800/50 backdrop-blur-sm rounded-xl border border-slate-700/50 p-8">
-            <h2 class="text-3xl font-bold text-center mb-8 text-white">Why Choose FINA?</h2>
-            <div class="grid md:grid-cols-2 gap-6">
-                <div class="flex items-start space-x-3">
-                    <span class="material-icons text-green-400">check_circle</span>
-                    <div>
-                        <h4 class="font-semibold text-white">Secure & Private</h4>
-                        <p class="text-slate-300">Your financial data is encrypted and protected with 2FA.</p>
+    <!-- Features Section -->
+    <section id="features" class="py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16 reveal">
+                <h2 class="text-3xl sm:text-4xl font-bold text-white">
+                    <span data-i18n="features.title">Everything You Need to</span>
+                    <span class="gradient-text" data-i18n="features.titleHighlight">Master Your Money</span>
+                </h2>
+                <p class="mt-4 text-lg text-slate-400 max-w-2xl mx-auto" data-i18n="features.subtitle">
+                    Powerful features designed to simplify your financial life and help you achieve your goals faster.
+                </p>
+            </div>
+            
+            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div class="feature-card glass p-6 rounded-2xl reveal">
+                    <div class="feature-icon w-14 h-14 rounded-xl bg-blue-500/20 flex items-center justify-center mb-4">
+                        <span class="material-icons text-blue-400 text-3xl">account_balance_wallet</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2" data-i18n="features.expense.title">Smart Expense Tracking</h3>
+                    <p class="text-slate-400" data-i18n="features.expense.desc">Automatically categorize and track every expense. Get real-time notifications when approaching budget limits.</p>
+                </div>
+                
+                <div class="feature-card glass p-6 rounded-2xl reveal">
+                    <div class="feature-icon w-14 h-14 rounded-xl bg-purple-500/20 flex items-center justify-center mb-4">
+                        <span class="material-icons text-purple-400 text-3xl">document_scanner</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2" data-i18n="features.ocr.title">AI Receipt Scanner</h3>
+                    <p class="text-slate-400" data-i18n="features.ocr.desc">Simply snap a photo of your receipt. Our OCR technology extracts amount, date, and merchant automatically.</p>
+                </div>
+                
+                <div class="feature-card glass p-6 rounded-2xl reveal">
+                    <div class="feature-icon w-14 h-14 rounded-xl bg-green-500/20 flex items-center justify-center mb-4">
+                        <span class="material-icons text-green-400 text-3xl">savings</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2" data-i18n="features.budget.title">Intelligent Budgets</h3>
+                    <p class="text-slate-400" data-i18n="features.budget.desc">Set monthly or category-specific budgets. Receive smart alerts before overspending.</p>
+                </div>
+                
+                <div class="feature-card glass p-6 rounded-2xl reveal">
+                    <div class="feature-icon w-14 h-14 rounded-xl bg-cyan-500/20 flex items-center justify-center mb-4">
+                        <span class="material-icons text-cyan-400 text-3xl">insights</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2" data-i18n="features.reports.title">Visual Analytics</h3>
+                    <p class="text-slate-400" data-i18n="features.reports.desc">Beautiful charts and reports show exactly where your money goes. Compare months and track trends.</p>
+                </div>
+                
+                <div class="feature-card glass p-6 rounded-2xl reveal">
+                    <div class="feature-icon w-14 h-14 rounded-xl bg-orange-500/20 flex items-center justify-center mb-4">
+                        <span class="material-icons text-orange-400 text-3xl">autorenew</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2" data-i18n="features.recurring.title">Recurring Management</h3>
+                    <p class="text-slate-400" data-i18n="features.recurring.desc">Never forget a bill again. Track recurring expenses and income with automatic reminders.</p>
+                </div>
+                
+                <div class="feature-card glass p-6 rounded-2xl reveal">
+                    <div class="feature-icon w-14 h-14 rounded-xl bg-pink-500/20 flex items-center justify-center mb-4">
+                        <span class="material-icons text-pink-400 text-3xl">folder</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2" data-i18n="features.documents.title">Document Vault</h3>
+                    <p class="text-slate-400" data-i18n="features.documents.desc">Securely store receipts, invoices, and financial documents. Search and access anytime.</p>
+                </div>
+                
+                <div class="feature-card glass p-6 rounded-2xl reveal">
+                    <div class="feature-icon w-14 h-14 rounded-xl bg-yellow-500/20 flex items-center justify-center mb-4">
+                        <span class="material-icons text-yellow-400 text-3xl">label</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2" data-i18n="features.tags.title">Smart Tags</h3>
+                    <p class="text-slate-400" data-i18n="features.tags.desc">AI-powered auto-tagging learns your patterns. Organize expenses your way with custom tags.</p>
+                </div>
+                
+                <div class="feature-card glass p-6 rounded-2xl reveal">
+                    <div class="feature-icon w-14 h-14 rounded-xl bg-indigo-500/20 flex items-center justify-center mb-4">
+                        <span class="material-icons text-indigo-400 text-3xl">currency_exchange</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-2" data-i18n="features.multi.title">Multi-Currency</h3>
+                    <p class="text-slate-400" data-i18n="features.multi.desc">Track expenses in any currency. Perfect for travelers and international transactions.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- How it Works Section -->
+    <section id="how-it-works" class="py-20 bg-slate-800/30">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-16 reveal">
+                <h2 class="text-3xl sm:text-4xl font-bold text-white">
+                    <span data-i18n="how.title">Get Started in</span>
+                    <span class="gradient-text" data-i18n="how.titleHighlight">3 Simple Steps</span>
+                </h2>
+            </div>
+            
+            <div class="grid md:grid-cols-3 gap-8">
+                <div class="text-center reveal">
+                    <div class="w-20 h-20 rounded-full animate-gradient flex items-center justify-center mx-auto mb-6">
+                        <span class="text-white text-3xl font-bold">1</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3" data-i18n="how.step1.title">Create Your Account</h3>
+                    <p class="text-slate-400" data-i18n="how.step1.desc">Sign up in seconds. No credit card required. Choose your preferred language and currency.</p>
+                </div>
+                
+                <div class="text-center reveal">
+                    <div class="w-20 h-20 rounded-full animate-gradient flex items-center justify-center mx-auto mb-6">
+                        <span class="text-white text-3xl font-bold">2</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3" data-i18n="how.step2.title">Add Your Expenses</h3>
+                    <p class="text-slate-400" data-i18n="how.step2.desc">Log expenses manually or scan receipts. Import from CSV. Set up recurring transactions.</p>
+                </div>
+                
+                <div class="text-center reveal">
+                    <div class="w-20 h-20 rounded-full animate-gradient flex items-center justify-center mx-auto mb-6">
+                        <span class="text-white text-3xl font-bold">3</span>
+                    </div>
+                    <h3 class="text-xl font-bold text-white mb-3" data-i18n="how.step3.title">Gain Insights</h3>
+                    <p class="text-slate-400" data-i18n="how.step3.desc">Watch your financial picture come together. Get actionable insights and reach your goals.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Security Section -->
+    <section id="security" class="py-20">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid lg:grid-cols-2 gap-12 items-center">
+                <div class="reveal">
+                    <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">
+                        <span data-i18n="security.title">Your Security is Our</span>
+                        <br>
+                        <span class="gradient-text" data-i18n="security.titleHighlight">Top Priority</span>
+                    </h2>
+                    <p class="text-lg text-slate-400 mb-8" data-i18n="security.subtitle">
+                        Bank-level security measures protect your financial data.
+                    </p>
+                    
+                    <div class="space-y-6">
+                        <div class="flex items-start space-x-4">
+                            <div class="w-12 h-12 rounded-xl bg-green-500/20 flex items-center justify-center flex-shrink-0">
+                                <span class="material-icons text-green-400">lock</span>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-white" data-i18n="security.encryption">End-to-End Encryption</h4>
+                                <p class="text-slate-400" data-i18n="security.encryptionDesc">All data is encrypted in transit and at rest using industry-standard AES-256.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start space-x-4">
+                            <div class="w-12 h-12 rounded-xl bg-blue-500/20 flex items-center justify-center flex-shrink-0">
+                                <span class="material-icons text-blue-400">verified_user</span>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-white" data-i18n="security.2fa">Two-Factor Authentication</h4>
+                                <p class="text-slate-400" data-i18n="security.2faDesc">Add an extra layer of security with TOTP-based 2FA using your favorite authenticator app.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start space-x-4">
+                            <div class="w-12 h-12 rounded-xl bg-purple-500/20 flex items-center justify-center flex-shrink-0">
+                                <span class="material-icons text-purple-400">visibility_off</span>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-white" data-i18n="security.privacy">Privacy First</h4>
+                                <p class="text-slate-400" data-i18n="security.privacyDesc">We never sell your data. Your financial information stays private and secure.</p>
+                            </div>
+                        </div>
+                        
+                        <div class="flex items-start space-x-4">
+                            <div class="w-12 h-12 rounded-xl bg-cyan-500/20 flex items-center justify-center flex-shrink-0">
+                                <span class="material-icons text-cyan-400">backup</span>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-white" data-i18n="security.backup">Automatic Backups</h4>
+                                <p class="text-slate-400" data-i18n="security.backupDesc">Your data is automatically backed up. Never lose your financial history.</p>
+                            </div>
+                        </div>
                     </div>
                 </div>
-                <div class="flex items-start space-x-3">
-                    <span class="material-icons text-green-400">check_circle</span>
-                    <div>
-                        <h4 class="font-semibold text-white">Easy to Use</h4>
-                        <p class="text-slate-300">Intuitive interface designed for everyone.</p>
-                    </div>
-                </div>
-                <div class="flex items-start space-x-3">
-                    <span class="material-icons text-green-400">check_circle</span>
-                    <div>
-                        <h4 class="font-semibold text-white">Mobile Ready</h4>
-                        <p class="text-slate-300">Access your finances from any device, anywhere.</p>
-                    </div>
-                </div>
-                <div class="flex items-start space-x-3">
-                    <span class="material-icons text-green-400">check_circle</span>
-                    <div>
-                        <h4 class="font-semibold text-white">Free to Use</h4>
-                        <p class="text-slate-300">No hidden fees, completely free personal finance management.</p>
+                
+                <div class="reveal">
+                    <div class="glass rounded-2xl p-8 relative">
+                        <div class="absolute inset-0 animate-gradient rounded-2xl opacity-10"></div>
+                        <div class="relative text-center">
+                            <div class="w-32 h-32 rounded-full bg-green-500/20 flex items-center justify-center mx-auto mb-6 animate-pulse-glow">
+                                <span class="material-icons text-green-400 text-6xl">shield</span>
+                            </div>
+                            <h3 class="text-2xl font-bold text-white mb-2">100% Secure</h3>
+                            <p class="text-slate-400">Your data is protected 24/7</p>
+                            
+                            <div class="mt-8 grid grid-cols-3 gap-4">
+                                <div class="text-center">
+                                    <span class="material-icons text-blue-400 text-2xl">https</span>
+                                    <div class="text-slate-400 text-sm mt-1">SSL/TLS</div>
+                                </div>
+                                <div class="text-center">
+                                    <span class="material-icons text-green-400 text-2xl">security</span>
+                                    <div class="text-slate-400 text-sm mt-1">2FA</div>
+                                </div>
+                                <div class="text-center">
+                                    <span class="material-icons text-purple-400 text-2xl">encrypted</span>
+                                    <div class="text-slate-400 text-sm mt-1">AES-256</div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
         </div>
-    </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="py-20">
+        <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="glass rounded-3xl p-12 text-center relative overflow-hidden reveal">
+                <div class="absolute inset-0 animate-gradient opacity-10"></div>
+                <div class="relative">
+                    <h2 class="text-3xl sm:text-4xl font-bold text-white mb-4">
+                        <span data-i18n="cta.title">Ready to Transform Your</span>
+                        <br>
+                        <span class="gradient-text" data-i18n="cta.titleHighlight">Financial Life?</span>
+                    </h2>
+                    <p class="text-lg text-slate-400 mb-8 max-w-xl mx-auto" data-i18n="cta.subtitle">
+                        Join thousands of users who have taken control of their finances with FINA.
+                    </p>
+                    <a href="/auth/register" class="inline-flex items-center bg-blue-600 text-white px-8 py-4 rounded-xl text-lg font-semibold hover:bg-blue-700 transition shadow-lg shadow-blue-500/30 group">
+                        <span data-i18n="cta.button">Create Free Account</span>
+                        <span class="material-icons ml-2 group-hover:translate-x-1 transition-transform">arrow_forward</span>
+                    </a>
+                    <p class="mt-4 text-slate-500 text-sm" data-i18n="cta.note">
+                        No credit card required • Free forever • Cancel anytime
+                    </p>
+                </div>
+            </div>
+        </div>
+    </section>
 
     <!-- Footer -->
-    <footer class="bg-slate-800/50 backdrop-blur-sm mt-20 py-8 border-t border-slate-700/50">
-        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-slate-400">
-            <p>&copy; 2025 FINA. All rights reserved.</p>
+    <footer class="bg-slate-800/50 backdrop-blur-sm py-12 border-t border-slate-700/50">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="grid md:grid-cols-4 gap-8 mb-8">
+                <div>
+                    <div class="flex items-center space-x-2 mb-4">
+                        <div class="w-10 h-10 rounded-xl animate-gradient flex items-center justify-center">
+                            <span class="text-white font-bold text-xl">F</span>
+                        </div>
+                        <span class="text-2xl font-bold text-white">FINA</span>
+                    </div>
+                    <p class="text-slate-400" data-i18n="footer.tagline">Your intelligent personal finance companion.</p>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold text-white mb-4" data-i18n="footer.product">Product</h4>
+                    <ul class="space-y-2 text-slate-400">
+                        <li><a href="#features" class="hover:text-white transition" data-i18n="footer.features">Features</a></li>
+                        <li><a href="#security" class="hover:text-white transition" data-i18n="footer.security">Security</a></li>
+                        <li><a href="#" class="hover:text-white transition" data-i18n="footer.pricing">Pricing</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold text-white mb-4" data-i18n="footer.support">Support</h4>
+                    <ul class="space-y-2 text-slate-400">
+                        <li><a href="#" class="hover:text-white transition" data-i18n="footer.help">Help Center</a></li>
+                        <li><a href="#" class="hover:text-white transition" data-i18n="footer.contact">Contact Us</a></li>
+                        <li><a href="#" class="hover:text-white transition" data-i18n="footer.faq">FAQ</a></li>
+                    </ul>
+                </div>
+                
+                <div>
+                    <h4 class="font-semibold text-white mb-4" data-i18n="footer.legal">Legal</h4>
+                    <ul class="space-y-2 text-slate-400">
+                        <li><a href="#" class="hover:text-white transition" data-i18n="footer.privacy">Privacy Policy</a></li>
+                        <li><a href="#" class="hover:text-white transition" data-i18n="footer.terms">Terms of Service</a></li>
+                    </ul>
+                </div>
+            </div>
+            
+            <div class="pt-8 border-t border-slate-700 flex flex-col md:flex-row justify-between items-center">
+                <p class="text-slate-400 text-sm">
+                    &copy; 2026 FINA. <span data-i18n="footer.rights">All rights reserved.</span>
+                </p>
+                <p class="text-slate-400 text-sm mt-4 md:mt-0">
+                    <span data-i18n="footer.madeWith">Made with</span> 
+                    <span class="text-red-400">❤</span> 
+                    <span data-i18n="footer.forYou">for smart savers</span>
+                </p>
+            </div>
         </div>
     </footer>
+
+    <script>
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+    </script>
 </body>
 </html>

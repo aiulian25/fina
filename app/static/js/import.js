@@ -241,6 +241,9 @@ class CSVImporter {
 
             const response = await fetch('/api/import/parse-csv', {
                 method: 'POST',
+                headers: {
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                },
                 body: formData
             });
 
@@ -275,7 +278,8 @@ class CSVImporter {
             const response = await fetch('/api/import/detect-duplicates', {
                 method: 'POST',
                 headers: {
-                    'Content-Type': 'application/json'
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || ''
                 },
                 body: JSON.stringify({
                     transactions: this.parsedTransactions
@@ -373,7 +377,7 @@ class CSVImporter {
                         <div class="text-sm text-text-muted dark:text-[#92adc9]">${trans.date}</div>
                     </div>
                 </div>
-                <div class="font-semibold text-text-main dark:text-white">${window.formatCurrency(trans.amount, trans.currency || window.userCurrency || 'GBP')}</div>
+                <div class="font-semibold text-text-main dark:text-white">${window.formatCurrency(trans.amount, trans.currency || window.userCurrency || 'RON')}</div>
             </div>
         `;
     }

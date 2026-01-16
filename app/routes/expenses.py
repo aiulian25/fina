@@ -79,8 +79,19 @@ def create_expense():
     if not data or not data.get('amount') or not data.get('category_id') or not data.get('description'):
         return jsonify({'success': False, 'message': 'Missing required fields'}), 400
     
+    # Security: Validate amount to prevent negative values and overflow attacks
+    from app.utils import validate_amount, validate_positive_integer
+    is_valid, validated_amount, error_msg = validate_amount(data.get('amount'), 'Amount')
+    if not is_valid:
+        return jsonify({'success': False, 'message': error_msg}), 400
+    
+    # Security: Validate category_id is a positive integer
+    is_valid, validated_category_id, error_msg = validate_positive_integer(data.get('category_id'), 'Category ID', min_val=1)
+    if not is_valid:
+        return jsonify({'success': False, 'message': error_msg}), 400
+    
     # Security: Verify category belongs to current user
-    category = Category.query.filter_by(id=int(data.get('category_id')), user_id=current_user.id).first()
+    category = Category.query.filter_by(id=validated_category_id, user_id=current_user.id).first()
     if not category:
         return jsonify({'success': False, 'message': 'Invalid category'}), 400
     
@@ -90,6 +101,12 @@ def create_expense():
     if 'receipt' in request.files:
         file = request.files['receipt']
         if file and file.filename and allowed_file(file.filename):
+            # Security: Validate file content matches extension
+            from app.utils import validate_file_content
+            is_valid, error_msg, _ = validate_file_content(file, allowed_extensions=ALLOWED_EXTENSIONS)
+            if not is_valid:
+                return jsonify({'success': False, 'message': f'Receipt upload failed: {error_msg}'}), 400
+            
             filename = secure_filename(f"{current_user.id}_{datetime.utcnow().timestamp()}_{file.filename}")
             receipts_dir = os.path.join(current_app.config['UPLOAD_FOLDER'], 'receipts')
             filepath = os.path.join(receipts_dir, filename)
@@ -108,10 +125,10 @@ def create_expense():
     
     # Create expense
     expense = Expense(
-        amount=float(data.get('amount')),
+        amount=validated_amount,
         currency=data.get('currency', current_user.currency),
         description=data.get('description'),
-        category_id=int(data.get('category_id')),
+        category_id=validated_category_id,
         user_id=current_user.id,
         receipt_path=receipt_path,
         receipt_ocr_text=receipt_ocr_text,
@@ -195,19 +212,28 @@ def update_expense(expense_id):
     # Handle both FormData and JSON requests
     data = request.form if request.form else request.get_json()
     
+    # Security: Import validation functions
+    from app.utils import validate_amount, validate_positive_integer
+    
     # Update fields
     if data.get('amount'):
-        expense.amount = float(data.get('amount'))
+        is_valid, validated_amount, error_msg = validate_amount(data.get('amount'), 'Amount')
+        if not is_valid:
+            return jsonify({'success': False, 'message': error_msg}), 400
+        expense.amount = validated_amount
     if data.get('currency'):
         expense.currency = data.get('currency')
     if data.get('description'):
         expense.description = data.get('description')
     if data.get('category_id'):
+        is_valid, validated_category_id, error_msg = validate_positive_integer(data.get('category_id'), 'Category ID', min_val=1)
+        if not is_valid:
+            return jsonify({'success': False, 'message': error_msg}), 400
         # Security: Verify category belongs to current user
-        category = Category.query.filter_by(id=int(data.get('category_id')), user_id=current_user.id).first()
+        category = Category.query.filter_by(id=validated_category_id, user_id=current_user.id).first()
         if not category:
             return jsonify({'success': False, 'message': 'Invalid category'}), 400
-        expense.category_id = int(data.get('category_id'))
+        expense.category_id = validated_category_id
     if data.get('date'):
         expense.date = datetime.fromisoformat(data.get('date'))
     if data.get('tags') is not None:
@@ -222,6 +248,12 @@ def update_expense(expense_id):
     if 'receipt' in request.files:
         file = request.files['receipt']
         if file and file.filename and allowed_file(file.filename):
+            # Security: Validate file content matches extension
+            from app.utils import validate_file_content
+            is_valid, error_msg, _ = validate_file_content(file, allowed_extensions=ALLOWED_EXTENSIONS)
+            if not is_valid:
+                return jsonify({'success': False, 'message': f'Receipt upload failed: {error_msg}'}), 400
+            
             # Delete old receipt
             if expense.receipt_path:
                 clean_path = expense.receipt_path.replace('/uploads/', '').lstrip('/')

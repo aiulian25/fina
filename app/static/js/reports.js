@@ -2,15 +2,45 @@
 
 let currentPeriod = 30;
 let categoryFilter = '';
+let selectedReportYear = new Date().getFullYear();
 let trendChart = null;
 let categoryChart = null;
 let monthlyChart = null;
+
+// Load available years for reports
+async function loadReportAvailableYears() {
+    try {
+        const data = await apiCall('/api/available-years');
+        const selector = document.getElementById('report-year-selector');
+        if (!selector) return;
+        
+        // Store current year
+        const currentYear = data.current_year || new Date().getFullYear();
+        
+        // Populate dropdown
+        selector.innerHTML = data.years.map(year => 
+            `<option value="${year}" ${year === currentYear ? 'selected' : ''}>${year}</option>`
+        ).join('');
+        
+        // Set initial year
+        selectedReportYear = currentYear;
+        
+        // Add change listener
+        selector.addEventListener('change', (e) => {
+            selectedReportYear = parseInt(e.target.value);
+            loadReportsData();
+        });
+    } catch (error) {
+        console.error('Failed to load available years:', error);
+    }
+}
 
 // Load reports data
 async function loadReportsData() {
     try {
         const params = new URLSearchParams({
             period: currentPeriod,
+            year: selectedReportYear,
             ...(categoryFilter && { category_id: categoryFilter })
         });
         
@@ -25,7 +55,7 @@ async function loadReportsData() {
 // Display reports data
 function displayReportsData(data) {
     // Store user currency globally
-    window.userCurrency = data.currency || 'GBP';
+    window.userCurrency = data.currency || 'RON';
     
     // Update KPI cards
     document.getElementById('total-spent').textContent = formatCurrency(data.total_spent, window.userCurrency);
@@ -218,7 +248,7 @@ function updateTrendChart(dailyData) {
                     displayColors: true,
                     callbacks: {
                         label: function(context) {
-                            return context.dataset.label + ': ' + formatCurrency(context.parsed.y, window.userCurrency || 'GBP');
+                            return context.dataset.label + ': ' + formatCurrency(context.parsed.y);
                         }
                     }
                 }
@@ -243,7 +273,7 @@ function updateTrendChart(dailyData) {
                     ticks: {
                         color: textColor,
                         callback: function(value) {
-                            return formatCurrency(value, window.userCurrency || 'GBP');
+                            return formatCurrency(value);
                         }
                     }
                 }
@@ -260,7 +290,7 @@ function updateIncomeChart(incomeBreakdown) {
     
     if (!pieChart || !pieLegend) return;
     
-    const userCurrency = window.userCurrency || 'GBP';
+    const userCurrency = window.userCurrency || 'RON';
     
     if (!incomeBreakdown || incomeBreakdown.length === 0) {
         pieChart.style.background = 'conic-gradient(#10b981 0% 100%)';
@@ -322,7 +352,7 @@ function updateCategoryChart(categories) {
     
     if (!pieChart || !pieLegend) return;
     
-    const userCurrency = window.userCurrency || 'GBP';
+    const userCurrency = window.userCurrency || 'RON';
     
     if (categories.length === 0) {
         pieChart.style.background = 'conic-gradient(#233648 0% 100%)';
@@ -435,7 +465,7 @@ function updateMonthlyChart(monthlyData) {
                     padding: 12,
                     callbacks: {
                         label: function(context) {
-                            return context.dataset.label + ': ' + formatCurrency(context.parsed.y, window.userCurrency || 'GBP');
+                            return context.dataset.label + ': ' + formatCurrency(context.parsed.y);
                         }
                     }
                 }
@@ -458,7 +488,7 @@ function updateMonthlyChart(monthlyData) {
                     ticks: {
                         color: textColor,
                         callback: function(value) {
-                            return formatCurrency(value, window.userCurrency || 'GBP');
+                            return formatCurrency(value);
                         }
                     }
                 }
@@ -593,7 +623,11 @@ window.addEventListener('storage', (e) => {
 });
 
 // Initialize on page load
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener('DOMContentLoaded', async () => {
+    // Load available years first
+    await loadReportAvailableYears();
+    
+    // Then load the rest
     loadReportsData();
     loadCategoriesFilter();
     loadRecommendations();

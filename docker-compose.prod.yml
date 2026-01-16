@@ -1,0 +1,39 @@
+# Production Docker Compose - Uses pre-built image from GitHub Container Registry
+# Deploy on any machine with: docker compose -f docker-compose.prod.yml up -d
+
+services:
+  web:
+    image: ghcr.io/aiulian25/fina:latest
+    container_name: fina
+    ports:
+      - "5103:5103"
+    volumes:
+      - ./data:/app/data:rw
+      - ./uploads:/app/uploads:rw
+    environment:
+      - FLASK_ENV=production
+      - SECRET_KEY=${SECRET_KEY:-change-this-to-a-secure-random-string}
+      - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=sqlite:////app/data/fina.db
+      - HTTPS_ENABLED=${HTTPS_ENABLED:-false}
+    depends_on:
+      - redis
+    restart: unless-stopped
+    networks:
+      - fina-network
+
+  redis:
+    image: redis:7-alpine
+    container_name: fina-redis
+    restart: unless-stopped
+    networks:
+      - fina-network
+    volumes:
+      - redis-data:/data
+
+volumes:
+  redis-data:
+
+networks:
+  fina-network:
+    driver: bridge

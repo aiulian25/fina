@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="FINA - Track your expenses, manage your finances">
     <meta name="theme-color" content="#111a22">
+    <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>{% block title %}FINA - Personal Finance Tracker{% endblock %}</title>
     
     <!-- PWA Manifest -->
@@ -126,21 +127,41 @@
     <!-- Prevent theme flashing by applying theme before page render -->
     <script>
         (function() {
-            const theme = localStorage.getItem('theme') || 'dark';
-            if (theme === 'dark') {
+            {% if current_user.is_authenticated %}
+            // Use database preferences as source of truth for logged-in users
+            const dbTheme = '{{ current_user.theme|default("dark") }}';
+            const dbLanguage = '{{ current_user.language }}';
+            const dbNotifications = {{ 'true' if current_user.notifications_enabled|default(true) else 'false' }};
+            
+            // Sync theme from database to localStorage
+            if (dbTheme) {
+                localStorage.setItem('theme', dbTheme);
+            }
+            
+            // Apply theme
+            if (dbTheme === 'dark') {
                 document.documentElement.classList.add('dark');
             } else {
                 document.documentElement.classList.remove('dark');
             }
             
-            {% if current_user.is_authenticated %}
-            // Sync user language preference from database to localStorage
-            const dbLanguage = '{{ current_user.language }}';
-            const storedLanguage = localStorage.getItem('language');
-            
-            // Always use database language as source of truth
-            if (dbLanguage && dbLanguage !== storedLanguage) {
+            // Sync language from database to localStorage
+            if (dbLanguage) {
                 localStorage.setItem('language', dbLanguage);
+            }
+            
+            // Sync notifications preference
+            localStorage.setItem('budgetNotificationsEnabled', dbNotifications ? 'true' : 'false');
+            
+            // Store currency globally for formatCurrency function
+            window.userCurrency = '{{ current_user.currency }}';
+            {% else %}
+            // For non-authenticated users, use localStorage only
+            const theme = localStorage.getItem('theme') || 'dark';
+            if (theme === 'dark') {
+                document.documentElement.classList.add('dark');
+            } else {
+                document.documentElement.classList.remove('dark');
             }
             {% endif %}
         })();
@@ -188,12 +209,12 @@
     <!-- Toast Notification Container -->
     <div id="toast-container" class="fixed top-4 right-4 z-50 space-y-2"></div>
     
-    <script src="{{ url_for('static', filename='js/i18n.js') }}?v=2.0.3"></script>
-    <script src="{{ url_for('static', filename='js/app.js') }}?v=2.0.3"></script>
-    <script src="{{ url_for('static', filename='js/search.js') }}?v=2.0.3"></script>
-    <script src="{{ url_for('static', filename='js/budget.js') }}?v=2.0.3"></script>
-    <script src="{{ url_for('static', filename='js/notifications.js') }}?v=2.0.3"></script>
-    <script src="{{ url_for('static', filename='js/pwa.js') }}?v=2.0.3"></script>
+    <script src="{{ url_for('static', filename='js/i18n.js') }}?v=2.0.4"></script>
+    <script src="{{ url_for('static', filename='js/app.js') }}?v=2.0.4"></script>
+    <script src="{{ url_for('static', filename='js/search.js') }}?v=2.0.4"></script>
+    <script src="{{ url_for('static', filename='js/budget.js') }}?v=2.0.4"></script>
+    <script src="{{ url_for('static', filename='js/notifications.js') }}?v=2.0.4"></script>
+    <script src="{{ url_for('static', filename='js/pwa.js') }}?v=2.0.4"></script>
     {% block extra_js %}{% endblock %}
 </body>
 </html>

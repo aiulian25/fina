@@ -63,6 +63,42 @@ def income():
     return render_template('income.html')
 
 
+@bp.route('/goals')
+@login_required
+def goals():
+    return render_template('goals.html')
+
+
+@bp.route('/subscriptions')
+@login_required
+def subscriptions():
+    return render_template('subscriptions.html')
+
+
+@bp.route('/analyzer')
+@login_required
+def analyzer():
+    return render_template('analyzer.html')
+
+
+@bp.route('/insights')
+@login_required
+def insights():
+    return render_template('insights.html')
+
+
+@bp.route('/challenges')
+@login_required
+def challenges():
+    return render_template('challenges.html')
+
+
+@bp.route('/forecast')
+@login_required
+def forecast():
+    return render_template('forecast.html')
+
+
 @bp.route('/admin')
 @login_required
 def admin():
@@ -71,12 +107,61 @@ def admin():
     return render_template('admin.html')
 
 
+@bp.route('/api/available-years')
+@login_required
+def available_years():
+    """
+    Get available years with data for current user.
+    Security: Only returns years for current_user's data.
+    """
+    # Get distinct years from expenses
+    expense_years = db.session.query(
+        extract('year', Expense.date).label('year')
+    ).filter(
+        Expense.user_id == current_user.id
+    ).distinct().all()
+    
+    # Get distinct years from income
+    income_years = db.session.query(
+        extract('year', Income.date).label('year')
+    ).filter(
+        Income.user_id == current_user.id
+    ).distinct().all()
+    
+    # Combine and sort years
+    all_years = set()
+    for row in expense_years:
+        if row.year:
+            all_years.add(int(row.year))
+    for row in income_years:
+        if row.year:
+            all_years.add(int(row.year))
+    
+    # Always include current year
+    current_year = datetime.utcnow().year
+    all_years.add(current_year)
+    
+    return jsonify({
+        'years': sorted(list(all_years), reverse=True),
+        'current_year': current_year
+    })
+
+
 @bp.route('/api/dashboard-stats')
 @login_required
 def dashboard_stats():
     now = datetime.utcnow()
     
-    # Current month stats
+    # Get optional year filter from query params
+    filter_year = request.args.get('year', type=int)
+    if filter_year is None:
+        filter_year = now.year
+    
+    # Validate year (security: prevent extreme values)
+    if filter_year < 2000 or filter_year > 2100:
+        filter_year = now.year
+    
+    # Current month stats (always current month for KPIs)
     current_month_start = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
     
     # Previous month stats
@@ -134,8 +219,10 @@ def dashboard_stats():
         Expense.date >= current_month_start
     ).count()
     
-    # Category breakdown for entire current year (all currencies)
-    current_year_start = now.replace(month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+    # Category breakdown for selected year (charts filter)
+    selected_year_start = datetime(filter_year, 1, 1, 0, 0, 0)
+    selected_year_end = datetime(filter_year + 1, 1, 1, 0, 0, 0)
+    
     category_stats = db.session.query(
         Category.id,
         Category.name,
@@ -145,17 +232,18 @@ def dashboard_stats():
         func.count(Expense.id).label('count')
     ).join(Expense).filter(
         Expense.user_id == current_user.id,
-        Expense.date >= current_year_start
+        Expense.date >= selected_year_start,
+        Expense.date < selected_year_end
     ).group_by(Category.id).order_by(Category.display_order, Category.created_at).all()
     
-    # Monthly breakdown (all 12 months of current year) - including income
+    # Monthly breakdown for selected year - including income
     monthly_data = []
     for month_num in range(1, 13):
-        month_start = now.replace(month=month_num, day=1, hour=0, minute=0, second=0, microsecond=0)
+        month_start = datetime(filter_year, month_num, 1, 0, 0, 0)
         if month_num == 12:
-            month_end = now.replace(year=now.year+1, month=1, day=1, hour=0, minute=0, second=0, microsecond=0)
+            month_end = datetime(filter_year + 1, 1, 1, 0, 0, 0)
         else:
-            month_end = now.replace(month=month_num+1, day=1, hour=0, minute=0, second=0, microsecond=0)
+            month_end = datetime(filter_year, month_num + 1, 1, 0, 0, 0)
         
         month_expenses = Expense.query.filter(
             Expense.user_id == current_user.id,
@@ -173,6 +261,7 @@ def dashboard_stats():
         
         monthly_data.append({
             'month': month_start.strftime('%b'),
+            'month_num': month_num,
             'expenses': float(month_total),
             'income': float(month_income),
             'profit': float(month_income - month_total)
@@ -205,7 +294,8 @@ def dashboard_stats():
         'total_transactions': total_transactions,
         'currency': current_user.currency,
         'category_breakdown': category_breakdown,
-        'monthly_data': monthly_data
+        'monthly_data': monthly_data,
+        'selected_year': filter_year
     })
 
 
@@ -234,18 +324,44 @@ def reports_stats():
     period = request.args.get('period', '30')  # days
     category_filter = request.args.get('category_id', type=int)
     
+    # Get year filter from query params
+    filter_year = request.args.get('year', type=int)
+    now = datetime.utcnow()
+    
+    if filter_year is None:
+        filter_year = now.year
+    
+    # Validate year (security: prevent extreme values)
+    if filter_year < 2000 or filter_year > 2100:
+        filter_year = now.year
+    
     try:
         days = int(period)
     except ValueError:
         days = 30
     
-    now = datetime.utcnow()
-    period_start = now - timedelta(days=days)
+    # Calculate period_start and period_end based on year selection
+    # If viewing current year, use relative days from now
+    # If viewing past year, show data from that year based on period
+    if filter_year == now.year:
+        # Current year: use relative days from today
+        period_end = now
+        period_start = now - timedelta(days=days)
+    else:
+        # Past year: show data relative to end of that year
+        year_end = datetime(filter_year, 12, 31, 23, 59, 59)
+        period_end = year_end
+        period_start = year_end - timedelta(days=days)
+        # Ensure period_start doesn't go before the year starts
+        year_start = datetime(filter_year, 1, 1)
+        if period_start < year_start:
+            period_start = year_start
     
     # Query expenses with security filter
     query = Expense.query.filter(
         Expense.user_id == current_user.id,
-        Expense.date >= period_start
+        Expense.date >= period_start,
+        Expense.date <= period_end
     )
     
     if category_filter:
@@ -256,7 +372,8 @@ def reports_stats():
     # Query income for the same period
     income_query = Income.query.filter(
         Income.user_id == current_user.id,
-        Income.date >= period_start
+        Income.date >= period_start,
+        Income.date <= period_end
     )
     incomes = income_query.all()
     
@@ -265,18 +382,21 @@ def reports_stats():
     total_income = sum(inc.amount for inc in incomes)
     
     # Previous period comparison for expenses and income
-    prev_period_start = period_start - timedelta(days=days)
+    actual_days = (period_end - period_start).days or 1
+    prev_period_start = period_start - timedelta(days=actual_days)
+    prev_period_end = period_start
+    
     prev_expenses = Expense.query.filter(
         Expense.user_id == current_user.id,
         Expense.date >= prev_period_start,
-        Expense.date < period_start
+        Expense.date < prev_period_end
     ).all()
     prev_total = sum(exp.amount for exp in prev_expenses)
     
     prev_incomes = Income.query.filter(
         Income.user_id == current_user.id,
         Income.date >= prev_period_start,
-        Income.date < period_start
+        Income.date < prev_period_end
     ).all()
     prev_income_total = sum(inc.amount for inc in prev_incomes)
     
@@ -312,9 +432,9 @@ def reports_stats():
     
     top_category = max(category_totals.items(), key=lambda x: x[1]) if category_totals else ('None', 0)
     
-    # Average daily spending
-    avg_daily = total_spent / days if days > 0 else 0
-    prev_avg_daily = prev_total / days if days > 0 else 0
+    # Average daily spending (use actual_days for accurate calculation)
+    avg_daily = total_spent / actual_days if actual_days > 0 else 0
+    prev_avg_daily = prev_total / actual_days if actual_days > 0 else 0
     avg_change = 0
     if prev_avg_daily > 0:
         avg_change = ((avg_daily - prev_avg_daily) / prev_avg_daily) * 100
@@ -363,10 +483,11 @@ def reports_stats():
                 'percentage': round(percentage, 1)
             })
     
-    # Daily spending and income trend (last 30 days)
+    # Daily spending and income trend (last 30 days of the selected period)
     daily_trend = []
-    for i in range(min(30, days)):
-        day_date = now - timedelta(days=i)
+    trend_days = min(30, actual_days)
+    for i in range(trend_days):
+        day_date = period_end - timedelta(days=i)
         day_start = day_date.replace(hour=0, minute=0, second=0, microsecond=0)
         day_end = day_start + timedelta(days=1)
         
@@ -391,15 +512,14 @@ def reports_stats():
             'profit': float(day_income - day_total)
         })
     
-    # Monthly comparison with income (all 12 months of current year)
+    # Monthly comparison with income (all 12 months of selected year)
     monthly_comparison = []
-    current_year = now.year
     for month in range(1, 13):
-        month_start = datetime(current_year, month, 1)
+        month_start = datetime(filter_year, month, 1)
         if month == 12:
-            month_end = datetime(current_year + 1, 1, 1)
+            month_end = datetime(filter_year + 1, 1, 1)
         else:
-            month_end = datetime(current_year, month + 1, 1)
+            month_end = datetime(filter_year, month + 1, 1)
         
         month_expenses = Expense.query.filter(
             Expense.user_id == current_user.id,
@@ -451,7 +571,8 @@ def reports_stats():
         'daily_trend': daily_trend,
         'monthly_comparison': monthly_comparison,
         'currency': current_user.currency,
-        'period_days': days
+        'period_days': days,
+        'selected_year': filter_year
     })
 
 

@@ -188,12 +188,31 @@ class BudgetNotifications {
             const granted = await this.requestPermission();
             if (granted) {
                 localStorage.setItem('budgetNotificationsEnabled', 'true');
+                // Save to server for persistence
+                this.saveToServer(true);
                 return true;
             }
             return false;
         } else {
             localStorage.setItem('budgetNotificationsEnabled', 'false');
+            // Save to server for persistence
+            this.saveToServer(false);
             return true;
+        }
+    }
+    
+    /**
+     * Save notification preference to server
+     */
+    async saveToServer(enabled) {
+        try {
+            await fetch('/api/settings/profile', {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ notifications_enabled: enabled })
+            });
+        } catch (error) {
+            console.debug('Could not save notification preference to server:', error);
         }
     }
 }

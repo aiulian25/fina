@@ -31,6 +31,30 @@
                         <span class="material-symbols-outlined text-[20px]">payments</span>
                         <span class="text-sm font-medium" data-translate="nav.income">Income</span>
                     </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-background-light dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.goals') }}">
+                        <span class="material-symbols-outlined text-[20px]">savings</span>
+                        <span class="text-sm font-medium" data-translate="nav.goals">Savings Goals</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-background-light dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.subscriptions') }}">
+                        <span class="material-symbols-outlined text-[20px]">subscriptions</span>
+                        <span class="text-sm font-medium" data-translate="nav.subscriptions">Subscriptions</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.analyzer') }}">
+                        <span class="material-symbols-outlined text-[20px]">psychology</span>
+                        <span class="text-sm font-medium" data-translate="nav.analyzer">Expense Analyzer</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.insights') }}">
+                        <span class="material-symbols-outlined text-[20px]">insights</span>
+                        <span class="text-sm font-medium" data-translate="nav.insights">Smart Insights</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.challenges') }}">
+                        <span class="material-symbols-outlined text-[20px]">emoji_events</span>
+                        <span class="text-sm font-medium" data-translate="nav.challenges">Challenges</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.forecast') }}">
+                        <span class="material-symbols-outlined text-[20px]">auto_graph</span>
+                        <span class="text-sm font-medium" data-translate="nav.forecast">Forecast</span>
+                    </a>
                     <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-background-light dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.recurring') }}">
                         <span class="material-symbols-outlined text-[20px]">repeat</span>
                         <span class="text-sm font-medium" data-translate="nav.recurring">Recurring</span>
@@ -241,10 +265,227 @@
                     </div>
                 </div>
                 
+                <!-- Active Sessions Section -->
+                <div class="bg-card-light dark:bg-card-dark border border-border-light dark:border-[#233648] rounded-2xl p-6">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h3 class="text-lg font-semibold text-text-main dark:text-white mb-1" data-translate="settings.activeSessions">Active Sessions</h3>
+                            <p class="text-sm text-text-muted dark:text-[#92adc9]" data-translate="settings.activeSessionsDesc">Manage devices logged into your account</p>
+                        </div>
+                        <button onclick="loadActiveSessions()" class="p-2 text-text-muted dark:text-[#92adc9] hover:text-primary transition-colors" title="Refresh">
+                            <span class="material-symbols-outlined text-[20px]">refresh</span>
+                        </button>
+                    </div>
+                    
+                    <!-- Sessions List -->
+                    <div id="sessions-list" class="space-y-3 mb-4">
+                        <div class="flex items-center justify-center py-8 text-text-muted dark:text-[#92adc9]">
+                            <span class="material-symbols-outlined animate-spin mr-2">progress_activity</span>
+                            <span data-translate="common.loading">Loading...</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Revoke All Button -->
+                    <div class="pt-4 border-t border-border-light dark:border-[#233648]">
+                        <button onclick="revokeAllSessions()" id="revoke-all-btn" class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 text-red-600 dark:text-red-400 rounded-lg text-sm font-medium hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors disabled:opacity-50" disabled>
+                            <span class="material-symbols-outlined text-[18px]">logout</span>
+                            <span data-translate="settings.revokeAllSessions">Sign Out All Other Sessions</span>
+                        </button>
+                    </div>
+                </div>
+                
             </div>
         </div>
     </main>
 </div>
 
 <script src="{{ url_for('static', filename='js/settings.js') }}"></script>
+<script>
+// Active Sessions Management
+function loadActiveSessions() {
+    const container = document.getElementById('sessions-list');
+    container.innerHTML = `
+        <div class="flex items-center justify-center py-8 text-text-muted dark:text-[#92adc9]">
+            <span class="material-symbols-outlined animate-spin mr-2">progress_activity</span>
+            <span data-translate="common.loading">Loading...</span>
+        </div>
+    `;
+    
+    fetch('/api/settings/sessions', {
+        headers: {
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            renderSessions(data.sessions);
+        } else {
+            container.innerHTML = `
+                <div class="text-center py-8 text-red-500">
+                    <span class="material-symbols-outlined text-[32px] mb-2">error</span>
+                    <p>${data.message || 'Failed to load sessions'}</p>
+                </div>
+            `;
+        }
+    })
+    .catch(error => {
+        console.error('Error loading sessions:', error);
+        container.innerHTML = `
+            <div class="text-center py-8 text-red-500">
+                <span class="material-symbols-outlined text-[32px] mb-2">error</span>
+                <p>Failed to load sessions</p>
+            </div>
+        `;
+    });
+}
+
+function renderSessions(sessions) {
+    const container = document.getElementById('sessions-list');
+    const revokeAllBtn = document.getElementById('revoke-all-btn');
+    
+    if (sessions.length === 0) {
+        container.innerHTML = `
+            <div class="text-center py-8 text-text-muted dark:text-[#92adc9]">
+                <span class="material-symbols-outlined text-[32px] mb-2">devices</span>
+                <p data-translate="settings.noSessions">No active sessions found</p>
+            </div>
+        `;
+        revokeAllBtn.disabled = true;
+        return;
+    }
+    
+    const otherSessions = sessions.filter(s => !s.is_current);
+    revokeAllBtn.disabled = otherSessions.length === 0;
+    
+    const deviceIcons = {
+        'mobile': 'smartphone',
+        'tablet': 'tablet',
+        'desktop': 'computer'
+    };
+    
+    container.innerHTML = sessions.map(session => {
+        const deviceIcon = deviceIcons[session.device_type] || 'devices';
+        const lastActive = session.last_activity ? formatRelativeTime(session.last_activity) : 'Unknown';
+        const loginTime = session.created_at ? formatDateTime(session.created_at) : 'Unknown';
+        
+        return `
+            <div class="flex items-center gap-4 p-4 bg-background-light dark:bg-background-dark border border-border-light dark:border-[#233648] rounded-xl ${session.is_current ? 'ring-2 ring-primary/30' : ''}">
+                <div class="flex-shrink-0 w-12 h-12 flex items-center justify-center bg-slate-100 dark:bg-white/10 rounded-full">
+                    <span class="material-symbols-outlined text-[24px] text-text-main dark:text-white">${deviceIcon}</span>
+                </div>
+                <div class="flex-1 min-w-0">
+                    <div class="flex items-center gap-2 mb-1">
+                        <span class="font-medium text-text-main dark:text-white truncate">${session.browser || 'Unknown'} on ${session.os || 'Unknown'}</span>
+                        ${session.is_current ? `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary" data-translate="settings.currentSession">Current</span>` : ''}
+                    </div>
+                    <div class="text-sm text-text-muted dark:text-[#92adc9] space-y-0.5">
+                        <div class="flex items-center gap-1">
+                            <span class="material-symbols-outlined text-[14px]">location_on</span>
+                            <span>${session.ip_address || 'Unknown IP'}</span>
+                        </div>
+                        <div class="flex items-center gap-1">
+                            <span class="material-symbols-outlined text-[14px]">schedule</span>
+                            <span data-translate-prefix="settings.lastActive">${lastActive}</span>
+                        </div>
+                    </div>
+                </div>
+                ${!session.is_current ? `
+                <button onclick="revokeSession(${session.id})" class="flex-shrink-0 p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-500/10 rounded-lg transition-colors" title="Revoke session">
+                    <span class="material-symbols-outlined text-[20px]">logout</span>
+                </button>
+                ` : ''}
+            </div>
+        `;
+    }).join('');
+    
+    // Apply translations
+    if (typeof applyTranslations === 'function') {
+        applyTranslations();
+    }
+}
+
+function revokeSession(sessionId) {
+    if (!confirm(window.translations?.['settings.revokeSessionConfirm'] || 'Are you sure you want to terminate this session?')) {
+        return;
+    }
+    
+    fetch(`/api/settings/sessions/${sessionId}`, {
+        method: 'DELETE',
+        headers: {
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('success', window.translations?.['settings.sessionRevoked'] || 'Session terminated successfully');
+            loadActiveSessions();
+        } else {
+            showNotification('error', data.message || 'Failed to terminate session');
+        }
+    })
+    .catch(error => {
+        console.error('Error revoking session:', error);
+        showNotification('error', 'Failed to terminate session');
+    });
+}
+
+function revokeAllSessions() {
+    if (!confirm(window.translations?.['settings.revokeAllConfirm'] || 'Are you sure you want to sign out from all other devices?')) {
+        return;
+    }
+    
+    fetch('/api/settings/sessions/revoke-all', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showNotification('success', data.message || 'All other sessions terminated');
+            loadActiveSessions();
+        } else {
+            showNotification('error', data.message || 'Failed to terminate sessions');
+        }
+    })
+    .catch(error => {
+        console.error('Error revoking sessions:', error);
+        showNotification('error', 'Failed to terminate sessions');
+    });
+}
+
+function formatRelativeTime(isoString) {
+    const date = new Date(isoString);
+    const now = new Date();
+    const diffMs = now - date;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    
+    if (diffMins < 1) return window.translations?.['time.justNow'] || 'Just now';
+    if (diffMins < 60) return `${diffMins} ${window.translations?.['time.minutesAgo'] || 'minutes ago'}`;
+    if (diffHours < 24) return `${diffHours} ${window.translations?.['time.hoursAgo'] || 'hours ago'}`;
+    if (diffDays < 7) return `${diffDays} ${window.translations?.['time.daysAgo'] || 'days ago'}`;
+    
+    return formatDateTime(isoString);
+}
+
+function formatDateTime(isoString) {
+    const date = new Date(isoString);
+    return date.toLocaleDateString(undefined, { 
+        month: 'short', 
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+// Load sessions on page load
+document.addEventListener('DOMContentLoaded', function() {
+    loadActiveSessions();
+});
+</script>
 {% endblock %}

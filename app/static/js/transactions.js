@@ -112,7 +112,7 @@ function displayTransactions(transactions) {
                 </div>
             </td>
             <td class="p-5 text-right">
-                <span class="text-text-main dark:text-white font-semibold">${formatCurrency(tx.amount, tx.currency || window.userCurrency || 'GBP')}</span>
+                <span class="text-text-main dark:text-white font-semibold">${formatCurrency(tx.amount, tx.currency || window.userCurrency || 'RON')}</span>
             </td>
             <td class="p-5 text-center">
                 <span class="inline-flex items-center justify-center size-6 rounded-full ${statusClass}" title="${statusTitle}">

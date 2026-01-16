@@ -7,10 +7,10 @@ let detectedSuggestions = [];
 async function loadUserCurrency() {
     try {
         const profile = await apiCall('/api/settings/profile');
-        window.userCurrency = profile.profile.currency || 'GBP';
+        window.userCurrency = profile.profile.currency || 'RON';
     } catch (error) {
         console.error('Failed to load user currency:', error);
-        window.userCurrency = 'GBP';
+        window.userCurrency = 'RON';
     }
 }
 

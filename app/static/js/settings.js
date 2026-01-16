@@ -45,6 +45,9 @@ function setupAvatarHandlers() {
             try {
                 const response = await fetch('/api/settings/avatar', {
                     method: 'POST',
+                    headers: {
+                        'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || ''
+                    },
                     body: formData
                 });
                 
@@ -81,7 +84,8 @@ function setupAvatarHandlers() {
                 const response = await fetch('/api/settings/avatar/default', {
                     method: 'PUT',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || ''
                     },
                     body: JSON.stringify({ avatar: avatarPath })
                 });
@@ -147,7 +151,8 @@ function setupProfileHandlers() {
                 const response = await fetch('/api/settings/profile', {
                     method: 'PUT',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || ''
                     },
                     body: JSON.stringify({
                         username,
@@ -212,7 +217,8 @@ function setupPasswordHandlers() {
                 const response = await fetch('/api/settings/password', {
                     method: 'PUT',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || ''
                     },
                     body: JSON.stringify({
                         current_password: currentPassword,

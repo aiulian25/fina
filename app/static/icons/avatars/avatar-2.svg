@@ -1,5 +1,32 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100" fill="none">
-  <circle cx="50" cy="50" r="50" fill="#10B981"/>
-  <circle cx="50" cy="35" r="15" fill="white"/>
-  <path d="M25 75 Q25 55 50 55 Q75 55 75 75" fill="white"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
+  <!-- Happy Panda Avatar -->
+  <defs>
+    <linearGradient id="pandaBg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#11998e"/>
+      <stop offset="100%" style="stop-color:#38ef7d"/>
+    </linearGradient>
+  </defs>
+  <circle cx="50" cy="50" r="50" fill="url(#pandaBg)"/>
+  <!-- Ears -->
+  <circle cx="22" cy="25" r="12" fill="#2D3436"/>
+  <circle cx="78" cy="25" r="12" fill="#2D3436"/>
+  <!-- Face -->
+  <ellipse cx="50" cy="55" rx="32" ry="28" fill="white"/>
+  <!-- Eye patches -->
+  <ellipse cx="35" cy="48" rx="12" ry="10" fill="#2D3436"/>
+  <ellipse cx="65" cy="48" rx="12" ry="10" fill="#2D3436"/>
+  <!-- Eyes -->
+  <ellipse cx="35" cy="48" rx="5" ry="6" fill="white"/>
+  <ellipse cx="65" cy="48" rx="5" ry="6" fill="white"/>
+  <circle cx="36" cy="47" r="3" fill="#2D3436"/>
+  <circle cx="66" cy="47" r="3" fill="#2D3436"/>
+  <circle cx="37" cy="46" r="1.5" fill="white"/>
+  <circle cx="67" cy="46" r="1.5" fill="white"/>
+  <!-- Nose -->
+  <ellipse cx="50" cy="62" rx="6" ry="4" fill="#2D3436"/>
+  <!-- Mouth - big smile -->
+  <path d="M38 70 Q50 82 62 70" stroke="#2D3436" stroke-width="3" fill="none"/>
+  <!-- Blush -->
+  <ellipse cx="25" cy="62" rx="6" ry="4" fill="#FFB8B8" opacity="0.6"/>
+  <ellipse cx="75" cy="62" rx="6" ry="4" fill="#FFB8B8" opacity="0.6"/>
 </svg>

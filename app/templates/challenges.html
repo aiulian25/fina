@@ -1,0 +1,558 @@
+{% extends "base.html" %}
+
+{% block title %}Challenges & Achievements - FINA{% endblock %}
+
+{% block extra_css %}
+<style>
+    /* Badge animations */
+    @keyframes badge-unlock {
+        0% { transform: scale(0) rotate(-180deg); opacity: 0; }
+        50% { transform: scale(1.2) rotate(10deg); }
+        100% { transform: scale(1) rotate(0); opacity: 1; }
+    }
+    
+    .badge-unlock {
+        animation: badge-unlock 0.6s ease-out forwards;
+    }
+    
+    /* Streak fire animation */
+    @keyframes fire-flicker {
+        0%, 100% { transform: scale(1); opacity: 1; }
+        50% { transform: scale(1.1); opacity: 0.8; }
+    }
+    
+    .fire-animation {
+        animation: fire-flicker 0.5s ease-in-out infinite;
+    }
+    
+    /* Progress bar animation */
+    @keyframes progress-fill {
+        from { width: 0; }
+    }
+    
+    .progress-animated {
+        animation: progress-fill 1s ease-out forwards;
+    }
+    
+    /* Level up glow */
+    @keyframes level-glow {
+        0%, 100% { box-shadow: 0 0 5px rgba(59, 130, 246, 0.5); }
+        50% { box-shadow: 0 0 20px rgba(59, 130, 246, 0.8); }
+    }
+    
+    .level-glow {
+        animation: level-glow 2s ease-in-out infinite;
+    }
+    
+    /* Rarity colors */
+    .rarity-common { border-color: #6b7280; }
+    .rarity-uncommon { border-color: #10b981; }
+    .rarity-rare { border-color: #3b82f6; }
+    .rarity-epic { border-color: #8b5cf6; }
+    .rarity-legendary { border-color: #f59e0b; }
+    
+    /* Calendar day styles */
+    .calendar-day {
+        transition: all 0.2s ease;
+    }
+    .calendar-day:hover {
+        transform: scale(1.1);
+    }
+    .calendar-day.success {
+        background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+    }
+    .calendar-day.failed {
+        background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+    }
+    .calendar-day.pending {
+        background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="flex h-screen w-full">
+    <!-- Side Navigation -->
+    <aside id="sidebar" class="hidden lg:flex w-64 flex-col bg-sidebar-light dark:bg-background-dark border-r border-border-light dark:border-[#233648] transition-all duration-300 shadow-sm dark:shadow-none">
+        <div class="p-6 flex flex-col h-full justify-between">
+            <div class="flex flex-col gap-8">
+                <!-- User Profile -->
+                <div class="flex gap-3 items-center">
+                    <img src="{{ current_user.avatar | avatar_url }}" alt="{{ current_user.username }}" class="size-10 rounded-full border-2 border-primary/30 object-cover">
+                    <div class="flex flex-col">
+                        <h1 class="text-text-main dark:text-white text-base font-bold leading-none">{{ current_user.username }}</h1>
+                        <p class="text-text-muted dark:text-[#92adc9] text-xs font-normal mt-1">
+                            {% if current_user.is_admin %}<span data-translate="user.admin">Admin</span>{% else %}<span data-translate="user.user">User</span>{% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Navigation Links -->
+                <nav class="flex flex-col gap-2">
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.dashboard') }}">
+                        <span class="material-symbols-outlined text-[20px]">dashboard</span>
+                        <span class="text-sm font-medium" data-translate="nav.dashboard">Dashboard</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.transactions') }}">
+                        <span class="material-symbols-outlined text-[20px]">receipt_long</span>
+                        <span class="text-sm font-medium" data-translate="nav.transactions">Transactions</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.income') }}">
+                        <span class="material-symbols-outlined text-[20px]">payments</span>
+                        <span class="text-sm font-medium" data-translate="nav.income">Income</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.goals') }}">
+                        <span class="material-symbols-outlined text-[20px]">savings</span>
+                        <span class="text-sm font-medium" data-translate="nav.goals">Savings Goals</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.subscriptions') }}">
+                        <span class="material-symbols-outlined text-[20px]">subscriptions</span>
+                        <span class="text-sm font-medium" data-translate="nav.subscriptions">Subscriptions</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.analyzer') }}">
+                        <span class="material-symbols-outlined text-[20px]">psychology</span>
+                        <span class="text-sm font-medium" data-translate="nav.analyzer">Expense Analyzer</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.insights') }}">
+                        <span class="material-symbols-outlined text-[20px]">insights</span>
+                        <span class="text-sm font-medium" data-translate="nav.insights">Smart Insights</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary border border-primary/10" href="{{ url_for('main.challenges') }}">
+                        <span class="material-symbols-outlined text-[20px]">emoji_events</span>
+                        <span class="text-sm font-medium" data-translate="nav.challenges">Challenges</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.forecast') }}">
+                        <span class="material-symbols-outlined text-[20px]">auto_graph</span>
+                        <span class="text-sm font-medium" data-translate="nav.forecast">Forecast</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.recurring') }}">
+                        <span class="material-symbols-outlined text-[20px]">repeat</span>
+                        <span class="text-sm font-medium" data-translate="nav.recurring">Recurring</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.import_page') }}">
+                        <span class="material-symbols-outlined text-[20px]">file_upload</span>
+                        <span class="text-sm font-medium" data-translate="nav.import">Import CSV</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.reports') }}">
+                        <span class="material-symbols-outlined text-[20px]">pie_chart</span>
+                        <span class="text-sm font-medium" data-translate="nav.reports">Reports</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.documents') }}">
+                        <span class="material-symbols-outlined text-[20px]">folder_open</span>
+                        <span class="text-sm font-medium" data-translate="nav.documents">Documents</span>
+                    </a>
+                    {% if current_user.is_admin %}
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="/admin">
+                        <span class="material-symbols-outlined text-[20px]">admin_panel_settings</span>
+                        <span class="text-sm font-medium" data-translate="nav.admin">Admin</span>
+                    </a>
+                    {% endif %}
+                </nav>
+            </div>
+            
+            <!-- Bottom Links -->
+            <div class="flex flex-col gap-2">
+                <button id="theme-toggle" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors">
+                    <span class="material-symbols-outlined text-[20px]" id="theme-icon">light_mode</span>
+                    <span class="text-sm font-medium" id="theme-text" data-translate="dashboard.lightMode">Light Mode</span>
+                </button>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.settings') }}">
+                    <span class="material-symbols-outlined text-[20px]">settings</span>
+                    <span class="text-sm font-medium" data-translate="nav.settings">Settings</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('auth.logout') }}">
+                    <span class="material-symbols-outlined text-[20px]">logout</span>
+                    <span class="text-sm font-medium" data-translate="nav.logout">Log out</span>
+                </a>
+            </div>
+        </div>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-full overflow-hidden relative">
+        <!-- Top Header -->
+        <header class="h-16 flex items-center justify-between px-6 lg:px-8 border-b border-border-light dark:border-[#233648] bg-white/80 dark:bg-background-dark/95 backdrop-blur z-10 shrink-0 shadow-sm dark:shadow-none">
+            <div class="flex items-center gap-4">
+                <button id="menu-toggle" class="lg:hidden text-text-main dark:text-white">
+                    <span class="material-symbols-outlined">menu</span>
+                </button>
+                <h2 class="text-text-main dark:text-white text-lg font-bold" data-translate="nav.challenges">Challenges & Achievements</h2>
+            </div>
+            <div class="flex items-center gap-3">
+                <!-- Level Badge -->
+                <div id="level-badge" class="flex items-center gap-2 px-3 py-1.5 bg-primary/10 rounded-lg level-glow">
+                    <span class="material-symbols-outlined text-primary text-lg">military_tech</span>
+                    <span class="text-primary font-bold" data-translate="challenges.level">Level</span>
+                    <span id="user-level" class="text-primary font-bold">1</span>
+                </div>
+            </div>
+        </header>
+        
+        <!-- Scrollable Content -->
+        <div class="flex-1 overflow-y-auto p-6 lg:p-8 scroll-smooth bg-[#f8fafc] dark:bg-background-dark">
+            <div class="max-w-7xl mx-auto flex flex-col gap-6 pb-10">
+                
+                <!-- Stats Overview -->
+                <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                    <!-- Total Points -->
+                    <div class="bg-white dark:bg-card-dark rounded-xl p-5 border border-gray-200 dark:border-[#233648]">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-text-muted dark:text-[#92adc9]" data-translate="challenges.totalPoints">Total Points</p>
+                                <p id="total-points" class="text-3xl font-bold text-amber-500 mt-1">0</p>
+                            </div>
+                            <div class="p-3 bg-amber-500/10 rounded-xl">
+                                <span class="material-symbols-outlined text-amber-500 text-2xl">stars</span>
+                            </div>
+                        </div>
+                        <div class="mt-3">
+                            <div class="flex items-center justify-between text-xs text-text-muted dark:text-[#92adc9] mb-1">
+                                <span data-translate="challenges.nextLevel">Next Level</span>
+                                <span id="points-to-next">0 pts</span>
+                            </div>
+                            <div class="w-full bg-gray-200 dark:bg-[#233648] rounded-full h-2">
+                                <div id="level-progress" class="bg-amber-500 h-2 rounded-full progress-animated" style="width: 0%"></div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- No-Spend Streak -->
+                    <div class="bg-white dark:bg-card-dark rounded-xl p-5 border border-gray-200 dark:border-[#233648]">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-text-muted dark:text-[#92adc9]" data-translate="challenges.noSpendStreak">No-Spend Streak</p>
+                                <p class="text-3xl font-bold text-emerald-500 mt-1">
+                                    <span id="no-spend-streak">0</span>
+                                    <span class="text-lg" data-translate="challenges.days">days</span>
+                                </p>
+                            </div>
+                            <div class="p-3 bg-emerald-500/10 rounded-xl">
+                                <span id="streak-icon" class="material-symbols-outlined text-emerald-500 text-2xl">local_fire_department</span>
+                            </div>
+                        </div>
+                        <p class="text-xs text-text-muted dark:text-[#92adc9] mt-2">
+                            <span data-translate="challenges.bestStreak">Best:</span> <span id="best-no-spend-streak">0</span> <span data-translate="challenges.days">days</span>
+                        </p>
+                    </div>
+                    
+                    <!-- Achievements Earned -->
+                    <div class="bg-white dark:bg-card-dark rounded-xl p-5 border border-gray-200 dark:border-[#233648]">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-text-muted dark:text-[#92adc9]" data-translate="challenges.achievementsEarned">Achievements</p>
+                                <p class="text-3xl font-bold text-purple-500 mt-1">
+                                    <span id="achievements-earned">0</span>/<span id="achievements-total">0</span>
+                                </p>
+                            </div>
+                            <div class="p-3 bg-purple-500/10 rounded-xl">
+                                <span class="material-symbols-outlined text-purple-500 text-2xl">emoji_events</span>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- 52-Week Progress -->
+                    <div class="bg-white dark:bg-card-dark rounded-xl p-5 border border-gray-200 dark:border-[#233648]">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-text-muted dark:text-[#92adc9]" data-translate="challenges.week52Progress">52-Week Progress</p>
+                                <p class="text-3xl font-bold text-blue-500 mt-1">
+                                    <span id="week-52-progress">0</span>/52
+                                </p>
+                            </div>
+                            <div class="p-3 bg-blue-500/10 rounded-xl">
+                                <span class="material-symbols-outlined text-blue-500 text-2xl">calendar_month</span>
+                            </div>
+                        </div>
+                        <p id="week-52-saved" class="text-xs text-emerald-500 mt-2 font-medium"></p>
+                    </div>
+                </div>
+                
+                <!-- Tabs -->
+                <div class="flex flex-wrap gap-2">
+                    <button class="tab-btn active px-4 py-2.5 rounded-lg border border-gray-200 dark:border-[#233648] text-sm font-medium flex items-center gap-2 bg-white dark:bg-card-dark" data-tab="no-spend">
+                        <span class="material-symbols-outlined text-lg">event_available</span>
+                        <span data-translate="challenges.tabs.noSpend">No-Spend Days</span>
+                    </button>
+                    <button class="tab-btn px-4 py-2.5 rounded-lg border border-gray-200 dark:border-[#233648] text-sm font-medium flex items-center gap-2 text-text-muted dark:text-[#92adc9]" data-tab="52-week">
+                        <span class="material-symbols-outlined text-lg">savings</span>
+                        <span data-translate="challenges.tabs.week52">52-Week Challenge</span>
+                    </button>
+                    <button class="tab-btn px-4 py-2.5 rounded-lg border border-gray-200 dark:border-[#233648] text-sm font-medium flex items-center gap-2 text-text-muted dark:text-[#92adc9]" data-tab="achievements">
+                        <span class="material-symbols-outlined text-lg">emoji_events</span>
+                        <span data-translate="challenges.tabs.achievements">Achievements</span>
+                    </button>
+                    <button class="tab-btn px-4 py-2.5 rounded-lg border border-gray-200 dark:border-[#233648] text-sm font-medium flex items-center gap-2 text-text-muted dark:text-[#92adc9]" data-tab="leaderboard">
+                        <span class="material-symbols-outlined text-lg">leaderboard</span>
+                        <span data-translate="challenges.tabs.leaderboard">Leaderboard</span>
+                    </button>
+                </div>
+                
+                <!-- Tab Content -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Main Content Area -->
+                    <div class="lg:col-span-2 space-y-6">
+                        
+                        <!-- No-Spend Days Tab -->
+                        <div id="tab-no-spend" class="tab-content">
+                            <!-- Today's Status -->
+                            <div class="bg-white dark:bg-card-dark rounded-xl p-6 border border-gray-200 dark:border-[#233648] mb-6">
+                                <h3 class="text-lg font-semibold text-text-main dark:text-white mb-4 flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-primary">today</span>
+                                    <span data-translate="challenges.todayStatus">Today's Status</span>
+                                </h3>
+                                <div id="today-status" class="flex items-center justify-between">
+                                    <div>
+                                        <p id="today-status-text" class="text-2xl font-bold text-emerald-500" data-translate="challenges.noSpendSoFar">No spending so far!</p>
+                                        <p id="today-spent-amount" class="text-sm text-text-muted dark:text-[#92adc9] mt-1"></p>
+                                    </div>
+                                    <button id="set-intentional-btn" onclick="setIntentionalNoSpend()" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg flex items-center gap-2 transition-colors">
+                                        <span class="material-symbols-outlined text-lg">flag</span>
+                                        <span data-translate="challenges.setIntentional">Make it intentional</span>
+                                    </button>
+                                </div>
+                            </div>
+                            
+                            <!-- Calendar -->
+                            <div class="bg-white dark:bg-card-dark rounded-xl p-6 border border-gray-200 dark:border-[#233648]">
+                                <div class="flex items-center justify-between mb-4">
+                                    <h3 class="text-lg font-semibold text-text-main dark:text-white flex items-center gap-2">
+                                        <span class="material-symbols-outlined text-primary">calendar_month</span>
+                                        <span data-translate="challenges.calendar">Calendar</span>
+                                    </h3>
+                                    <div class="flex items-center gap-2">
+                                        <button onclick="changeMonth(-1)" class="p-2 hover:bg-gray-100 dark:hover:bg-[#233648] rounded-lg transition-colors">
+                                            <span class="material-symbols-outlined">chevron_left</span>
+                                        </button>
+                                        <span id="calendar-month" class="font-medium text-text-main dark:text-white min-w-[120px] text-center"></span>
+                                        <button onclick="changeMonth(1)" class="p-2 hover:bg-gray-100 dark:hover:bg-[#233648] rounded-lg transition-colors">
+                                            <span class="material-symbols-outlined">chevron_right</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <!-- Calendar Grid -->
+                                <div class="grid grid-cols-7 gap-1 text-center mb-2">
+                                    <div class="text-xs font-medium text-text-muted dark:text-[#92adc9] py-2" data-translate="challenges.days.mon">Mon</div>
+                                    <div class="text-xs font-medium text-text-muted dark:text-[#92adc9] py-2" data-translate="challenges.days.tue">Tue</div>
+                                    <div class="text-xs font-medium text-text-muted dark:text-[#92adc9] py-2" data-translate="challenges.days.wed">Wed</div>
+                                    <div class="text-xs font-medium text-text-muted dark:text-[#92adc9] py-2" data-translate="challenges.days.thu">Thu</div>
+                                    <div class="text-xs font-medium text-text-muted dark:text-[#92adc9] py-2" data-translate="challenges.days.fri">Fri</div>
+                                    <div class="text-xs font-medium text-text-muted dark:text-[#92adc9] py-2" data-translate="challenges.days.sat">Sat</div>
+                                    <div class="text-xs font-medium text-text-muted dark:text-[#92adc9] py-2" data-translate="challenges.days.sun">Sun</div>
+                                </div>
+                                <div id="calendar-grid" class="grid grid-cols-7 gap-1">
+                                    <!-- Calendar days will be rendered here -->
+                                </div>
+                                
+                                <!-- Legend -->
+                                <div class="flex items-center justify-center gap-6 mt-4 text-sm">
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-4 h-4 rounded bg-emerald-500"></div>
+                                        <span class="text-text-muted dark:text-[#92adc9]" data-translate="challenges.legend.noSpend">No Spend</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-4 h-4 rounded bg-red-500"></div>
+                                        <span class="text-text-muted dark:text-[#92adc9]" data-translate="challenges.legend.spent">Spent</span>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <div class="w-4 h-4 rounded border-2 border-amber-500"></div>
+                                        <span class="text-text-muted dark:text-[#92adc9]" data-translate="challenges.legend.intentional">Intentional</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- 52-Week Challenge Tab -->
+                        <div id="tab-52-week" class="tab-content hidden">
+                            <!-- Challenge Status -->
+                            <div id="week-52-container">
+                                <div id="week-52-inactive" class="bg-white dark:bg-card-dark rounded-xl p-6 border border-gray-200 dark:border-[#233648]">
+                                    <div class="text-center py-8">
+                                        <div class="w-20 h-20 bg-blue-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+                                            <span class="material-symbols-outlined text-blue-500 text-4xl">savings</span>
+                                        </div>
+                                        <h3 class="text-xl font-bold text-text-main dark:text-white mb-2" data-translate="challenges.week52.title">52-Week Savings Challenge</h3>
+                                        <p class="text-text-muted dark:text-[#92adc9] mb-6 max-w-md mx-auto" data-translate="challenges.week52.description">
+                                            Save a little more each week. Start with 1 in week 1, 2 in week 2, and so on. By the end of 52 weeks, you'll have saved 1,378!
+                                        </p>
+                                        
+                                        <!-- Configuration -->
+                                        <div class="max-w-sm mx-auto space-y-4 text-left mb-6">
+                                            <div>
+                                                <label class="block text-sm font-medium text-text-main dark:text-white mb-1" data-translate="challenges.week52.baseAmount">Starting Amount</label>
+                                                <input type="number" id="week52-base" value="1" min="1" step="1" class="w-full px-3 py-2 bg-gray-50 dark:bg-[#1a2b3c] border border-gray-200 dark:border-[#233648] rounded-lg text-text-main dark:text-white">
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-text-main dark:text-white mb-1" data-translate="challenges.week52.increment">Weekly Increment</label>
+                                                <input type="number" id="week52-increment" value="1" min="1" step="1" class="w-full px-3 py-2 bg-gray-50 dark:bg-[#1a2b3c] border border-gray-200 dark:border-[#233648] rounded-lg text-text-main dark:text-white">
+                                            </div>
+                                            <div class="flex items-center gap-3">
+                                                <input type="checkbox" id="week52-reverse" class="w-4 h-4 text-primary rounded">
+                                                <label for="week52-reverse" class="text-sm text-text-muted dark:text-[#92adc9]" data-translate="challenges.week52.reverse">Start with highest amount (reverse order)</label>
+                                            </div>
+                                        </div>
+                                        
+                                        <button onclick="startWeek52Challenge()" class="px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-lg font-medium flex items-center gap-2 mx-auto transition-colors">
+                                            <span class="material-symbols-outlined">rocket_launch</span>
+                                            <span data-translate="challenges.week52.start">Start Challenge</span>
+                                        </button>
+                                    </div>
+                                </div>
+                                
+                                <div id="week-52-active" class="hidden space-y-6">
+                                    <!-- Progress Overview -->
+                                    <div class="bg-white dark:bg-card-dark rounded-xl p-6 border border-gray-200 dark:border-[#233648]">
+                                        <div class="flex items-center justify-between mb-4">
+                                            <h3 class="text-lg font-semibold text-text-main dark:text-white flex items-center gap-2">
+                                                <span class="material-symbols-outlined text-blue-500">savings</span>
+                                                <span data-translate="challenges.week52.yourProgress">Your Progress</span>
+                                            </h3>
+                                            <button onclick="resetWeek52Challenge()" class="text-red-500 hover:text-red-600 text-sm flex items-center gap-1">
+                                                <span class="material-symbols-outlined text-sm">restart_alt</span>
+                                                <span data-translate="challenges.week52.reset">Reset</span>
+                                            </button>
+                                        </div>
+                                        
+                                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+                                            <div class="text-center p-3 bg-gray-50 dark:bg-[#1a2b3c] rounded-lg">
+                                                <p class="text-sm text-text-muted dark:text-[#92adc9]" data-translate="challenges.week52.currentWeek">Current Week</p>
+                                                <p id="week52-current-week" class="text-2xl font-bold text-blue-500">1</p>
+                                            </div>
+                                            <div class="text-center p-3 bg-gray-50 dark:bg-[#1a2b3c] rounded-lg">
+                                                <p class="text-sm text-text-muted dark:text-[#92adc9]" data-translate="challenges.week52.totalSaved">Total Saved</p>
+                                                <p id="week52-total-saved" class="text-2xl font-bold text-emerald-500">0</p>
+                                            </div>
+                                            <div class="text-center p-3 bg-gray-50 dark:bg-[#1a2b3c] rounded-lg">
+                                                <p class="text-sm text-text-muted dark:text-[#92adc9]" data-translate="challenges.week52.expected">Expected</p>
+                                                <p id="week52-expected" class="text-2xl font-bold text-text-main dark:text-white">0</p>
+                                            </div>
+                                            <div class="text-center p-3 bg-gray-50 dark:bg-[#1a2b3c] rounded-lg">
+                                                <p class="text-sm text-text-muted dark:text-[#92adc9]" data-translate="challenges.week52.finalGoal">Final Goal</p>
+                                                <p id="week52-final-goal" class="text-2xl font-bold text-amber-500">1,378</p>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Save for this week -->
+                                        <div class="flex items-center gap-4 p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                                            <div class="flex-1">
+                                                <p class="text-sm text-text-muted dark:text-[#92adc9]" data-translate="challenges.week52.thisWeekTarget">This week's target</p>
+                                                <p id="week52-this-week-target" class="text-xl font-bold text-blue-500">1</p>
+                                            </div>
+                                            <div class="flex items-center gap-2">
+                                                <input type="number" id="week52-save-amount" class="w-24 px-3 py-2 bg-white dark:bg-[#1a2b3c] border border-gray-200 dark:border-[#233648] rounded-lg text-text-main dark:text-white" placeholder="0">
+                                                <button onclick="saveForWeek()" class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg flex items-center gap-2 transition-colors">
+                                                    <span class="material-symbols-outlined text-lg">check</span>
+                                                    <span data-translate="challenges.week52.save">Save</span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Week Grid -->
+                                    <div class="bg-white dark:bg-card-dark rounded-xl p-6 border border-gray-200 dark:border-[#233648]">
+                                        <h4 class="text-sm font-medium text-text-muted dark:text-[#92adc9] mb-4" data-translate="challenges.week52.weeklyProgress">Weekly Progress</h4>
+                                        <div id="week52-grid" class="grid grid-cols-13 gap-1">
+                                            <!-- Week cells will be rendered here -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Achievements Tab -->
+                        <div id="tab-achievements" class="tab-content hidden">
+                            <div class="bg-white dark:bg-card-dark rounded-xl p-6 border border-gray-200 dark:border-[#233648]">
+                                <h3 class="text-lg font-semibold text-text-main dark:text-white mb-4 flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-primary">emoji_events</span>
+                                    <span data-translate="challenges.allAchievements">All Achievements</span>
+                                </h3>
+                                <div id="achievements-grid" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <!-- Achievement cards will be rendered here -->
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Leaderboard Tab -->
+                        <div id="tab-leaderboard" class="tab-content hidden">
+                            <div class="bg-white dark:bg-card-dark rounded-xl p-6 border border-gray-200 dark:border-[#233648]">
+                                <h3 class="text-lg font-semibold text-text-main dark:text-white mb-4 flex items-center gap-2">
+                                    <span class="material-symbols-outlined text-primary">leaderboard</span>
+                                    <span data-translate="challenges.leaderboard">Leaderboard</span>
+                                </h3>
+                                <div id="leaderboard-list" class="space-y-3">
+                                    <!-- Leaderboard rows will be rendered here -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Sidebar -->
+                    <div class="space-y-6">
+                        <!-- Quick Actions -->
+                        <div class="bg-white dark:bg-card-dark rounded-xl p-5 border border-gray-200 dark:border-[#233648]">
+                            <h3 class="text-base font-semibold text-text-main dark:text-white mb-4 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-primary">bolt</span>
+                                <span data-translate="challenges.quickActions">Quick Actions</span>
+                            </h3>
+                            <div class="space-y-2">
+                                <a href="{{ url_for('main.goals') }}" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-[#233648] transition-colors group">
+                                    <span class="material-symbols-outlined text-emerald-500 group-hover:scale-110 transition-transform">savings</span>
+                                    <span class="text-sm text-text-main dark:text-white" data-translate="challenges.actions.viewGoals">View Savings Goals</span>
+                                </a>
+                                <a href="{{ url_for('main.transactions') }}" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-[#233648] transition-colors group">
+                                    <span class="material-symbols-outlined text-blue-500 group-hover:scale-110 transition-transform">receipt_long</span>
+                                    <span class="text-sm text-text-main dark:text-white" data-translate="challenges.actions.viewTransactions">View Transactions</span>
+                                </a>
+                                <a href="{{ url_for('main.insights') }}" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-[#233648] transition-colors group">
+                                    <span class="material-symbols-outlined text-purple-500 group-hover:scale-110 transition-transform">insights</span>
+                                    <span class="text-sm text-text-main dark:text-white" data-translate="challenges.actions.viewInsights">View Insights</span>
+                                </a>
+                            </div>
+                        </div>
+                        
+                        <!-- Recent Achievements -->
+                        <div class="bg-white dark:bg-card-dark rounded-xl p-5 border border-gray-200 dark:border-[#233648]">
+                            <h3 class="text-base font-semibold text-text-main dark:text-white mb-4 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-amber-500">workspace_premium</span>
+                                <span data-translate="challenges.recentAchievements">Recent Achievements</span>
+                            </h3>
+                            <div id="recent-achievements" class="space-y-3">
+                                <p class="text-sm text-text-muted dark:text-[#92adc9] text-center py-4" data-translate="challenges.noRecentAchievements">No achievements yet</p>
+                            </div>
+                        </div>
+                        
+                        <!-- Tips -->
+                        <div class="bg-gradient-to-br from-emerald-500/10 to-blue-500/10 rounded-xl p-5 border border-emerald-500/20">
+                            <h3 class="text-base font-semibold text-text-main dark:text-white mb-3 flex items-center gap-2">
+                                <span class="material-symbols-outlined text-emerald-500">lightbulb</span>
+                                <span data-translate="challenges.tip">Tip</span>
+                            </h3>
+                            <p id="tip-text" class="text-sm text-text-muted dark:text-[#92adc9]" data-translate="challenges.tips.noSpend">
+                                Try designating specific days as no-spend days. Start with weekends and build up your streak!
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Achievement Unlock Modal -->
+<div id="achievement-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-card-dark rounded-2xl max-w-sm w-full p-8 text-center">
+        <div id="achievement-badge" class="w-24 h-24 rounded-full mx-auto mb-4 flex items-center justify-center badge-unlock">
+            <span id="achievement-icon" class="material-symbols-outlined text-5xl text-white">emoji_events</span>
+        </div>
+        <h3 class="text-xl font-bold text-text-main dark:text-white mb-2" data-translate="challenges.achievementUnlocked">Achievement Unlocked!</h3>
+        <p id="achievement-title" class="text-lg font-semibold text-amber-500 mb-2"></p>
+        <p id="achievement-description" class="text-sm text-text-muted dark:text-[#92adc9] mb-4"></p>
+        <p class="text-sm text-amber-500 font-medium mb-6">+<span id="achievement-points">0</span> <span data-translate="challenges.points">points</span></p>
+        <button onclick="closeAchievementModal()" class="px-6 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg transition-colors" data-translate="common.awesome">Awesome!</button>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/challenges.js') }}?v=1.0.0"></script>
+{% endblock %}

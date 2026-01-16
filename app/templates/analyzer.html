@@ -1,0 +1,500 @@
+{% extends "base.html" %}
+
+{% block title %}Expense Analyzer - FINA{% endblock %}
+
+{% block body %}
+<div class="flex h-screen w-full">
+    <!-- Side Navigation -->
+    <aside id="sidebar" class="hidden lg:flex w-64 flex-col bg-sidebar-light dark:bg-background-dark border-r border-border-light dark:border-[#233648] transition-all duration-300 shadow-sm dark:shadow-none">
+        <div class="p-6 flex flex-col h-full justify-between">
+            <div class="flex flex-col gap-8">
+                <!-- User Profile -->
+                <div class="flex gap-3 items-center">
+                    <img src="{{ current_user.avatar | avatar_url }}" alt="{{ current_user.username }}" class="size-10 rounded-full border-2 border-primary/30 object-cover">
+                    <div class="flex flex-col">
+                        <h1 class="text-text-main dark:text-white text-base font-bold leading-none">{{ current_user.username }}</h1>
+                        <p class="text-text-muted dark:text-[#92adc9] text-xs font-normal mt-1">
+                            {% if current_user.is_admin %}<span data-translate="user.admin">Admin</span>{% else %}<span data-translate="user.user">User</span>{% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Navigation Links -->
+                <nav class="flex flex-col gap-2">
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.dashboard') }}">
+                        <span class="material-symbols-outlined text-[20px]">dashboard</span>
+                        <span class="text-sm font-medium" data-translate="nav.dashboard">Dashboard</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.transactions') }}">
+                        <span class="material-symbols-outlined text-[20px]">receipt_long</span>
+                        <span class="text-sm font-medium" data-translate="nav.transactions">Transactions</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.income') }}">
+                        <span class="material-symbols-outlined text-[20px]">payments</span>
+                        <span class="text-sm font-medium" data-translate="nav.income">Income</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.goals') }}">
+                        <span class="material-symbols-outlined text-[20px]">savings</span>
+                        <span class="text-sm font-medium" data-translate="nav.goals">Savings Goals</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.subscriptions') }}">
+                        <span class="material-symbols-outlined text-[20px]">subscriptions</span>
+                        <span class="text-sm font-medium" data-translate="nav.subscriptions">Subscriptions</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary border border-primary/10" href="{{ url_for('main.analyzer') }}">
+                        <span class="material-symbols-outlined text-[20px]">psychology</span>
+                        <span class="text-sm font-medium" data-translate="nav.analyzer">Expense Analyzer</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.insights') }}">
+                        <span class="material-symbols-outlined text-[20px]">insights</span>
+                        <span class="text-sm font-medium" data-translate="nav.insights">Smart Insights</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.challenges') }}">
+                        <span class="material-symbols-outlined text-[20px]">emoji_events</span>
+                        <span class="text-sm font-medium" data-translate="nav.challenges">Challenges</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.forecast') }}">
+                        <span class="material-symbols-outlined text-[20px]">auto_graph</span>
+                        <span class="text-sm font-medium" data-translate="nav.forecast">Forecast</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.recurring') }}">
+                        <span class="material-symbols-outlined text-[20px]">repeat</span>
+                        <span class="text-sm font-medium" data-translate="nav.recurring">Recurring</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.import_page') }}">
+                        <span class="material-symbols-outlined text-[20px]">file_upload</span>
+                        <span class="text-sm font-medium" data-translate="nav.import">Import CSV</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.reports') }}">
+                        <span class="material-symbols-outlined text-[20px]">pie_chart</span>
+                        <span class="text-sm font-medium" data-translate="nav.reports">Reports</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.documents') }}">
+                        <span class="material-symbols-outlined text-[20px]">folder_open</span>
+                        <span class="text-sm font-medium" data-translate="nav.documents">Documents</span>
+                    </a>
+                    {% if current_user.is_admin %}
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="/admin">
+                        <span class="material-symbols-outlined text-[20px]">admin_panel_settings</span>
+                        <span class="text-sm font-medium" data-translate="nav.admin">Admin</span>
+                    </a>
+                    {% endif %}
+                </nav>
+            </div>
+            
+            <!-- Bottom Links -->
+            <div class="flex flex-col gap-2">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.settings') }}">
+                    <span class="material-symbols-outlined text-[20px]">settings</span>
+                    <span class="text-sm font-medium" data-translate="nav.settings">Settings</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-red-500 dark:hover:text-red-400 transition-colors" href="{{ url_for('auth.logout') }}">
+                    <span class="material-symbols-outlined text-[20px]">logout</span>
+                    <span class="text-sm font-medium" data-translate="nav.logout">Logout</span>
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col min-h-screen overflow-hidden">
+        <!-- Top Bar (Mobile) -->
+        <header class="lg:hidden bg-white dark:bg-card-dark border-b border-border-light dark:border-[#233648] p-4 flex items-center justify-between">
+            <button id="mobile-menu-toggle" class="text-text-main dark:text-white p-2 hover:bg-slate-100 dark:hover:bg-[#233648] rounded-lg transition-colors">
+                <span class="material-symbols-outlined text-[24px]">menu</span>
+            </button>
+            <h1 class="text-lg font-bold text-text-main dark:text-white" data-translate="analyzer.title">Expense Analyzer</h1>
+            <div class="w-10"></div>
+        </header>
+
+        <!-- Content -->
+        <main class="flex-1 overflow-y-auto bg-background-light dark:bg-background-dark p-4 md:p-6 lg:p-8">
+            <div class="max-w-7xl mx-auto">
+                <!-- Header -->
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
+                    <div>
+                        <h1 class="text-2xl md:text-3xl font-bold text-text-main dark:text-white mb-2" data-translate="analyzer.title">Expense Analyzer</h1>
+                        <p class="text-text-muted dark:text-[#92adc9]" data-translate="analyzer.subtitle">Discover hidden spending patterns and save more money</p>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <select id="days-filter" class="bg-white dark:bg-card-dark border border-border-light dark:border-[#233648] rounded-lg px-4 py-2.5 text-sm text-text-main dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none">
+                            <option value="30" data-translate="analyzer.last30Days">Last 30 Days</option>
+                            <option value="90" selected data-translate="analyzer.last90Days">Last 90 Days</option>
+                            <option value="180" data-translate="analyzer.last6Months">Last 6 Months</option>
+                            <option value="365" data-translate="analyzer.lastYear">Last Year</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Score Card -->
+                <div id="score-card" class="bg-gradient-to-br from-primary/10 to-primary/5 dark:from-primary/20 dark:to-primary/10 border border-primary/20 rounded-2xl p-6 mb-6">
+                    <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+                        <div class="flex items-center gap-4">
+                            <div class="relative">
+                                <svg class="w-20 h-20 transform -rotate-90">
+                                    <circle cx="40" cy="40" r="36" stroke="currentColor" stroke-width="8" fill="none" class="text-gray-200 dark:text-gray-700"></circle>
+                                    <circle id="score-circle" cx="40" cy="40" r="36" stroke="currentColor" stroke-width="8" fill="none" 
+                                        class="text-primary transition-all duration-1000" 
+                                        stroke-dasharray="226.2" stroke-dashoffset="226.2" stroke-linecap="round"></circle>
+                                </svg>
+                                <div class="absolute inset-0 flex items-center justify-center">
+                                    <span id="score-value" class="text-2xl font-bold text-text-main dark:text-white">--</span>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-text-main dark:text-white" data-translate="analyzer.spendingScore">Spending Score</h3>
+                                <p id="score-label" class="text-sm text-text-muted dark:text-[#92adc9]">--</p>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 md:grid-cols-4 gap-4">
+                            <div class="text-center p-3 bg-white/50 dark:bg-card-dark/50 rounded-xl">
+                                <p class="text-2xl font-bold text-text-main dark:text-white" id="total-analyzed">--</p>
+                                <p class="text-xs text-text-muted dark:text-[#92adc9]" data-translate="analyzer.transactions">Transactions</p>
+                            </div>
+                            <div class="text-center p-3 bg-white/50 dark:bg-card-dark/50 rounded-xl">
+                                <p class="text-2xl font-bold text-amber-500" id="wants-percentage">--</p>
+                                <p class="text-xs text-text-muted dark:text-[#92adc9]" data-translate="analyzer.wantsSpending">Wants</p>
+                            </div>
+                            <div class="text-center p-3 bg-white/50 dark:bg-card-dark/50 rounded-xl">
+                                <p class="text-2xl font-bold text-red-500" id="impulse-count">--</p>
+                                <p class="text-xs text-text-muted dark:text-[#92adc9]" data-translate="analyzer.impulseBuys">Impulse Buys</p>
+                            </div>
+                            <div class="text-center p-3 bg-white/50 dark:bg-card-dark/50 rounded-xl">
+                                <p class="text-2xl font-bold text-emerald-500" id="potential-savings">--</p>
+                                <p class="text-xs text-text-muted dark:text-[#92adc9]" data-translate="analyzer.yearlySavings">Yearly Savings</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Insights Section -->
+                <div id="insights-section" class="mb-6">
+                    <h2 class="text-lg font-semibold text-text-main dark:text-white mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">lightbulb</span>
+                        <span data-translate="analyzer.personalizedInsights">Personalized Insights</span>
+                    </h2>
+                    <div id="insights-container" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <!-- Insights will be loaded here -->
+                        <div class="animate-pulse bg-white dark:bg-card-dark rounded-xl p-4 h-24"></div>
+                        <div class="animate-pulse bg-white dark:bg-card-dark rounded-xl p-4 h-24"></div>
+                    </div>
+                </div>
+
+                <!-- Tab Navigation -->
+                <div class="flex flex-wrap gap-2 mb-6 pb-2">
+                    <button class="tab-btn active inline-flex items-center gap-2 px-4 py-2 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded-full text-sm font-medium hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-colors" data-tab="silly">
+                        <span class="material-symbols-outlined text-[18px]">coffee</span>
+                        <span data-translate="analyzer.tabs.sillyExpenses">Silly Expenses</span>
+                    </button>
+                    <button class="tab-btn inline-flex items-center gap-2 px-4 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-sm font-medium hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-colors" data-tab="needs-wants">
+                        <span class="material-symbols-outlined text-[18px]">balance</span>
+                        <span data-translate="analyzer.tabs.needsVsWants">Needs vs Wants</span>
+                    </button>
+                    <button class="tab-btn inline-flex items-center gap-2 px-4 py-2 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full text-sm font-medium hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors" data-tab="impulse">
+                        <span class="material-symbols-outlined text-[18px]">bolt</span>
+                        <span data-translate="analyzer.tabs.impulse">Impulse Buys</span>
+                    </button>
+                    <button class="tab-btn inline-flex items-center gap-2 px-4 py-2 bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 rounded-full text-sm font-medium hover:bg-emerald-200 dark:hover:bg-emerald-900/50 transition-colors" data-tab="projections">
+                        <span class="material-symbols-outlined text-[18px]">trending_up</span>
+                        <span data-translate="analyzer.tabs.projections">If You Saved...</span>
+                    </button>
+                </div>
+
+                <!-- Tab Content: Silly Expenses -->
+                <div id="tab-silly" class="tab-content">
+                    <div class="bg-white dark:bg-card-dark rounded-2xl border border-border-light dark:border-[#233648] p-6 mb-6">
+                        <div class="flex items-center justify-between mb-4">
+                            <h3 class="text-lg font-semibold text-text-main dark:text-white flex items-center gap-2">
+                                <span class="material-symbols-outlined text-amber-500">coffee</span>
+                                <span data-translate="analyzer.sillyExpenses.title">Small Purchases That Add Up</span>
+                            </h3>
+                            <span id="silly-total" class="text-lg font-bold text-amber-500">--</span>
+                        </div>
+                        <p class="text-sm text-text-muted dark:text-[#92adc9] mb-6" data-translate="analyzer.sillyExpenses.desc">Daily coffee runs, snacks, and small treats might seem harmless, but they add up fast!</p>
+                        
+                        <div id="silly-expenses-list" class="space-y-4">
+                            <!-- Silly expenses will be loaded here -->
+                            <div class="animate-pulse h-20 bg-gray-100 dark:bg-[#233648] rounded-xl"></div>
+                            <div class="animate-pulse h-20 bg-gray-100 dark:bg-[#233648] rounded-xl"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Content: Needs vs Wants -->
+                <div id="tab-needs-wants" class="tab-content hidden">
+                    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+                        <!-- Needs Card -->
+                        <div class="bg-white dark:bg-card-dark rounded-2xl border border-border-light dark:border-[#233648] p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold text-emerald-500 flex items-center gap-2">
+                                    <span class="material-symbols-outlined">home</span>
+                                    <span data-translate="analyzer.needs">Needs</span>
+                                </h3>
+                                <span id="needs-total" class="text-lg font-bold text-emerald-500">--</span>
+                            </div>
+                            <p class="text-sm text-text-muted dark:text-[#92adc9] mb-4" data-translate="analyzer.needsDesc">Essential expenses like rent, groceries, utilities</p>
+                            <div class="relative h-4 bg-gray-100 dark:bg-[#233648] rounded-full overflow-hidden mb-2">
+                                <div id="needs-bar" class="absolute left-0 top-0 h-full bg-emerald-500 rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                            <p class="text-sm text-text-muted dark:text-[#92adc9]"><span id="needs-percentage">--</span>% <span data-translate="analyzer.ofTotal">of total</span></p>
+                        </div>
+
+                        <!-- Wants Card -->
+                        <div class="bg-white dark:bg-card-dark rounded-2xl border border-border-light dark:border-[#233648] p-6">
+                            <div class="flex items-center justify-between mb-4">
+                                <h3 class="text-lg font-semibold text-amber-500 flex items-center gap-2">
+                                    <span class="material-symbols-outlined">shopping_bag</span>
+                                    <span data-translate="analyzer.wants">Wants</span>
+                                </h3>
+                                <span id="wants-total" class="text-lg font-bold text-amber-500">--</span>
+                            </div>
+                            <p class="text-sm text-text-muted dark:text-[#92adc9] mb-4" data-translate="analyzer.wantsDesc">Non-essential spending like entertainment, dining out</p>
+                            <div class="relative h-4 bg-gray-100 dark:bg-[#233648] rounded-full overflow-hidden mb-2">
+                                <div id="wants-bar" class="absolute left-0 top-0 h-full bg-amber-500 rounded-full transition-all duration-500" style="width: 0%"></div>
+                            </div>
+                            <p class="text-sm text-text-muted dark:text-[#92adc9]"><span id="wants-percentage-bar">--</span>% <span data-translate="analyzer.ofTotal">of total</span></p>
+                        </div>
+                    </div>
+
+                    <!-- 50/30/20 Rule -->
+                    <div class="bg-gradient-to-r from-primary/5 to-primary/10 dark:from-primary/10 dark:to-primary/20 rounded-2xl border border-primary/20 p-6 mb-6">
+                        <h3 class="text-lg font-semibold text-text-main dark:text-white mb-2 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-primary">lightbulb</span>
+                            <span data-translate="analyzer.rule503020">The 50/30/20 Rule</span>
+                        </h3>
+                        <p class="text-sm text-text-muted dark:text-[#92adc9] mb-4" data-translate="analyzer.rule503020Desc">A popular budgeting guideline: 50% needs, 30% wants, 20% savings</p>
+                        <div class="flex gap-4">
+                            <div class="flex-1 text-center">
+                                <div class="h-24 bg-emerald-500/20 rounded-lg flex items-end justify-center mb-2 relative overflow-hidden">
+                                    <div id="rule-needs-bar" class="absolute bottom-0 w-full bg-emerald-500 transition-all duration-500" style="height: 0%"></div>
+                                    <span class="relative z-10 text-sm font-bold text-emerald-600 dark:text-emerald-400 pb-2">50%</span>
+                                </div>
+                                <p class="text-xs text-text-muted dark:text-[#92adc9]" data-translate="analyzer.needs">Needs</p>
+                            </div>
+                            <div class="flex-1 text-center">
+                                <div class="h-24 bg-amber-500/20 rounded-lg flex items-end justify-center mb-2 relative overflow-hidden">
+                                    <div id="rule-wants-bar" class="absolute bottom-0 w-full bg-amber-500 transition-all duration-500" style="height: 0%"></div>
+                                    <span class="relative z-10 text-sm font-bold text-amber-600 dark:text-amber-400 pb-2">30%</span>
+                                </div>
+                                <p class="text-xs text-text-muted dark:text-[#92adc9]" data-translate="analyzer.wants">Wants</p>
+                            </div>
+                            <div class="flex-1 text-center">
+                                <div class="h-24 bg-primary/20 rounded-lg flex items-end justify-center mb-2 relative overflow-hidden">
+                                    <div id="rule-savings-bar" class="absolute bottom-0 w-full bg-primary transition-all duration-500" style="height: 0%"></div>
+                                    <span class="relative z-10 text-sm font-bold text-primary pb-2">20%</span>
+                                </div>
+                                <p class="text-xs text-text-muted dark:text-[#92adc9]" data-translate="analyzer.savings">Savings</p>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Top Wants Categories -->
+                    <div class="bg-white dark:bg-card-dark rounded-2xl border border-border-light dark:border-[#233648] p-6">
+                        <h3 class="text-lg font-semibold text-text-main dark:text-white mb-4" data-translate="analyzer.topWantsCategories">Top "Wants" Categories</h3>
+                        <div id="wants-categories-list" class="space-y-3">
+                            <div class="animate-pulse h-12 bg-gray-100 dark:bg-[#233648] rounded-lg"></div>
+                            <div class="animate-pulse h-12 bg-gray-100 dark:bg-[#233648] rounded-lg"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Content: Impulse Purchases -->
+                <div id="tab-impulse" class="tab-content hidden">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div class="bg-white dark:bg-card-dark rounded-xl border border-border-light dark:border-[#233648] p-4">
+                            <div class="flex items-center gap-3">
+                                <div class="p-2 bg-red-500/10 rounded-lg">
+                                    <span class="material-symbols-outlined text-red-500">bolt</span>
+                                </div>
+                                <div>
+                                    <p id="impulse-total-amount" class="text-xl font-bold text-text-main dark:text-white">--</p>
+                                    <p class="text-xs text-text-muted dark:text-[#92adc9]" data-translate="analyzer.impulseTotal">Total Impulse Spending</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white dark:bg-card-dark rounded-xl border border-border-light dark:border-[#233648] p-4">
+                            <div class="flex items-center gap-3">
+                                <div class="p-2 bg-amber-500/10 rounded-lg">
+                                    <span class="material-symbols-outlined text-amber-500">calendar_month</span>
+                                </div>
+                                <div>
+                                    <p id="impulse-monthly" class="text-xl font-bold text-text-main dark:text-white">--</p>
+                                    <p class="text-xs text-text-muted dark:text-[#92adc9]" data-translate="analyzer.monthlyAverage">Monthly Average</p>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="bg-white dark:bg-card-dark rounded-xl border border-border-light dark:border-[#233648] p-4">
+                            <div class="flex items-center gap-3">
+                                <div class="p-2 bg-purple-500/10 rounded-lg">
+                                    <span class="material-symbols-outlined text-purple-500">trending_up</span>
+                                </div>
+                                <div>
+                                    <p id="impulse-yearly" class="text-xl font-bold text-text-main dark:text-white">--</p>
+                                    <p class="text-xs text-text-muted dark:text-[#92adc9]" data-translate="analyzer.yearlyProjection">Yearly Projection</p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Impulse by Day -->
+                    <div class="bg-white dark:bg-card-dark rounded-2xl border border-border-light dark:border-[#233648] p-6 mb-6">
+                        <h3 class="text-lg font-semibold text-text-main dark:text-white mb-4" data-translate="analyzer.impulseByDay">Impulse Purchases by Day</h3>
+                        <div id="impulse-by-day" class="grid grid-cols-7 gap-2">
+                            <!-- Days will be loaded here -->
+                        </div>
+                    </div>
+
+                    <!-- Recent Impulse Purchases -->
+                    <div class="bg-white dark:bg-card-dark rounded-2xl border border-border-light dark:border-[#233648] p-6">
+                        <h3 class="text-lg font-semibold text-text-main dark:text-white mb-4" data-translate="analyzer.recentImpulse">Recent Impulse Purchases</h3>
+                        <div id="impulse-list" class="space-y-3 max-h-96 overflow-y-auto">
+                            <div class="animate-pulse h-16 bg-gray-100 dark:bg-[#233648] rounded-lg"></div>
+                            <div class="animate-pulse h-16 bg-gray-100 dark:bg-[#233648] rounded-lg"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tab Content: Projections -->
+                <div id="tab-projections" class="tab-content hidden">
+                    <div class="bg-gradient-to-br from-emerald-500/10 to-emerald-500/5 dark:from-emerald-500/20 dark:to-emerald-500/10 rounded-2xl border border-emerald-500/20 p-6 mb-6">
+                        <h3 class="text-xl font-bold text-text-main dark:text-white mb-2 flex items-center gap-2">
+                            <span class="material-symbols-outlined text-emerald-500">savings</span>
+                            <span data-translate="analyzer.ifYouSaved">If You Saved This Instead...</span>
+                        </h3>
+                        <p class="text-text-muted dark:text-[#92adc9] mb-4" data-translate="analyzer.ifYouSavedDesc">See how your small daily expenses could grow if invested at 7% annual return</p>
+                        
+                        <div class="flex items-center gap-4 mb-6">
+                            <div class="flex-1">
+                                <label class="text-sm text-text-muted dark:text-[#92adc9] mb-1 block" data-translate="analyzer.monthlyAmount">Monthly Amount to Save</label>
+                                <div class="flex items-center gap-2">
+                                    <span class="text-text-main dark:text-white font-medium" id="currency-symbol">$</span>
+                                    <input type="number" id="projection-amount" class="flex-1 bg-white dark:bg-card-dark border border-border-light dark:border-[#233648] rounded-lg px-4 py-2.5 text-text-main dark:text-white focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none" value="100">
+                                </div>
+                            </div>
+                            <button onclick="recalculateProjections()" class="px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg transition-colors">
+                                <span data-translate="analyzer.calculate">Calculate</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Projection Cards -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
+                        <div class="bg-white dark:bg-card-dark rounded-xl border border-border-light dark:border-[#233648] p-4 text-center">
+                            <p class="text-sm text-text-muted dark:text-[#92adc9] mb-1">1 <span data-translate="analyzer.year">Year</span></p>
+                            <p id="proj-1yr" class="text-2xl font-bold text-emerald-500">--</p>
+                            <p class="text-xs text-text-muted dark:text-[#92adc9] mt-1"><span id="proj-1yr-growth">--</span> <span data-translate="analyzer.growth">growth</span></p>
+                        </div>
+                        <div class="bg-white dark:bg-card-dark rounded-xl border border-border-light dark:border-[#233648] p-4 text-center">
+                            <p class="text-sm text-text-muted dark:text-[#92adc9] mb-1">5 <span data-translate="analyzer.years">Years</span></p>
+                            <p id="proj-5yr" class="text-2xl font-bold text-emerald-500">--</p>
+                            <p class="text-xs text-text-muted dark:text-[#92adc9] mt-1"><span id="proj-5yr-growth">--</span> <span data-translate="analyzer.growth">growth</span></p>
+                        </div>
+                        <div class="bg-white dark:bg-card-dark rounded-xl border border-border-light dark:border-[#233648] p-4 text-center">
+                            <p class="text-sm text-text-muted dark:text-[#92adc9] mb-1">10 <span data-translate="analyzer.years">Years</span></p>
+                            <p id="proj-10yr" class="text-2xl font-bold text-emerald-500">--</p>
+                            <p class="text-xs text-text-muted dark:text-[#92adc9] mt-1"><span id="proj-10yr-growth">--</span> <span data-translate="analyzer.growth">growth</span></p>
+                        </div>
+                        <div class="bg-white dark:bg-card-dark rounded-xl border border-border-light dark:border-[#233648] p-4 text-center">
+                            <p class="text-sm text-text-muted dark:text-[#92adc9] mb-1">20 <span data-translate="analyzer.years">Years</span></p>
+                            <p id="proj-20yr" class="text-2xl font-bold text-emerald-500">--</p>
+                            <p class="text-xs text-text-muted dark:text-[#92adc9] mt-1"><span id="proj-20yr-growth">--</span> <span data-translate="analyzer.growth">growth</span></p>
+                        </div>
+                        <div class="bg-white dark:bg-card-dark rounded-xl border border-border-light dark:border-[#233648] p-4 text-center">
+                            <p class="text-sm text-text-muted dark:text-[#92adc9] mb-1">30 <span data-translate="analyzer.years">Years</span></p>
+                            <p id="proj-30yr" class="text-2xl font-bold text-emerald-500">--</p>
+                            <p class="text-xs text-text-muted dark:text-[#92adc9] mt-1"><span id="proj-30yr-growth">--</span> <span data-translate="analyzer.growth">growth</span></p>
+                        </div>
+                    </div>
+
+                    <!-- Projection Chart -->
+                    <div class="bg-white dark:bg-card-dark rounded-2xl border border-border-light dark:border-[#233648] p-6">
+                        <h3 class="text-lg font-semibold text-text-main dark:text-white mb-4" data-translate="analyzer.growthChart">Growth Projection</h3>
+                        <div id="projection-chart" class="h-64 flex items-end gap-2">
+                            <!-- Bars will be rendered here -->
+                        </div>
+                        <div class="flex justify-between text-xs text-text-muted dark:text-[#92adc9] mt-2">
+                            <span>1Y</span>
+                            <span>5Y</span>
+                            <span>10Y</span>
+                            <span>20Y</span>
+                            <span>30Y</span>
+                        </div>
+                        <p class="text-xs text-text-muted dark:text-[#92adc9] text-center mt-4" data-translate="analyzer.disclaimer">* Projections assume 7% annual return compounded monthly. Actual returns may vary.</p>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Mobile Navigation -->
+        <nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-white dark:bg-card-dark border-t border-border-light dark:border-[#233648] px-4 py-3 z-50">
+            <div class="flex justify-around items-center">
+                <a href="{{ url_for('main.dashboard') }}" class="flex flex-col items-center gap-1 text-text-muted dark:text-[#92adc9] hover:text-primary dark:hover:text-primary transition-colors">
+                    <span class="material-symbols-outlined text-[24px]">dashboard</span>
+                    <span class="text-xs" data-translate="nav.dashboard">Dashboard</span>
+                </a>
+                <a href="{{ url_for('main.transactions') }}" class="flex flex-col items-center gap-1 text-text-muted dark:text-[#92adc9] hover:text-primary dark:hover:text-primary transition-colors">
+                    <span class="material-symbols-outlined text-[24px]">receipt_long</span>
+                    <span class="text-xs" data-translate="nav.transactions">Transactions</span>
+                </a>
+                <a href="{{ url_for('main.goals') }}" class="flex flex-col items-center gap-1 text-text-muted dark:text-[#92adc9] hover:text-primary dark:hover:text-primary transition-colors">
+                    <span class="material-symbols-outlined text-[24px]">savings</span>
+                    <span class="text-xs" data-translate="nav.goals">Goals</span>
+                </a>
+                <a href="{{ url_for('main.analyzer') }}" class="flex flex-col items-center gap-1 text-primary">
+                    <span class="material-symbols-outlined text-[24px]">psychology</span>
+                    <span class="text-xs" data-translate="nav.analyzer">Analyzer</span>
+                </a>
+                <a href="{{ url_for('main.settings') }}" class="flex flex-col items-center gap-1 text-text-muted dark:text-[#92adc9] hover:text-primary dark:hover:text-primary transition-colors">
+                    <span class="material-symbols-outlined text-[24px]">settings</span>
+                    <span class="text-xs" data-translate="nav.settings">Settings</span>
+                </a>
+            </div>
+        </nav>
+    </div>
+</div>
+
+<!-- Mobile Sidebar Overlay -->
+<div id="sidebar-overlay" class="fixed inset-0 bg-black/50 z-40 hidden lg:hidden" onclick="closeMobileSidebar()"></div>
+
+<style>
+    .tab-btn {
+        transition: all 0.2s ease;
+    }
+    .tab-btn.active {
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        ring: 2px;
+        ring-offset: 2px;
+    }
+    .tab-btn:not(.active) {
+        opacity: 0.7;
+    }
+    .tab-btn:not(.active):hover {
+        opacity: 1;
+        transform: scale(1.02);
+    }
+    .tab-content {
+        animation: fadeIn 0.3s ease;
+    }
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+</style>
+
+<script src="{{ url_for('static', filename='js/analyzer.js') }}?v=2.0.4"></script>
+<script>
+    // Mobile sidebar toggle
+    document.getElementById('mobile-menu-toggle')?.addEventListener('click', function() {
+        document.getElementById('sidebar').classList.remove('hidden');
+        document.getElementById('sidebar').classList.add('fixed', 'inset-y-0', 'left-0', 'z-50');
+        document.getElementById('sidebar-overlay').classList.remove('hidden');
+    });
+    
+    function closeMobileSidebar() {
+        document.getElementById('sidebar').classList.add('hidden');
+        document.getElementById('sidebar').classList.remove('fixed', 'inset-y-0', 'left-0', 'z-50');
+        document.getElementById('sidebar-overlay').classList.add('hidden');
+    }
+</script>
+{% endblock %}

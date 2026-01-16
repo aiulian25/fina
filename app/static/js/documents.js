@@ -115,6 +115,9 @@ async function uploadFile(file) {
     try {
         const response = await fetch('/api/documents/', {
             method: 'POST',
+            headers: {
+                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || ''
+            },
             body: formData
         });
         
@@ -411,7 +414,10 @@ async function deleteDocument(id) {
     
     try {
         const response = await fetch(`/api/documents/${id}`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || ''
+            }
         });
         
         const result = await response.json();

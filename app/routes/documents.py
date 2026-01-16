@@ -80,7 +80,10 @@ def upload_document():
     """
     Upload a new document
     Security: Associates document with current_user.id
+    Security: Validates file content matches extension
     """
+    from app.utils import validate_file_content
+    
     if 'file' not in request.files:
         return jsonify({'success': False, 'message': 'No file provided'}), 400
     
@@ -94,6 +97,14 @@ def upload_document():
             'success': False, 
             'message': 'Invalid file type. Allowed: PDF, CSV, XLS, XLSX, PNG, JPG'
         }), 400
+    
+    # Security: Validate file content matches extension
+    is_valid, error_msg, detected_type = validate_file_content(
+        file, 
+        allowed_extensions=set(ALLOWED_DOCUMENT_TYPES.keys())
+    )
+    if not is_valid:
+        return jsonify({'success': False, 'message': error_msg}), 400
     
     # Check file size
     file.seek(0, os.SEEK_END)

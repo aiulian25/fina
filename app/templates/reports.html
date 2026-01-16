@@ -35,6 +35,30 @@
                         <span class="material-symbols-outlined text-[20px]">payments</span>
                         <span class="text-sm font-medium" data-translate="nav.income">Income</span>
                     </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-background-light dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.goals') }}">
+                        <span class="material-symbols-outlined text-[20px]">savings</span>
+                        <span class="text-sm font-medium" data-translate="nav.goals">Savings Goals</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-background-light dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.subscriptions') }}">
+                        <span class="material-symbols-outlined text-[20px]">subscriptions</span>
+                        <span class="text-sm font-medium" data-translate="nav.subscriptions">Subscriptions</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.analyzer') }}">
+                        <span class="material-symbols-outlined text-[20px]">psychology</span>
+                        <span class="text-sm font-medium" data-translate="nav.analyzer">Expense Analyzer</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.insights') }}">
+                        <span class="material-symbols-outlined text-[20px]">insights</span>
+                        <span class="text-sm font-medium" data-translate="nav.insights">Smart Insights</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.challenges') }}">
+                        <span class="material-symbols-outlined text-[20px]">emoji_events</span>
+                        <span class="text-sm font-medium" data-translate="nav.challenges">Challenges</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.forecast') }}">
+                        <span class="material-symbols-outlined text-[20px]">auto_graph</span>
+                        <span class="text-sm font-medium" data-translate="nav.forecast">Forecast</span>
+                    </a>
                     <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-background-light dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.recurring') }}">
                         <span class="material-symbols-outlined text-[20px]">repeat</span>
                         <span class="text-sm font-medium" data-translate="nav.recurring">Recurring</span>
@@ -97,8 +121,14 @@
             <div class="max-w-7xl mx-auto flex flex-col gap-6 pb-10">
                 <!-- Period Selection -->
                 <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-card-light dark:bg-card-dark p-4 rounded-xl border border-border-light dark:border-[#233648] shadow-sm">
-                    <div class="flex items-center gap-3">
+                    <div class="flex flex-wrap items-center gap-3">
                         <h3 class="text-sm font-semibold text-text-muted dark:text-[#92adc9] uppercase tracking-wider" data-translate="reports.analysisPeriod">Analysis Period:</h3>
+                        <!-- Year Selector -->
+                        <div class="flex items-center gap-2">
+                            <select id="report-year-selector" class="px-3 py-1.5 text-sm bg-background-light dark:bg-background-dark border border-border-light dark:border-[#233648] rounded-lg text-text-main dark:text-white focus:outline-none focus:ring-2 focus:ring-primary/50 cursor-pointer min-w-[90px]">
+                                <!-- Options populated by JS -->
+                            </select>
+                        </div>
                         <div class="flex bg-background-light dark:bg-background-dark rounded-lg p-1 border border-border-light dark:border-[#233648]">
                             <button class="period-btn active px-3 py-1 text-sm font-medium rounded transition-colors" data-period="30">
                                 <span data-translate="reports.last30Days">Last 30 Days</span>
@@ -129,7 +159,7 @@
                         <div class="flex justify-between items-start mb-4">
                             <div class="flex flex-col">
                                 <span class="text-text-muted dark:text-[#92adc9] text-xs font-medium uppercase tracking-wider" data-translate="reports.totalIncome">Total Income</span>
-                                <h4 id="total-income" class="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">$0.00</h4>
+                                <h4 id="total-income" class="text-2xl font-bold text-green-600 dark:text-green-400 mt-1">0.00</h4>
                             </div>
                             <div class="p-2 bg-green-500/10 rounded-lg text-green-600 dark:text-green-400 group-hover:bg-green-500 group-hover:text-white transition-colors">
                                 <span class="material-symbols-outlined text-[20px]">trending_up</span>
@@ -145,7 +175,7 @@
                         <div class="flex justify-between items-start mb-4">
                             <div class="flex flex-col">
                                 <span class="text-text-muted dark:text-[#92adc9] text-xs font-medium uppercase tracking-wider" data-translate="reports.totalSpent">Total Spent</span>
-                                <h4 id="total-spent" class="text-2xl font-bold text-text-main dark:text-white mt-1">$0.00</h4>
+                                <h4 id="total-spent" class="text-2xl font-bold text-text-main dark:text-white mt-1">0.00</h4>
                             </div>
                             <div class="p-2 bg-primary/10 rounded-lg text-primary group-hover:bg-primary group-hover:text-white transition-colors">
                                 <span class="material-symbols-outlined text-[20px]">payments</span>
@@ -162,7 +192,7 @@
                         <div class="flex justify-between items-start mb-4">
                             <div class="flex flex-col">
                                 <span class="text-text-muted dark:text-[#92adc9] text-xs font-medium uppercase tracking-wider" data-translate="reports.profitLoss">Profit/Loss</span>
-                                <h4 id="profit-loss" class="text-2xl font-bold text-text-main dark:text-white mt-1">$0.00</h4>
+                                <h4 id="profit-loss" class="text-2xl font-bold text-text-main dark:text-white mt-1">0.00</h4>
                             </div>
                             <div class="p-2 bg-accent/10 rounded-lg text-accent group-hover:bg-accent group-hover:text-white transition-colors">
                                 <span class="material-symbols-outlined text-[20px]">account_balance</span>
@@ -178,7 +208,7 @@
                         <div class="flex justify-between items-start mb-4">
                             <div class="flex flex-col">
                                 <span class="text-text-muted dark:text-[#92adc9] text-xs font-medium uppercase tracking-wider" data-translate="reports.avgDaily">Avg. Daily</span>
-                                <h4 id="avg-daily" class="text-2xl font-bold text-text-main dark:text-white mt-1">$0.00</h4>
+                                <h4 id="avg-daily" class="text-2xl font-bold text-text-main dark:text-white mt-1">0.00</h4>
                             </div>
                             <div class="p-2 bg-warning/10 rounded-lg text-warning group-hover:bg-warning group-hover:text-white transition-colors">
                                 <span class="material-symbols-outlined text-[20px]">calendar_today</span>
@@ -233,7 +263,7 @@
                                 <!-- Inner hole for donut effect -->
                                 <div class="absolute inset-3 bg-card-light dark:bg-card-dark rounded-full flex flex-col items-center justify-center z-10 border border-border-light dark:border-[#233648]">
                                     <span class="text-text-muted dark:text-[#92adc9] text-[10px] font-medium" data-translate="dashboard.total">Total</span>
-                                    <span id="income-pie-total" class="text-green-600 dark:text-green-400 text-base font-bold">0 lei</span>
+                                    <span id="income-pie-total" class="text-green-600 dark:text-green-400 text-base font-bold">0.00</span>
                                 </div>
                             </div>
                         </div>
@@ -256,7 +286,7 @@
                                 <!-- Inner hole for donut effect -->
                                 <div class="absolute inset-3 bg-card-light dark:bg-card-dark rounded-full flex flex-col items-center justify-center z-10 border border-border-light dark:border-[#233648]">
                                     <span class="text-text-muted dark:text-[#92adc9] text-[10px] font-medium" data-translate="dashboard.total">Total</span>
-                                    <span id="category-pie-total" class="text-text-main dark:text-white text-base font-bold">0 lei</span>
+                                    <span id="category-pie-total" class="text-text-main dark:text-white text-base font-bold">0.00</span>
                                 </div>
                             </div>
                         </div>
@@ -266,11 +296,11 @@
                     </div>
                 
                     <!-- Monthly Comparison -->
-                    <div class="bg-card-light dark:bg-card-dark p-6 rounded-xl border border-border-light dark:border-[#233648] shadow-sm">
-                        <div class="flex justify-between items-center mb-6">
+                    <div class="bg-card-light dark:bg-card-dark p-6 rounded-xl border border-border-light dark:border-[#233648] shadow-sm flex flex-col">
+                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
                             <h3 class="text-lg font-bold text-text-main dark:text-white" data-translate="reports.monthlyComparison">Monthly Comparison</h3>
                         </div>
-                        <div class="h-64">
+                        <div class="flex-1 h-64 min-h-0">
                             <canvas id="monthly-chart"></canvas>
                         </div>
                     </div>

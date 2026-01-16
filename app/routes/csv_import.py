@@ -424,10 +424,13 @@ def import_transactions():
                 
             description = trans.get('description', 'Transaction')
             
-            # Validate amount
-            if amount <= 0:
-                errors.append({'transaction': trans, 'error': f'Invalid amount: {amount}'})
+            # Security: Validate amount to prevent negative values and overflow attacks
+            from app.utils import validate_amount
+            is_valid, validated_amount, error_msg = validate_amount(amount, 'Amount')
+            if not is_valid:
+                errors.append({'transaction': trans, 'error': error_msg})
                 continue
+            amount = validated_amount
             
             # Get category ID from mapping or bank category
             category_id = None

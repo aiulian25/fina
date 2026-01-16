@@ -30,7 +30,10 @@ function showToast(message, type = 'info') {
 }
 
 // Format currency
-function formatCurrency(amount, currency = 'USD') {
+function formatCurrency(amount, currency = null) {
+    // Use passed currency, then window.userCurrency, then fallback to RON
+    const effectiveCurrency = currency || window.userCurrency || 'RON';
+    
     const symbols = {
         'USD': '$',
         'EUR': '€',
@@ -38,10 +41,10 @@ function formatCurrency(amount, currency = 'USD') {
         'RON': 'lei'
     };
     
-    const symbol = symbols[currency] || currency;
+    const symbol = symbols[effectiveCurrency] || effectiveCurrency;
     const formatted = parseFloat(amount).toFixed(2);
     
-    if (currency === 'RON') {
+    if (effectiveCurrency === 'RON') {
         return `${formatted} ${symbol}`;
     }
     return `${symbol}${formatted}`;
@@ -66,13 +69,22 @@ function formatDate(dateString) {
     return date.toLocaleDateString(locale, { month: 'short', day: 'numeric', year: 'numeric' });
 }
 
+// Get CSRF token from meta tag
+function getCsrfToken() {
+    const meta = document.querySelector('meta[name="csrf-token"]');
+    return meta ? meta.getAttribute('content') : '';
+}
+
 // API helper
 async function apiCall(url, options = {}) {
     try {
+        // Get CSRF token for all non-GET requests
+        const csrfToken = getCsrfToken();
+        
         // Don't set Content-Type header for FormData - browser will set it automatically with boundary
         const headers = options.body instanceof FormData 
-            ? { ...options.headers }
-            : { ...options.headers, 'Content-Type': 'application/json' };
+            ? { ...options.headers, 'X-CSRFToken': csrfToken }
+            : { ...options.headers, 'Content-Type': 'application/json', 'X-CSRFToken': csrfToken };
         
         const response = await fetch(url, {
             ...options,
@@ -122,8 +134,9 @@ function initTheme() {
     updateThemeUI(isDark);
 }
 
-function toggleTheme() {
+async function toggleTheme() {
     const isDark = document.documentElement.classList.contains('dark');
+    const newTheme = isDark ? 'light' : 'dark';
     
     if (isDark) {
         document.documentElement.classList.remove('dark');
@@ -133,6 +146,21 @@ function toggleTheme() {
         document.documentElement.classList.add('dark');
         localStorage.setItem('theme', 'dark');
         updateThemeUI(true);
+    }
+    
+    // Save theme preference to server (for persistence across devices)
+    try {
+        await fetch('/api/settings/profile', {
+            method: 'PUT',
+            headers: { 
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCsrfToken()
+            },
+            body: JSON.stringify({ theme: newTheme })
+        });
+    } catch (error) {
+        // Silently fail - localStorage already updated for immediate effect
+        console.debug('Could not save theme to server:', error);
     }
     
     // Dispatch custom event for other components to react to theme change

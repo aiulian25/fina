@@ -1,8 +1,11 @@
-const CACHE_NAME = 'fina-v6';
+const CACHE_NAME = 'fina-v10';
 const urlsToCache = [
   '/',
   '/static/js/app.js',
   '/static/js/pwa.js',
+  '/static/js/i18n.js',
+  '/static/js/challenges.js',
+  '/static/js/forecast.js',
   '/static/manifest.json',
   'https://cdn.tailwindcss.com',
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',

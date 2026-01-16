@@ -4,6 +4,7 @@ let usersData = [];
 // Load users on page load
 document.addEventListener('DOMContentLoaded', function() {
     loadUsers();
+    setupPasswordValidation();
 });
 
 async function loadUsers() {
@@ -83,9 +84,150 @@ function renderUsersTable() {
     `).join('');
 }
 
+// ==================== Password Validation ====================
+
+function setupPasswordValidation() {
+    // Create user form password validation
+    const createPassword = document.getElementById('create-password');
+    const createConfirmPassword = document.getElementById('create-confirm-password');
+    
+    if (createPassword) {
+        createPassword.addEventListener('input', () => {
+            updatePasswordStrength('create', createPassword.value);
+            validatePasswordMatch('create');
+        });
+    }
+    
+    if (createConfirmPassword) {
+        createConfirmPassword.addEventListener('input', () => validatePasswordMatch('create'));
+    }
+    
+    // Edit user form password validation
+    const editPassword = document.getElementById('edit-password');
+    const editConfirmPassword = document.getElementById('edit-confirm-password');
+    
+    if (editPassword) {
+        editPassword.addEventListener('input', () => {
+            const value = editPassword.value;
+            updatePasswordStrength('edit', value);
+            
+            // Show/hide confirm password field based on whether password is entered
+            const confirmContainer = document.getElementById('edit-confirm-password-container');
+            if (value.length > 0) {
+                confirmContainer.classList.remove('hidden');
+            } else {
+                confirmContainer.classList.add('hidden');
+                editConfirmPassword.value = '';
+                document.getElementById('edit-password-match').classList.add('hidden');
+            }
+            
+            validatePasswordMatch('edit');
+        });
+    }
+    
+    if (editConfirmPassword) {
+        editConfirmPassword.addEventListener('input', () => validatePasswordMatch('edit'));
+    }
+}
+
+function updatePasswordStrength(prefix, password) {
+    const strengthContainer = document.getElementById(`${prefix}-password-strength`);
+    const strengthText = document.getElementById(`${prefix}-strength-text`);
+    
+    if (!password) {
+        strengthContainer.classList.add('hidden');
+        return;
+    }
+    
+    strengthContainer.classList.remove('hidden');
+    
+    let strength = 0;
+    
+    // Length check
+    if (password.length >= 8) strength++;
+    if (password.length >= 12) strength++;
+    
+    // Character variety checks
+    if (/[a-z]/.test(password) && /[A-Z]/.test(password)) strength++;
+    if (/\d/.test(password)) strength++;
+    if (/[^a-zA-Z0-9]/.test(password)) strength++;
+    
+    // Cap at 4
+    strength = Math.min(strength, 4);
+    
+    // Update bars
+    const colors = ['bg-red-500', 'bg-orange-500', 'bg-yellow-500', 'bg-green-500'];
+    const labels = [
+        window.getTranslation('admin.passwordWeak', 'Weak'),
+        window.getTranslation('admin.passwordFair', 'Fair'),
+        window.getTranslation('admin.passwordGood', 'Good'),
+        window.getTranslation('admin.passwordStrong', 'Strong')
+    ];
+    
+    for (let i = 1; i <= 4; i++) {
+        const bar = document.getElementById(`${prefix}-strength-${i}`);
+        bar.className = 'h-1 flex-1 rounded';
+        if (i <= strength) {
+            bar.classList.add(colors[strength - 1]);
+        } else {
+            bar.classList.add('bg-slate-200', 'dark:bg-slate-700');
+        }
+    }
+    
+    strengthText.textContent = labels[strength - 1] || labels[0];
+    strengthText.className = 'text-xs';
+    if (strength <= 1) strengthText.classList.add('text-red-500');
+    else if (strength === 2) strengthText.classList.add('text-orange-500');
+    else if (strength === 3) strengthText.classList.add('text-yellow-600', 'dark:text-yellow-400');
+    else strengthText.classList.add('text-green-500');
+}
+
+function validatePasswordMatch(prefix) {
+    const password = document.getElementById(`${prefix}-password`).value;
+    const confirmPassword = document.getElementById(`${prefix}-confirm-password`).value;
+    const matchIndicator = document.getElementById(`${prefix}-password-match`);
+    
+    if (!confirmPassword) {
+        matchIndicator.classList.add('hidden');
+        return true;
+    }
+    
+    matchIndicator.classList.remove('hidden');
+    
+    if (password === confirmPassword) {
+        matchIndicator.textContent = window.getTranslation('admin.passwordsMatch', 'Passwords match');
+        matchIndicator.className = 'text-xs mt-1 text-green-500';
+        return true;
+    } else {
+        matchIndicator.textContent = window.getTranslation('admin.passwordsNoMatch', 'Passwords do not match');
+        matchIndicator.className = 'text-xs mt-1 text-red-500';
+        return false;
+    }
+}
+
+function togglePasswordVisibility(inputId) {
+    const input = document.getElementById(inputId);
+    const button = input.nextElementSibling;
+    const icon = button.querySelector('.material-symbols-outlined');
+    
+    if (input.type === 'password') {
+        input.type = 'text';
+        icon.textContent = 'visibility_off';
+    } else {
+        input.type = 'password';
+        icon.textContent = 'visibility';
+    }
+}
+
+// ==================== Create User Modal ====================
+
 function openCreateUserModal() {
     document.getElementById('create-user-modal').classList.remove('hidden');
     document.getElementById('create-user-modal').classList.add('flex');
+    // Reset form
+    document.getElementById('create-user-form').reset();
+    document.getElementById('create-password-strength').classList.add('hidden');
+    document.getElementById('create-password-match').classList.add('hidden');
 }
 
 function closeCreateUserModal() {
@@ -98,18 +240,42 @@ document.getElementById('create-user-form').addEventListener('submit', async fun
     e.preventDefault();
     
     const formData = new FormData(e.target);
+    const password = formData.get('password');
+    const confirmPassword = formData.get('confirm_password');
+    
+    // Validate password match
+    if (password !== confirmPassword) {
+        showToast(window.getTranslation('admin.passwordsNoMatch', 'Passwords do not match'), 'error');
+        return;
+    }
+    
+    // Validate password length
+    if (password.length < 8) {
+        showToast(window.getTranslation('admin.passwordTooShort', 'Password must be at least 8 characters'), 'error');
+        return;
+    }
+    
     const userData = {
         username: formData.get('username'),
         email: formData.get('email'),
-        password: formData.get('password'),
-        is_admin: formData.get('is_admin') === 'on'
+        password: password,
+        is_admin: formData.get('is_admin') === 'on',
+        language: formData.get('language'),
+        currency: formData.get('currency')
     };
+    
+    // Show loading state
+    const submitBtn = document.getElementById('create-user-btn');
+    const spinner = document.getElementById('create-user-spinner');
+    submitBtn.disabled = true;
+    spinner.classList.remove('hidden');
     
     try {
         const response = await fetch('/api/admin/users', {
             method: 'POST',
             headers: {
-                'Content-Type': 'application/json'
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || ''
             },
             body: JSON.stringify(userData)
         });
@@ -126,8 +292,125 @@ document.getElementById('create-user-form').addEventListener('submit', async fun
     } catch (error) {
         console.error('Error creating user:', error);
         showToast(window.getTranslation('admin.errorCreating', 'Error creating user'), 'error');
+    } finally {
+        submitBtn.disabled = false;
+        spinner.classList.add('hidden');
     }
 });
+
+// ==================== Edit User Modal ====================
+
+async function editUser(userId) {
+    try {
+        const response = await fetch(`/api/admin/users/${userId}`);
+        const data = await response.json();
+        
+        if (!data.success) {
+            showToast(data.message || window.getTranslation('admin.errorLoading', 'Error loading user'), 'error');
+            return;
+        }
+        
+        const user = data.user;
+        
+        // Populate form
+        document.getElementById('edit-user-id').value = user.id;
+        document.getElementById('edit-username').value = user.username;
+        document.getElementById('edit-email').value = user.email;
+        document.getElementById('edit-language').value = user.language;
+        document.getElementById('edit-currency').value = user.currency;
+        document.getElementById('edit-is-admin-checkbox').checked = user.is_admin;
+        
+        // Reset password fields
+        document.getElementById('edit-password').value = '';
+        document.getElementById('edit-confirm-password').value = '';
+        document.getElementById('edit-confirm-password-container').classList.add('hidden');
+        document.getElementById('edit-password-strength').classList.add('hidden');
+        document.getElementById('edit-password-match').classList.add('hidden');
+        
+        // Show modal
+        document.getElementById('edit-user-modal').classList.remove('hidden');
+        document.getElementById('edit-user-modal').classList.add('flex');
+        
+    } catch (error) {
+        console.error('Error loading user:', error);
+        showToast(window.getTranslation('admin.errorLoading', 'Error loading user'), 'error');
+    }
+}
+
+function closeEditUserModal() {
+    document.getElementById('edit-user-modal').classList.add('hidden');
+    document.getElementById('edit-user-modal').classList.remove('flex');
+    document.getElementById('edit-user-form').reset();
+}
+
+document.getElementById('edit-user-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(e.target);
+    const userId = formData.get('user_id');
+    const password = formData.get('password');
+    const confirmPassword = formData.get('confirm_password');
+    
+    // Validate password match if password is provided
+    if (password && password !== confirmPassword) {
+        showToast(window.getTranslation('admin.passwordsNoMatch', 'Passwords do not match'), 'error');
+        return;
+    }
+    
+    // Validate password length if provided
+    if (password && password.length < 8) {
+        showToast(window.getTranslation('admin.passwordTooShort', 'Password must be at least 8 characters'), 'error');
+        return;
+    }
+    
+    const userData = {
+        username: formData.get('username'),
+        email: formData.get('email'),
+        is_admin: formData.get('is_admin') === 'on',
+        language: formData.get('language'),
+        currency: formData.get('currency')
+    };
+    
+    // Only include password if it was entered
+    if (password) {
+        userData.password = password;
+    }
+    
+    // Show loading state
+    const submitBtn = document.getElementById('edit-user-btn');
+    const spinner = document.getElementById('edit-user-spinner');
+    submitBtn.disabled = true;
+    spinner.classList.remove('hidden');
+    
+    try {
+        const response = await fetch(`/api/admin/users/${userId}`, {
+            method: 'PUT',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || ''
+            },
+            body: JSON.stringify(userData)
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            showToast(window.getTranslation('admin.userUpdated', 'User updated successfully'), 'success');
+            closeEditUserModal();
+            loadUsers();
+        } else {
+            showToast(data.message || window.getTranslation('admin.errorUpdating', 'Error updating user'), 'error');
+        }
+    } catch (error) {
+        console.error('Error updating user:', error);
+        showToast(window.getTranslation('admin.errorUpdating', 'Error updating user'), 'error');
+    } finally {
+        submitBtn.disabled = false;
+        spinner.classList.add('hidden');
+    }
+});
+
+// ==================== Delete User ====================
 
 async function deleteUser(userId, username) {
     if (!confirm(window.getTranslation('admin.confirmDelete', 'Are you sure you want to delete user') + ` "${username}"?`)) {
@@ -136,7 +419,10 @@ async function deleteUser(userId, username) {
     
     try {
         const response = await fetch(`/api/admin/users/${userId}`, {
-            method: 'DELETE'
+            method: 'DELETE',
+            headers: {
+                'X-CSRFToken': document.querySelector('meta[name="csrf-token"]')?.content || ''
+            }
         });
         
         const data = await response.json();
@@ -153,10 +439,7 @@ async function deleteUser(userId, username) {
     }
 }
 
-async function editUser(userId) {
-    // Placeholder for edit functionality
-    showToast(window.getTranslation('admin.editNotImplemented', 'Edit functionality coming soon'), 'info');
-}
+// ==================== Utilities ====================
 
 function escapeHtml(text) {
     const div = document.createElement('div');

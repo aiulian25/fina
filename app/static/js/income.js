@@ -17,11 +17,11 @@ function showNotification(message, type = 'success') {
 async function loadUserCurrency() {
     try {
         const profile = await apiCall('/api/settings/profile');
-        window.userCurrency = profile.profile.currency || 'GBP';
+        window.userCurrency = profile.profile.currency || 'RON';
     } catch (error) {
         console.error('Failed to load user currency:', error);
         // Fallback to GBP if API fails
-        window.userCurrency = 'GBP';
+        window.userCurrency = 'RON';
     }
 }
 

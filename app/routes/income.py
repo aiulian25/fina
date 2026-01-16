@@ -95,6 +95,12 @@ def create_income():
         current_app.logger.warning(f"Missing required fields: {data}")
         return jsonify({'success': False, 'message': 'Missing required fields'}), 400
     
+    # Security: Validate amount to prevent negative values and overflow attacks
+    from app.utils import validate_amount
+    is_valid, validated_amount, error_msg = validate_amount(data.get('amount'), 'Amount')
+    if not is_valid:
+        return jsonify({'success': False, 'message': error_msg}), 400
+    
     try:
         income_date = datetime.fromisoformat(data.get('date')) if data.get('date') else datetime.utcnow()
         frequency = data.get('frequency', 'once')
@@ -108,7 +114,7 @@ def create_income():
         
         # Create income entry
         income = Income(
-            amount=float(data.get('amount')),
+            amount=validated_amount,
             currency=data.get('currency', current_user.currency),
             description=data.get('description'),
             source=data.get('source'),
@@ -156,10 +162,16 @@ def update_income(income_id):
     
     data = request.get_json()
     
+    # Security: Import validation function
+    from app.utils import validate_amount
+    
     try:
         # Update fields
         if 'amount' in data:
-            income.amount = float(data['amount'])
+            is_valid, validated_amount, error_msg = validate_amount(data['amount'], 'Amount')
+            if not is_valid:
+                return jsonify({'success': False, 'message': error_msg}), 400
+            income.amount = validated_amount
         if 'currency' in data:
             income.currency = data['currency']
         if 'description' in data:

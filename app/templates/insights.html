@@ -1,0 +1,512 @@
+{% extends "base.html" %}
+
+{% block title %}Smart Insights - Fina{% endblock %}
+
+{% block extra_css %}
+<style>
+    .insight-card {
+        transition: all 0.3s ease;
+    }
+    .insight-card:hover {
+        transform: translateY(-2px);
+    }
+    .insight-card.unread {
+        border-left: 4px solid #2b8cee;
+    }
+    .insight-card.priority-high {
+        border-left: 4px solid #ef4444;
+    }
+    .insight-card.priority-medium {
+        border-left: 4px solid #f59e0b;
+    }
+    .insight-card.priority-low {
+        border-left: 4px solid #10b981;
+    }
+    .tab-btn {
+        transition: all 0.2s ease;
+    }
+    .tab-btn.active {
+        background-color: rgba(43, 140, 238, 0.15);
+        color: #2b8cee;
+        border-color: rgba(43, 140, 238, 0.3);
+    }
+    .stat-card {
+        background: linear-gradient(135deg, rgba(43, 140, 238, 0.1) 0%, transparent 100%);
+    }
+    .leak-progress {
+        background: linear-gradient(90deg, #ef4444, #f59e0b);
+    }
+    @keyframes pulse-dot {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.5; }
+    }
+    .pulse-dot {
+        animation: pulse-dot 2s infinite;
+    }
+</style>
+{% endblock %}
+
+{% block body %}
+<div class="flex h-screen w-full">
+    <!-- Side Navigation -->
+    <aside id="sidebar" class="hidden lg:flex w-64 flex-col bg-sidebar-light dark:bg-background-dark border-r border-border-light dark:border-[#233648] transition-all duration-300 shadow-sm dark:shadow-none">
+        <div class="p-6 flex flex-col h-full justify-between">
+            <div class="flex flex-col gap-8">
+                <!-- User Profile -->
+                <div class="flex gap-3 items-center">
+                    <img src="{{ current_user.avatar | avatar_url }}" alt="{{ current_user.username }}" class="size-10 rounded-full border-2 border-primary/30 object-cover">
+                    <div class="flex flex-col">
+                        <h1 class="text-text-main dark:text-white text-base font-bold leading-none">{{ current_user.username }}</h1>
+                        <p class="text-text-muted dark:text-[#92adc9] text-xs font-normal mt-1">
+                            {% if current_user.is_admin %}<span data-translate="user.admin">Admin</span>{% else %}<span data-translate="user.user">User</span>{% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Navigation Links -->
+                <nav class="flex flex-col gap-2">
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.dashboard') }}">
+                        <span class="material-symbols-outlined text-[20px]">dashboard</span>
+                        <span class="text-sm font-medium" data-translate="nav.dashboard">Dashboard</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.transactions') }}">
+                        <span class="material-symbols-outlined text-[20px]">receipt_long</span>
+                        <span class="text-sm font-medium" data-translate="nav.transactions">Transactions</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.income') }}">
+                        <span class="material-symbols-outlined text-[20px]">payments</span>
+                        <span class="text-sm font-medium" data-translate="nav.income">Income</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.goals') }}">
+                        <span class="material-symbols-outlined text-[20px]">savings</span>
+                        <span class="text-sm font-medium" data-translate="nav.goals">Savings Goals</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.subscriptions') }}">
+                        <span class="material-symbols-outlined text-[20px]">subscriptions</span>
+                        <span class="text-sm font-medium" data-translate="nav.subscriptions">Subscriptions</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.analyzer') }}">
+                        <span class="material-symbols-outlined text-[20px]">psychology</span>
+                        <span class="text-sm font-medium" data-translate="nav.analyzer">Expense Analyzer</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary border border-primary/10" href="{{ url_for('main.insights') }}">
+                        <span class="material-symbols-outlined text-[20px]">insights</span>
+                        <span class="text-sm font-medium" data-translate="nav.insights">Smart Insights</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.challenges') }}">
+                        <span class="material-symbols-outlined text-[20px]">emoji_events</span>
+                        <span class="text-sm font-medium" data-translate="nav.challenges">Challenges</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.forecast') }}">
+                        <span class="material-symbols-outlined text-[20px]">auto_graph</span>
+                        <span class="text-sm font-medium" data-translate="nav.forecast">Forecast</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.recurring') }}">
+                        <span class="material-symbols-outlined text-[20px]">repeat</span>
+                        <span class="text-sm font-medium" data-translate="nav.recurring">Recurring</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.import_page') }}">
+                        <span class="material-symbols-outlined text-[20px]">file_upload</span>
+                        <span class="text-sm font-medium" data-translate="nav.import">Import CSV</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.reports') }}">
+                        <span class="material-symbols-outlined text-[20px]">pie_chart</span>
+                        <span class="text-sm font-medium" data-translate="nav.reports">Reports</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.documents') }}">
+                        <span class="material-symbols-outlined text-[20px]">folder_open</span>
+                        <span class="text-sm font-medium" data-translate="nav.documents">Documents</span>
+                    </a>
+                    {% if current_user.is_admin %}
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="/admin">
+                        <span class="material-symbols-outlined text-[20px]">admin_panel_settings</span>
+                        <span class="text-sm font-medium" data-translate="nav.admin">Admin</span>
+                    </a>
+                    {% endif %}
+                </nav>
+            </div>
+            
+            <!-- Bottom Links -->
+            <div class="flex flex-col gap-2">
+                <button id="theme-toggle" class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors">
+                    <span class="material-symbols-outlined text-[20px]" id="theme-icon">light_mode</span>
+                    <span class="text-sm font-medium" id="theme-text" data-translate="dashboard.lightMode">Light Mode</span>
+                </button>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.settings') }}">
+                    <span class="material-symbols-outlined text-[20px]">settings</span>
+                    <span class="text-sm font-medium" data-translate="nav.settings">Settings</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('auth.logout') }}">
+                    <span class="material-symbols-outlined text-[20px]">logout</span>
+                    <span class="text-sm font-medium" data-translate="nav.logout">Log out</span>
+                </a>
+            </div>
+        </div>
+    </aside>
+    
+    <!-- Main Content -->
+    <main class="flex-1 flex flex-col h-full overflow-hidden relative">
+        <!-- Top Header -->
+        <header class="h-16 flex items-center justify-between px-6 lg:px-8 border-b border-border-light dark:border-[#233648] bg-white/80 dark:bg-background-dark/95 backdrop-blur z-10 shrink-0 shadow-sm dark:shadow-none">
+            <div class="flex items-center gap-4">
+                <button id="menu-toggle" class="lg:hidden text-text-main dark:text-white">
+                    <span class="material-symbols-outlined">menu</span>
+                </button>
+                <h2 class="text-text-main dark:text-white text-lg font-bold" data-translate="nav.insights">Smart Insights</h2>
+            </div>
+            <div class="flex items-center gap-3">
+                <!-- Generate Insights Button -->
+                <button onclick="generateInsights()" id="generate-btn" class="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg flex items-center gap-2 transition-colors text-sm font-semibold shadow-md shadow-primary/20">
+                    <span class="material-symbols-outlined text-lg">auto_awesome</span>
+                    <span data-translate="insights.generate">Generate Insights</span>
+                </button>
+                
+                <!-- Settings -->
+                <button onclick="openPreferencesModal()" class="p-2 text-text-muted dark:text-[#92adc9] hover:text-text-main dark:hover:text-white hover:bg-gray-100 dark:hover:bg-[#233648] rounded-lg transition-colors">
+                    <span class="material-symbols-outlined">settings</span>
+                </button>
+            </div>
+        </header>
+        
+        <!-- Scrollable Content -->
+        <div class="flex-1 overflow-y-auto p-6 lg:p-8 scroll-smooth bg-[#f8fafc] dark:bg-background-dark">
+            <div class="max-w-7xl mx-auto flex flex-col gap-6 pb-10">
+        <!-- Summary Cards -->
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <!-- Unread Insights -->
+            <div class="stat-card bg-white dark:bg-card-dark rounded-xl p-5 border border-gray-200 dark:border-[#233648]">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-text-muted dark:text-[#92adc9]" data-translate="insights.unread">Unread</p>
+                        <p id="unread-count" class="text-3xl font-bold text-primary mt-1">0</p>
+                    </div>
+                    <div class="p-3 bg-primary/10 rounded-xl">
+                        <span class="material-symbols-outlined text-primary text-2xl">notifications</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Weekly Spending -->
+            <div class="bg-white dark:bg-card-dark rounded-xl p-5 border border-gray-200 dark:border-[#233648]">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-text-muted dark:text-[#92adc9]" data-translate="insights.weeklySpent">This Week</p>
+                        <p id="weekly-spent" class="text-3xl font-bold text-text-main dark:text-white mt-1">0</p>
+                        <p id="weekly-change" class="text-xs text-text-muted dark:text-[#92adc9] mt-1"></p>
+                    </div>
+                    <div class="p-3 bg-emerald-500/10 rounded-xl">
+                        <span class="material-symbols-outlined text-emerald-500 text-2xl">calendar_month</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Money Leaks Detected -->
+            <div class="bg-white dark:bg-card-dark rounded-xl p-5 border border-gray-200 dark:border-[#233648]">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-text-muted dark:text-[#92adc9]" data-translate="insights.moneyLeaks">Money Leaks</p>
+                        <p id="leak-count" class="text-3xl font-bold text-amber-500 mt-1">0</p>
+                        <p id="leak-yearly" class="text-xs text-text-muted dark:text-[#92adc9] mt-1"></p>
+                    </div>
+                    <div class="p-3 bg-amber-500/10 rounded-xl">
+                        <span class="material-symbols-outlined text-amber-500 text-2xl">water_drop</span>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Category Alerts -->
+            <div class="bg-white dark:bg-card-dark rounded-xl p-5 border border-gray-200 dark:border-[#233648]">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-text-muted dark:text-[#92adc9]" data-translate="insights.categoryAlerts">Category Spikes</p>
+                        <p id="spike-count" class="text-3xl font-bold text-red-500 mt-1">0</p>
+                    </div>
+                    <div class="p-3 bg-red-500/10 rounded-xl">
+                        <span class="material-symbols-outlined text-red-500 text-2xl">trending_up</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex flex-wrap gap-2 mb-6">
+            <button class="tab-btn active px-4 py-2.5 rounded-lg border border-gray-200 dark:border-[#233648] text-sm font-medium flex items-center gap-2" data-tab="all">
+                <span class="material-symbols-outlined text-lg">notifications</span>
+                <span data-translate="insights.tabs.all">All Insights</span>
+            </button>
+            <button class="tab-btn px-4 py-2.5 rounded-lg border border-gray-200 dark:border-[#233648] text-sm font-medium flex items-center gap-2" data-tab="digest">
+                <span class="material-symbols-outlined text-lg">summarize</span>
+                <span data-translate="insights.tabs.digest">Weekly Digest</span>
+            </button>
+            <button class="tab-btn px-4 py-2.5 rounded-lg border border-gray-200 dark:border-[#233648] text-sm font-medium flex items-center gap-2" data-tab="unusual">
+                <span class="material-symbols-outlined text-lg">warning</span>
+                <span data-translate="insights.tabs.unusual">Unusual Spending</span>
+            </button>
+            <button class="tab-btn px-4 py-2.5 rounded-lg border border-gray-200 dark:border-[#233648] text-sm font-medium flex items-center gap-2" data-tab="categories">
+                <span class="material-symbols-outlined text-lg">category</span>
+                <span data-translate="insights.tabs.categories">Category Analysis</span>
+            </button>
+            <button class="tab-btn px-4 py-2.5 rounded-lg border border-gray-200 dark:border-[#233648] text-sm font-medium flex items-center gap-2" data-tab="leaks">
+                <span class="material-symbols-outlined text-lg">water_drop</span>
+                <span data-translate="insights.tabs.leaks">Money Leaks</span>
+            </button>
+        </div>
+
+        <!-- Tab Content -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <!-- Main Content -->
+            <div class="lg:col-span-2">
+                <!-- All Insights Tab -->
+                <div id="tab-all" class="tab-content">
+                    <div class="bg-white dark:bg-card-dark rounded-xl border border-gray-200 dark:border-[#233648] overflow-hidden">
+                        <div class="flex items-center justify-between p-4 border-b border-gray-200 dark:border-[#233648]">
+                            <h3 class="font-semibold text-text-main dark:text-white flex items-center gap-2">
+                                <span class="material-symbols-outlined text-primary">notifications</span>
+                                <span data-translate="insights.allInsights">All Insights</span>
+                            </h3>
+                            <button onclick="markAllRead()" class="text-sm text-primary hover:text-primary-dark transition-colors" data-translate="insights.markAllRead">
+                                Mark all as read
+                            </button>
+                        </div>
+                        <div id="insights-list" class="divide-y divide-gray-200 dark:divide-[#233648]">
+                            <!-- Insights will be loaded here -->
+                            <div class="p-8 text-center text-text-muted dark:text-[#92adc9]">
+                                <span class="material-symbols-outlined text-4xl mb-2 block">hourglass_empty</span>
+                                <p data-translate="insights.loading">Loading insights...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Weekly Digest Tab -->
+                <div id="tab-digest" class="tab-content hidden">
+                    <div class="bg-white dark:bg-card-dark rounded-xl border border-gray-200 dark:border-[#233648] overflow-hidden">
+                        <div class="p-4 border-b border-gray-200 dark:border-[#233648]">
+                            <h3 class="font-semibold text-text-main dark:text-white flex items-center gap-2">
+                                <span class="material-symbols-outlined text-primary">summarize</span>
+                                <span data-translate="insights.weeklyDigest.title">Weekly Spending Summary</span>
+                            </h3>
+                            <p id="digest-period" class="text-sm text-text-muted dark:text-[#92adc9] mt-1"></p>
+                        </div>
+                        <div id="digest-content" class="p-4">
+                            <!-- Digest content will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Unusual Spending Tab -->
+                <div id="tab-unusual" class="tab-content hidden">
+                    <div class="bg-white dark:bg-card-dark rounded-xl border border-gray-200 dark:border-[#233648] overflow-hidden">
+                        <div class="p-4 border-b border-gray-200 dark:border-[#233648]">
+                            <h3 class="font-semibold text-text-main dark:text-white flex items-center gap-2">
+                                <span class="material-symbols-outlined text-amber-500">warning</span>
+                                <span data-translate="insights.unusual.title">Unusual Spending Detected</span>
+                            </h3>
+                        </div>
+                        <div id="unusual-content" class="p-4">
+                            <!-- Unusual spending will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Category Analysis Tab -->
+                <div id="tab-categories" class="tab-content hidden">
+                    <div class="bg-white dark:bg-card-dark rounded-xl border border-gray-200 dark:border-[#233648] overflow-hidden">
+                        <div class="p-4 border-b border-gray-200 dark:border-[#233648]">
+                            <h3 class="font-semibold text-text-main dark:text-white flex items-center gap-2">
+                                <span class="material-symbols-outlined text-primary">category</span>
+                                <span data-translate="insights.category.title">Category vs Last Month</span>
+                            </h3>
+                        </div>
+                        <div id="categories-content" class="p-4">
+                            <!-- Category comparisons will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Money Leaks Tab -->
+                <div id="tab-leaks" class="tab-content hidden">
+                    <div class="bg-white dark:bg-card-dark rounded-xl border border-gray-200 dark:border-[#233648] overflow-hidden">
+                        <div class="p-4 border-b border-gray-200 dark:border-[#233648]">
+                            <h3 class="font-semibold text-text-main dark:text-white flex items-center gap-2">
+                                <span class="material-symbols-outlined text-red-500">water_drop</span>
+                                <span data-translate="insights.leaks.title">Money Leaks Identified</span>
+                            </h3>
+                            <p class="text-sm text-text-muted dark:text-[#92adc9] mt-1" data-translate="insights.leaks.subtitle">
+                                Small recurring expenses that add up over time
+                            </p>
+                        </div>
+                        <div id="leaks-content" class="p-4">
+                            <!-- Money leaks will be loaded here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="lg:col-span-1 space-y-6">
+                <!-- Quick Actions -->
+                <div class="bg-white dark:bg-card-dark rounded-xl border border-gray-200 dark:border-[#233648] p-4">
+                    <h3 class="font-semibold text-text-main dark:text-white mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-primary">bolt</span>
+                        <span data-translate="insights.quickActions">Quick Actions</span>
+                    </h3>
+                    <div class="space-y-2">
+                        <a href="{{ url_for('main.transactions') }}" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-[#233648] transition-colors">
+                            <span class="material-symbols-outlined text-primary">receipt_long</span>
+                            <span class="text-sm text-text-main dark:text-white" data-translate="insights.viewTransactions">View All Transactions</span>
+                        </a>
+                        <a href="{{ url_for('main.reports') }}" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-[#233648] transition-colors">
+                            <span class="material-symbols-outlined text-emerald-500">pie_chart</span>
+                            <span class="text-sm text-text-main dark:text-white" data-translate="insights.viewReports">View Reports</span>
+                        </a>
+                        <a href="{{ url_for('main.analyzer') }}" class="flex items-center gap-3 p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-[#233648] transition-colors">
+                            <span class="material-symbols-outlined text-amber-500">psychology</span>
+                            <span class="text-sm text-text-main dark:text-white" data-translate="insights.expenseAnalyzer">Expense Analyzer</span>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Net Cash Flow -->
+                <div class="bg-white dark:bg-card-dark rounded-xl border border-gray-200 dark:border-[#233648] p-4">
+                    <h3 class="font-semibold text-text-main dark:text-white mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-emerald-500">account_balance</span>
+                        <span data-translate="insights.cashFlow">Weekly Cash Flow</span>
+                    </h3>
+                    <div class="space-y-3">
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-text-muted dark:text-[#92adc9]" data-translate="insights.income">Income</span>
+                            <span id="cashflow-income" class="text-sm font-medium text-emerald-500">0</span>
+                        </div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm text-text-muted dark:text-[#92adc9]" data-translate="insights.expenses">Expenses</span>
+                            <span id="cashflow-expenses" class="text-sm font-medium text-red-500">0</span>
+                        </div>
+                        <div class="h-px bg-gray-200 dark:bg-[#233648]"></div>
+                        <div class="flex justify-between items-center">
+                            <span class="text-sm font-medium text-text-main dark:text-white" data-translate="insights.netFlow">Net Flow</span>
+                            <span id="cashflow-net" class="text-lg font-bold">0</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Top Spending Day -->
+                <div class="bg-white dark:bg-card-dark rounded-xl border border-gray-200 dark:border-[#233648] p-4">
+                    <h3 class="font-semibold text-text-main dark:text-white mb-4 flex items-center gap-2">
+                        <span class="material-symbols-outlined text-amber-500">schedule</span>
+                        <span data-translate="insights.topSpendingDay">Highest Spending Day</span>
+                    </h3>
+                    <div class="text-center py-4">
+                        <p id="top-day-name" class="text-3xl font-bold text-text-main dark:text-white">--</p>
+                        <p id="top-day-amount" class="text-lg text-amber-500 font-medium mt-1">0</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- Preferences Modal -->
+<div id="preferences-modal" class="fixed inset-0 bg-black/50 z-50 hidden flex items-center justify-center p-4">
+    <div class="bg-white dark:bg-card-dark rounded-xl max-w-lg w-full max-h-[90vh] overflow-y-auto">
+        <div class="p-4 border-b border-gray-200 dark:border-[#233648] flex items-center justify-between">
+            <h3 class="text-lg font-semibold text-text-main dark:text-white flex items-center gap-2">
+                <span class="material-symbols-outlined text-primary">settings</span>
+                <span data-translate="insights.preferences.title">Insight Preferences</span>
+            </h3>
+            <button onclick="closePreferencesModal()" class="p-1 hover:bg-gray-100 dark:hover:bg-[#233648] rounded-lg transition-colors">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        <div class="p-4 space-y-6">
+            <!-- Weekly Digest -->
+            <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h4 class="font-medium text-text-main dark:text-white" data-translate="insights.preferences.weeklyDigest">Weekly Digest</h4>
+                        <p class="text-sm text-text-muted dark:text-[#92adc9]" data-translate="insights.preferences.weeklyDigestDesc">Get a summary every week</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="pref-weekly-digest" class="sr-only peer" checked>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:ring-2 peer-focus:ring-primary rounded-full peer dark:bg-[#233648] peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Unusual Spending Alerts -->
+            <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h4 class="font-medium text-text-main dark:text-white" data-translate="insights.preferences.unusualSpending">Unusual Spending Alerts</h4>
+                        <p class="text-sm text-text-muted dark:text-[#92adc9]" data-translate="insights.preferences.unusualSpendingDesc">Alert when spending exceeds normal</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="pref-unusual" class="sr-only peer" checked>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:ring-2 peer-focus:ring-primary rounded-full peer dark:bg-[#233648] peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                    </label>
+                </div>
+                <div class="ml-0">
+                    <label class="text-sm text-text-muted dark:text-[#92adc9]" data-translate="insights.preferences.threshold">Threshold</label>
+                    <select id="pref-unusual-threshold" class="mt-1 w-full px-3 py-2 bg-gray-50 dark:bg-[#1a2b3c] border border-gray-200 dark:border-[#233648] rounded-lg text-text-main dark:text-white">
+                        <option value="1.25">125% (Sensitive)</option>
+                        <option value="1.5" selected>150% (Normal)</option>
+                        <option value="2.0">200% (Relaxed)</option>
+                    </select>
+                </div>
+            </div>
+
+            <!-- Category Alerts -->
+            <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h4 class="font-medium text-text-main dark:text-white" data-translate="insights.preferences.categoryAlerts">Category Spending Alerts</h4>
+                        <p class="text-sm text-text-muted dark:text-[#92adc9]" data-translate="insights.preferences.categoryAlertsDesc">Alert when a category spikes</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="pref-category" class="sr-only peer" checked>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:ring-2 peer-focus:ring-primary rounded-full peer dark:bg-[#233648] peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Money Leak Detection -->
+            <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h4 class="font-medium text-text-main dark:text-white" data-translate="insights.preferences.moneyLeaks">Money Leak Detection</h4>
+                        <p class="text-sm text-text-muted dark:text-[#92adc9]" data-translate="insights.preferences.moneyLeaksDesc">Find recurring small expenses</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="pref-leaks" class="sr-only peer" checked>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:ring-2 peer-focus:ring-primary rounded-full peer dark:bg-[#233648] peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Push Notifications -->
+            <div class="space-y-3">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <h4 class="font-medium text-text-main dark:text-white" data-translate="insights.preferences.pushNotifications">Push Notifications</h4>
+                        <p class="text-sm text-text-muted dark:text-[#92adc9]" data-translate="insights.preferences.pushNotificationsDesc">Receive browser notifications</p>
+                    </div>
+                    <label class="relative inline-flex items-center cursor-pointer">
+                        <input type="checkbox" id="pref-push" class="sr-only peer" checked>
+                        <div class="w-11 h-6 bg-gray-200 peer-focus:ring-2 peer-focus:ring-primary rounded-full peer dark:bg-[#233648] peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-primary"></div>
+                    </label>
+                </div>
+            </div>
+        </div>
+        <div class="p-4 border-t border-gray-200 dark:border-[#233648] flex justify-end gap-3">
+            <button onclick="closePreferencesModal()" class="px-4 py-2 text-text-muted dark:text-[#92adc9] hover:text-text-main dark:hover:text-white transition-colors" data-translate="common.cancel">Cancel</button>
+            <button onclick="savePreferences()" class="px-4 py-2 bg-primary hover:bg-primary-dark text-white rounded-lg transition-colors" data-translate="common.save">Save</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{{ url_for('static', filename='js/insights.js') }}"></script>
+{% endblock %}

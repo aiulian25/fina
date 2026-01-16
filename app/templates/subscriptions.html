@@ -1,0 +1,516 @@
+{% extends "base.html" %}
+
+{% block title %}Subscriptions - FINA{% endblock %}
+
+{% block body %}
+<div class="flex h-screen w-full">
+    <!-- Side Navigation -->
+    <aside id="sidebar" class="hidden lg:flex w-64 flex-col bg-sidebar-light dark:bg-background-dark border-r border-border-light dark:border-[#233648] transition-all duration-300 shadow-sm dark:shadow-none">
+        <div class="p-6 flex flex-col h-full justify-between">
+            <div class="flex flex-col gap-8">
+                <!-- User Profile -->
+                <div class="flex gap-3 items-center">
+                    <img src="{{ current_user.avatar | avatar_url }}" alt="{{ current_user.username }}" class="size-10 rounded-full border-2 border-primary/30 object-cover">
+                    <div class="flex flex-col">
+                        <h1 class="text-text-main dark:text-white text-base font-bold leading-none">{{ current_user.username }}</h1>
+                        <p class="text-text-muted dark:text-[#92adc9] text-xs font-normal mt-1">
+                            {% if current_user.is_admin %}<span data-translate="user.admin">Admin</span>{% else %}<span data-translate="user.user">User</span>{% endif %}
+                        </p>
+                    </div>
+                </div>
+                
+                <!-- Navigation Links -->
+                <nav class="flex flex-col gap-2">
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.dashboard') }}">
+                        <span class="material-symbols-outlined text-[20px]">dashboard</span>
+                        <span class="text-sm font-medium" data-translate="nav.dashboard">Dashboard</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.transactions') }}">
+                        <span class="material-symbols-outlined text-[20px]">receipt_long</span>
+                        <span class="text-sm font-medium" data-translate="nav.transactions">Transactions</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.income') }}">
+                        <span class="material-symbols-outlined text-[20px]">payments</span>
+                        <span class="text-sm font-medium" data-translate="nav.income">Income</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.goals') }}">
+                        <span class="material-symbols-outlined text-[20px]">savings</span>
+                        <span class="text-sm font-medium" data-translate="nav.goals">Savings Goals</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary border border-primary/10" href="{{ url_for('main.subscriptions') }}">
+                        <span class="material-symbols-outlined text-[20px]">subscriptions</span>
+                        <span class="text-sm font-medium" data-translate="nav.subscriptions">Subscriptions</span>
+                    </a>                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.analyzer') }}">
+                        <span class="material-symbols-outlined text-[20px]">psychology</span>
+                        <span class="text-sm font-medium" data-translate="nav.analyzer">Expense Analyzer</span>
+                    </a>                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.insights') }}">
+                        <span class="material-symbols-outlined text-[20px]">insights</span>
+                        <span class="text-sm font-medium" data-translate="nav.insights">Smart Insights</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.challenges') }}">
+                        <span class="material-symbols-outlined text-[20px]">emoji_events</span>
+                        <span class="text-sm font-medium" data-translate="nav.challenges">Challenges</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.forecast') }}">
+                        <span class="material-symbols-outlined text-[20px]">auto_graph</span>
+                        <span class="text-sm font-medium" data-translate="nav.forecast">Forecast</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.recurring') }}">
+                        <span class="material-symbols-outlined text-[20px]">repeat</span>
+                        <span class="text-sm font-medium" data-translate="nav.recurring">Recurring</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.import_page') }}">
+                        <span class="material-symbols-outlined text-[20px]">file_upload</span>
+                        <span class="text-sm font-medium" data-translate="nav.import">Import CSV</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.reports') }}">
+                        <span class="material-symbols-outlined text-[20px]">pie_chart</span>
+                        <span class="text-sm font-medium" data-translate="nav.reports">Reports</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.documents') }}">
+                        <span class="material-symbols-outlined text-[20px]">folder_open</span>
+                        <span class="text-sm font-medium" data-translate="nav.documents">Documents</span>
+                    </a>
+                    {% if current_user.is_admin %}
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="/admin">
+                        <span class="material-symbols-outlined text-[20px]">admin_panel_settings</span>
+                        <span class="text-sm font-medium" data-translate="nav.admin">Admin</span>
+                    </a>
+                    {% endif %}
+                </nav>
+            </div>
+            
+            <!-- Bottom Links -->
+            <div class="flex flex-col gap-2">
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.settings') }}">
+                    <span class="material-symbols-outlined text-[20px]">settings</span>
+                    <span class="text-sm font-medium" data-translate="nav.settings">Settings</span>
+                </a>
+                <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-red-500 dark:hover:text-red-400 transition-colors" href="{{ url_for('auth.logout') }}">
+                    <span class="material-symbols-outlined text-[20px]">logout</span>
+                    <span class="text-sm font-medium" data-translate="nav.logout">Logout</span>
+                </a>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content Area -->
+    <div class="flex-1 flex flex-col min-h-screen overflow-hidden">
+        <!-- Top Bar (Mobile) -->
+        <header class="lg:hidden bg-white dark:bg-card-dark border-b border-border-light dark:border-[#233648] p-4 flex items-center justify-between">
+            <button id="mobile-menu-toggle" class="text-text-main dark:text-white p-2 hover:bg-slate-100 dark:hover:bg-[#233648] rounded-lg transition-colors">
+                <span class="material-symbols-outlined text-[24px]">menu</span>
+            </button>
+            <h1 class="text-lg font-bold text-text-main dark:text-white" data-translate="subscriptions.title">Subscriptions</h1>
+            <div class="w-10"></div>
+        </header>
+
+        <!-- Content -->
+        <main class="flex-1 overflow-y-auto bg-background-light dark:bg-background-dark p-4 md:p-6 lg:p-8">
+            <div class="max-w-7xl mx-auto">
+                <!-- Header -->
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6 gap-4">
+                    <div>
+                        <h1 class="text-2xl md:text-3xl font-bold text-text-main dark:text-white mb-2" data-translate="subscriptions.title">Subscriptions</h1>
+                        <p class="text-text-muted dark:text-[#92adc9]" data-translate="subscriptions.subtitle">Track and manage all your subscription services</p>
+                    </div>
+                    <div class="flex gap-3">
+                        <button onclick="detectSubscriptions()" id="detect-btn" class="inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2.5 rounded-xl font-medium transition-all hover:shadow-lg">
+                            <span class="material-symbols-outlined text-[20px]">auto_awesome</span>
+                            <span data-translate="subscriptions.detect">Detect</span>
+                        </button>
+                        <button onclick="openSubscriptionModal()" class="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-4 py-2.5 rounded-xl font-medium transition-all hover:shadow-lg">
+                            <span class="material-symbols-outlined text-[20px]">add</span>
+                            <span data-translate="subscriptions.add">Add Subscription</span>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Summary Cards -->
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+                    <!-- Monthly Cost -->
+                    <div class="bg-white dark:bg-card-dark rounded-2xl p-4 border border-border-light dark:border-[#233648] shadow-sm">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-10 h-10 rounded-xl bg-primary/10 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-primary text-[20px]">payments</span>
+                            </div>
+                            <span class="text-xs font-medium text-text-muted dark:text-[#92adc9]" data-translate="subscriptions.monthlyTotal">Monthly Cost</span>
+                        </div>
+                        <p class="text-xl font-bold text-text-main dark:text-white" id="monthly-cost">$0.00</p>
+                    </div>
+                    
+                    <!-- Yearly Cost -->
+                    <div class="bg-white dark:bg-card-dark rounded-2xl p-4 border border-border-light dark:border-[#233648] shadow-sm">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-10 h-10 rounded-xl bg-green-500/10 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-green-500 text-[20px]">calendar_month</span>
+                            </div>
+                            <span class="text-xs font-medium text-text-muted dark:text-[#92adc9]" data-translate="subscriptions.yearlyTotal">Yearly Cost</span>
+                        </div>
+                        <p class="text-xl font-bold text-text-main dark:text-white" id="yearly-cost">$0.00</p>
+                    </div>
+                    
+                    <!-- Active Subscriptions -->
+                    <div class="bg-white dark:bg-card-dark rounded-2xl p-4 border border-border-light dark:border-[#233648] shadow-sm">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-10 h-10 rounded-xl bg-blue-500/10 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-blue-500 text-[20px]">subscriptions</span>
+                            </div>
+                            <span class="text-xs font-medium text-text-muted dark:text-[#92adc9]" data-translate="subscriptions.activeCount">Active</span>
+                        </div>
+                        <p class="text-xl font-bold text-text-main dark:text-white" id="active-count">0</p>
+                    </div>
+                    
+                    <!-- Unused Alert -->
+                    <div class="bg-white dark:bg-card-dark rounded-2xl p-4 border border-border-light dark:border-[#233648] shadow-sm cursor-pointer hover:border-orange-500/50 transition-colors" onclick="scrollToUnused()">
+                        <div class="flex items-center gap-3 mb-3">
+                            <div class="w-10 h-10 rounded-xl bg-orange-500/10 flex items-center justify-center">
+                                <span class="material-symbols-outlined text-orange-500 text-[20px]">warning</span>
+                            </div>
+                            <span class="text-xs font-medium text-text-muted dark:text-[#92adc9]" data-translate="subscriptions.unusedCount">Unused</span>
+                        </div>
+                        <p class="text-xl font-bold text-orange-500" id="unused-count">0</p>
+                    </div>
+                </div>
+
+                <!-- Renewal Reminders Section -->
+                <div id="reminders-section" class="hidden mb-6">
+                    <div class="bg-gradient-to-r from-amber-500/10 to-orange-500/10 border border-amber-500/20 rounded-2xl p-4">
+                        <div class="flex items-center gap-3 mb-4">
+                            <span class="material-symbols-outlined text-amber-500 text-[24px]">notifications_active</span>
+                            <h3 class="text-lg font-semibold text-text-main dark:text-white" data-translate="subscriptions.upcomingRenewals">Upcoming Renewals</h3>
+                        </div>
+                        <div id="reminders-list" class="space-y-2"></div>
+                    </div>
+                </div>
+
+                <!-- Suggestions Section (Hidden by default) -->
+                <div id="suggestions-section" class="hidden mb-6">
+                    <div class="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-2xl p-4">
+                        <div class="flex items-center justify-between mb-4">
+                            <div class="flex items-center gap-3">
+                                <span class="material-symbols-outlined text-blue-400 text-[24px]">auto_awesome</span>
+                                <h3 class="text-lg font-semibold text-text-main dark:text-white" data-translate="subscriptions.detectedTitle">Detected Subscriptions</h3>
+                            </div>
+                            <button onclick="hideSuggestions()" class="p-1.5 hover:bg-white/10 rounded-lg transition-colors">
+                                <span class="material-symbols-outlined text-[20px] text-text-muted dark:text-[#92adc9]">close</span>
+                            </button>
+                        </div>
+                        <p class="text-sm text-text-muted dark:text-[#92adc9] mb-4" data-translate="subscriptions.detectedDesc">We found these potential subscriptions in your expense history</p>
+                        <div id="suggestions-list" class="space-y-3"></div>
+                    </div>
+                </div>
+
+                <!-- Unused Subscriptions Alert -->
+                <div id="unused-section" class="hidden mb-6">
+                    <div class="bg-gradient-to-r from-orange-500/10 to-red-500/10 border border-orange-500/20 rounded-2xl p-4">
+                        <div class="flex items-center gap-3 mb-3">
+                            <span class="material-symbols-outlined text-orange-500 text-[24px]">priority_high</span>
+                            <div>
+                                <h3 class="text-lg font-semibold text-text-main dark:text-white" data-translate="subscriptions.unusedTitle">Unused Subscriptions</h3>
+                                <p class="text-sm text-text-muted dark:text-[#92adc9]" data-translate="subscriptions.unusedDesc">These subscriptions haven't been used in a while</p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 mb-4">
+                            <span class="text-sm text-orange-500 font-medium" data-translate="subscriptions.potentialSavings">Potential monthly savings:</span>
+                            <span class="text-lg font-bold text-orange-500" id="potential-savings">$0.00</span>
+                        </div>
+                        <div id="unused-list" class="space-y-2"></div>
+                    </div>
+                </div>
+
+                <!-- Filter Tabs -->
+                <div class="flex flex-wrap gap-2 mb-6 pb-2">
+                    <button onclick="filterSubscriptions('all')" class="filter-tab active inline-flex items-center gap-2 px-4 py-2 bg-primary/20 text-primary dark:bg-primary/30 dark:text-primary rounded-full text-sm font-medium hover:bg-primary/30 dark:hover:bg-primary/40 transition-all" data-filter="all">
+                        <span class="material-symbols-outlined text-[18px]">apps</span>
+                        <span data-translate="common.all">All</span>
+                    </button>
+                    <button onclick="filterSubscriptions('entertainment')" class="filter-tab inline-flex items-center gap-2 px-4 py-2 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 rounded-full text-sm font-medium hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-all" data-filter="entertainment">
+                        <span class="material-symbols-outlined text-[18px]">movie</span>
+                        <span data-translate="subscriptions.filter.entertainment">Entertainment</span>
+                    </button>
+                    <button onclick="filterSubscriptions('software')" class="filter-tab inline-flex items-center gap-2 px-4 py-2 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded-full text-sm font-medium hover:bg-blue-200 dark:hover:bg-blue-900/50 transition-all" data-filter="software">
+                        <span class="material-symbols-outlined text-[18px]">code</span>
+                        <span data-translate="subscriptions.filter.software">Software</span>
+                    </button>
+                    <button onclick="filterSubscriptions('other')" class="filter-tab inline-flex items-center gap-2 px-4 py-2 bg-slate-100 dark:bg-slate-700/30 text-slate-700 dark:text-slate-300 rounded-full text-sm font-medium hover:bg-slate-200 dark:hover:bg-slate-700/50 transition-all" data-filter="other">
+                        <span class="material-symbols-outlined text-[18px]">more_horiz</span>
+                        <span data-translate="subscriptions.filter.other">Other</span>
+                    </button>
+                </div>
+
+                <!-- Subscriptions Grid -->
+                <div id="subscriptions-container" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+                    <!-- Loading skeleton -->
+                    <div class="animate-pulse bg-white dark:bg-card-dark rounded-2xl p-5 border border-border-light dark:border-[#233648]">
+                        <div class="flex items-start gap-4">
+                            <div class="w-12 h-12 bg-slate-200 dark:bg-[#233648] rounded-xl"></div>
+                            <div class="flex-1 space-y-2">
+                                <div class="h-4 bg-slate-200 dark:bg-[#233648] rounded w-3/4"></div>
+                                <div class="h-3 bg-slate-200 dark:bg-[#233648] rounded w-1/2"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Empty State -->
+                <div id="empty-state" class="hidden text-center py-12">
+                    <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-primary/10 flex items-center justify-center">
+                        <span class="material-symbols-outlined text-primary text-[40px]">subscriptions</span>
+                    </div>
+                    <h3 class="text-xl font-semibold text-text-main dark:text-white mb-2" data-translate="subscriptions.noSubscriptions">No subscriptions yet</h3>
+                    <p class="text-text-muted dark:text-[#92adc9] mb-4" data-translate="subscriptions.noSubscriptionsDesc">Add your first subscription or detect them from your expenses</p>
+                    <div class="flex gap-3 justify-center">
+                        <button onclick="detectSubscriptions()" class="inline-flex items-center gap-2 bg-blue-500 hover:bg-blue-600 text-white px-4 py-2.5 rounded-xl font-medium transition-all">
+                            <span class="material-symbols-outlined text-[18px]">auto_awesome</span>
+                            <span data-translate="subscriptions.detectFromExpenses">Detect from Expenses</span>
+                        </button>
+                        <button onclick="openSubscriptionModal()" class="inline-flex items-center gap-2 bg-primary hover:bg-primary/90 text-white px-4 py-2.5 rounded-xl font-medium transition-all">
+                            <span class="material-symbols-outlined text-[18px]">add</span>
+                            <span data-translate="subscriptions.addManually">Add Manually</span>
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- Mobile Navigation -->
+        <div id="mobile-menu" class="lg:hidden fixed inset-0 z-50 hidden">
+            <div class="absolute inset-0 bg-black/50" onclick="closeMobileMenu()"></div>
+            <div class="absolute left-0 top-0 bottom-0 w-72 bg-white dark:bg-card-dark transform transition-transform">
+                <div class="p-6 flex flex-col h-full justify-between">
+                    <div class="flex flex-col gap-8">
+                        <!-- User Profile -->
+                        <div class="flex gap-3 items-center">
+                            <img src="{{ current_user.avatar | avatar_url }}" alt="{{ current_user.username }}" class="size-10 rounded-full border-2 border-primary/30 object-cover">
+                            <div class="flex flex-col">
+                                <h1 class="text-text-main dark:text-white text-base font-bold leading-none">{{ current_user.username }}</h1>
+                                <p class="text-text-muted dark:text-[#92adc9] text-xs font-normal mt-1">
+                                    {% if current_user.is_admin %}<span data-translate="user.admin">Admin</span>{% else %}<span data-translate="user.user">User</span>{% endif %}
+                                </p>
+                            </div>
+                        </div>
+                        
+                        <!-- Mobile Navigation Links -->
+                        <nav class="flex flex-col gap-2">
+                            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.dashboard') }}">
+                                <span class="material-symbols-outlined text-[20px]">dashboard</span>
+                                <span class="text-sm font-medium" data-translate="nav.dashboard">Dashboard</span>
+                            </a>
+                            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.transactions') }}">
+                                <span class="material-symbols-outlined text-[20px]">receipt_long</span>
+                                <span class="text-sm font-medium" data-translate="nav.transactions">Transactions</span>
+                            </a>
+                            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.income') }}">
+                                <span class="material-symbols-outlined text-[20px]">payments</span>
+                                <span class="text-sm font-medium" data-translate="nav.income">Income</span>
+                            </a>
+                            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.goals') }}">
+                                <span class="material-symbols-outlined text-[20px]">savings</span>
+                                <span class="text-sm font-medium" data-translate="nav.goals">Savings Goals</span>
+                            </a>
+                            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg bg-primary/10 text-primary border border-primary/10" href="{{ url_for('main.subscriptions') }}">
+                                <span class="material-symbols-outlined text-[20px]">subscriptions</span>
+                                <span class="text-sm font-medium" data-translate="nav.subscriptions">Subscriptions</span>
+                            </a>
+                            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.analyzer') }}">
+                                <span class="material-symbols-outlined text-[20px]">psychology</span>
+                                <span class="text-sm font-medium" data-translate="nav.analyzer">Expense Analyzer</span>
+                            </a>
+                            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.insights') }}">
+                                <span class="material-symbols-outlined text-[20px]">insights</span>
+                                <span class="text-sm font-medium" data-translate="nav.insights">Smart Insights</span>
+                            </a>
+                            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.recurring') }}">
+                                <span class="material-symbols-outlined text-[20px]">repeat</span>
+                                <span class="text-sm font-medium" data-translate="nav.recurring">Recurring</span>
+                            </a>
+                            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.import_page') }}">
+                                <span class="material-symbols-outlined text-[20px]">file_upload</span>
+                                <span class="text-sm font-medium" data-translate="nav.import">Import CSV</span>
+                            </a>
+                            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.reports') }}">
+                                <span class="material-symbols-outlined text-[20px]">pie_chart</span>
+                                <span class="text-sm font-medium" data-translate="nav.reports">Reports</span>
+                            </a>
+                            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.documents') }}">
+                                <span class="material-symbols-outlined text-[20px]">folder_open</span>
+                                <span class="text-sm font-medium" data-translate="nav.documents">Documents</span>
+                            </a>
+                            {% if current_user.is_admin %}
+                            <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="/admin">
+                                <span class="material-symbols-outlined text-[20px]">admin_panel_settings</span>
+                                <span class="text-sm font-medium" data-translate="nav.admin">Admin</span>
+                            </a>
+                            {% endif %}
+                        </nav>
+                    </div>
+                    
+                    <!-- Bottom Links -->
+                    <div class="flex flex-col gap-2">
+                        <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.settings') }}">
+                            <span class="material-symbols-outlined text-[20px]">settings</span>
+                            <span class="text-sm font-medium" data-translate="nav.settings">Settings</span>
+                        </a>
+                        <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-red-500 dark:hover:text-red-400 transition-colors" href="{{ url_for('auth.logout') }}">
+                            <span class="material-symbols-outlined text-[20px]">logout</span>
+                            <span class="text-sm font-medium" data-translate="nav.logout">Logout</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Add/Edit Subscription Modal -->
+<div id="subscription-modal" class="fixed inset-0 z-50 hidden">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" onclick="closeSubscriptionModal()"></div>
+    <div class="absolute inset-4 md:inset-auto md:top-1/2 md:left-1/2 md:-translate-x-1/2 md:-translate-y-1/2 md:w-full md:max-w-lg bg-white dark:bg-card-dark rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[90vh]">
+        <div class="p-6 border-b border-border-light dark:border-[#233648] flex items-center justify-between">
+            <h2 id="modal-title" class="text-xl font-bold text-text-main dark:text-white" data-translate="subscriptions.addTitle">Add Subscription</h2>
+            <button onclick="closeSubscriptionModal()" class="p-2 hover:bg-slate-100 dark:hover:bg-[#233648] rounded-lg transition-colors">
+                <span class="material-symbols-outlined text-[20px] text-text-muted dark:text-[#92adc9]">close</span>
+            </button>
+        </div>
+        <form id="subscription-form" class="flex-1 overflow-y-auto p-6 space-y-4">
+            <input type="hidden" id="subscription-id">
+            
+            <!-- Popular Services Quick Select -->
+            <div class="mb-4">
+                <label class="block text-sm font-medium text-text-muted dark:text-[#92adc9] mb-2" data-translate="subscriptions.popularServices">Popular Services</label>
+                <div class="flex flex-wrap gap-2" id="popular-services">
+                    <button type="button" onclick="selectService('netflix')" class="service-btn flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-[#233648] text-sm hover:bg-slate-200 dark:hover:bg-[#2d4458] transition-colors">
+                        <span class="material-symbols-outlined text-[16px]" style="color: #E50914;">movie</span>
+                        Netflix
+                    </button>
+                    <button type="button" onclick="selectService('spotify')" class="service-btn flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-[#233648] text-sm hover:bg-slate-200 dark:hover:bg-[#2d4458] transition-colors">
+                        <span class="material-symbols-outlined text-[16px]" style="color: #1DB954;">music_note</span>
+                        Spotify
+                    </button>
+                    <button type="button" onclick="selectService('youtube_premium')" class="service-btn flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-[#233648] text-sm hover:bg-slate-200 dark:hover:bg-[#2d4458] transition-colors">
+                        <span class="material-symbols-outlined text-[16px]" style="color: #FF0000;">play_circle</span>
+                        YouTube
+                    </button>
+                    <button type="button" onclick="selectService('disney_plus')" class="service-btn flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-[#233648] text-sm hover:bg-slate-200 dark:hover:bg-[#2d4458] transition-colors">
+                        <span class="material-symbols-outlined text-[16px]" style="color: #113CCF;">castle</span>
+                        Disney+
+                    </button>
+                    <button type="button" onclick="selectService('gym')" class="service-btn flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-[#233648] text-sm hover:bg-slate-200 dark:hover:bg-[#2d4458] transition-colors">
+                        <span class="material-symbols-outlined text-[16px]" style="color: #FF5722;">fitness_center</span>
+                        Gym
+                    </button>
+                    <button type="button" onclick="selectService('chatgpt')" class="service-btn flex items-center gap-2 px-3 py-1.5 rounded-lg bg-slate-100 dark:bg-[#233648] text-sm hover:bg-slate-200 dark:hover:bg-[#2d4458] transition-colors">
+                        <span class="material-symbols-outlined text-[16px]" style="color: #10A37F;">smart_toy</span>
+                        ChatGPT
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Name -->
+            <div>
+                <label for="sub-name" class="block text-sm font-medium text-text-muted dark:text-[#92adc9] mb-2" data-translate="subscriptions.name">Name</label>
+                <input type="text" id="sub-name" required 
+                    class="w-full px-4 py-3 rounded-xl border border-border-light dark:border-[#233648] bg-white dark:bg-[#0f1419] text-text-main dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent"
+                    placeholder="Netflix, Spotify, etc.">
+            </div>
+            
+            <!-- Amount and Frequency Row -->
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label for="sub-amount" class="block text-sm font-medium text-text-muted dark:text-[#92adc9] mb-2" data-translate="subscriptions.amount">Amount</label>
+                    <input type="number" id="sub-amount" required step="0.01" min="0"
+                        class="w-full px-4 py-3 rounded-xl border border-border-light dark:border-[#233648] bg-white dark:bg-[#0f1419] text-text-main dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent"
+                        placeholder="9.99">
+                </div>
+                <div>
+                    <label for="sub-frequency" class="block text-sm font-medium text-text-muted dark:text-[#92adc9] mb-2" data-translate="subscriptions.frequency">Frequency</label>
+                    <select id="sub-frequency" required
+                        class="w-full px-4 py-3 rounded-xl border border-border-light dark:border-[#233648] bg-white dark:bg-[#0f1419] text-text-main dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent">
+                        <option value="monthly" data-translate="recurring.frequency.monthly">Monthly</option>
+                        <option value="yearly" data-translate="recurring.frequency.yearly">Yearly</option>
+                        <option value="weekly" data-translate="recurring.frequency.weekly">Weekly</option>
+                    </select>
+                </div>
+            </div>
+            
+            <!-- Category -->
+            <div>
+                <label for="sub-category" class="block text-sm font-medium text-text-muted dark:text-[#92adc9] mb-2" data-translate="subscriptions.category">Category</label>
+                <select id="sub-category" required
+                    class="w-full px-4 py-3 rounded-xl border border-border-light dark:border-[#233648] bg-white dark:bg-[#0f1419] text-text-main dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent">
+                </select>
+            </div>
+            
+            <!-- Next Billing Date -->
+            <div>
+                <label for="sub-next-date" class="block text-sm font-medium text-text-muted dark:text-[#92adc9] mb-2" data-translate="subscriptions.nextBilling">Next Billing Date</label>
+                <input type="date" id="sub-next-date" required
+                    class="w-full px-4 py-3 rounded-xl border border-border-light dark:border-[#233648] bg-white dark:bg-[#0f1419] text-text-main dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent">
+            </div>
+            
+            <!-- Reminder Days -->
+            <div>
+                <label for="sub-reminder" class="block text-sm font-medium text-text-muted dark:text-[#92adc9] mb-2" data-translate="subscriptions.reminderDays">Remind me before renewal</label>
+                <select id="sub-reminder"
+                    class="w-full px-4 py-3 rounded-xl border border-border-light dark:border-[#233648] bg-white dark:bg-[#0f1419] text-text-main dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent">
+                    <option value="0" data-translate="subscriptions.noReminder">No reminder</option>
+                    <option value="1">1 day</option>
+                    <option value="3" selected>3 days</option>
+                    <option value="7">7 days</option>
+                    <option value="14">14 days</option>
+                </select>
+            </div>
+            
+            <!-- Notes -->
+            <div>
+                <label for="sub-notes" class="block text-sm font-medium text-text-muted dark:text-[#92adc9] mb-2" data-translate="subscriptions.notes">Notes (optional)</label>
+                <textarea id="sub-notes" rows="2"
+                    class="w-full px-4 py-3 rounded-xl border border-border-light dark:border-[#233648] bg-white dark:bg-[#0f1419] text-text-main dark:text-white focus:ring-2 focus:ring-primary focus:border-transparent resize-none"
+                    placeholder="Family plan, shared with..."></textarea>
+            </div>
+            
+            <!-- Auto-create expense -->
+            <div class="flex items-center gap-3 p-4 rounded-xl bg-slate-50 dark:bg-[#233648]">
+                <input type="checkbox" id="sub-auto-create"
+                    class="w-5 h-5 rounded border-border-light dark:border-[#233648] text-primary focus:ring-primary">
+                <div>
+                    <label for="sub-auto-create" class="text-sm font-medium text-text-main dark:text-white" data-translate="subscriptions.autoCreate">Auto-create expense</label>
+                    <p class="text-xs text-text-muted dark:text-[#92adc9]" data-translate="subscriptions.autoCreateDesc">Automatically log this expense when it renews</p>
+                </div>
+            </div>
+        </form>
+        <div class="p-6 border-t border-border-light dark:border-[#233648] flex gap-3">
+            <button type="button" onclick="closeSubscriptionModal()" class="flex-1 px-6 py-3 rounded-xl border border-border-light dark:border-[#233648] text-text-main dark:text-white hover:bg-slate-50 dark:hover:bg-[#233648] transition-colors font-medium" data-translate="common.cancel">Cancel</button>
+            <button type="submit" form="subscription-form" class="flex-1 px-6 py-3 rounded-xl bg-primary hover:bg-primary/90 text-white transition-colors font-medium" data-translate="common.save">Save</button>
+        </div>
+    </div>
+</div>
+
+<!-- Service Icons Reference (hidden, for JS) -->
+<script>
+const SERVICE_ICONS = {
+    'netflix': { icon: 'movie', color: '#E50914' },
+    'spotify': { icon: 'music_note', color: '#1DB954' },
+    'amazon_prime': { icon: 'shopping_bag', color: '#FF9900' },
+    'disney_plus': { icon: 'castle', color: '#113CCF' },
+    'hbo_max': { icon: 'live_tv', color: '#5822B4' },
+    'apple_music': { icon: 'music_note', color: '#FA243C' },
+    'apple_tv': { icon: 'tv', color: '#000000' },
+    'youtube_premium': { icon: 'play_circle', color: '#FF0000' },
+    'hulu': { icon: 'smart_display', color: '#1CE783' },
+    'xbox_game_pass': { icon: 'sports_esports', color: '#107C10' },
+    'playstation_plus': { icon: 'sports_esports', color: '#003791' },
+    'adobe': { icon: 'design_services', color: '#FF0000' },
+    'microsoft_365': { icon: 'description', color: '#D83B01' },
+    'google_one': { icon: 'cloud', color: '#4285F4' },
+    'dropbox': { icon: 'cloud', color: '#0061FF' },
+    'chatgpt': { icon: 'smart_toy', color: '#10A37F' },
+    'gym': { icon: 'fitness_center', color: '#FF5722' },
+    'vpn': { icon: 'vpn_key', color: '#4687FF' },
+    'default': { icon: 'subscriptions', color: '#2b8cee' }
+};
+</script>
+
+<script src="{{ url_for('static', filename='js/subscriptions.js') }}"></script>
+{% endblock %}

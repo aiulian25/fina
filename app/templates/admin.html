@@ -33,6 +33,30 @@
                         <span class="material-symbols-outlined text-[20px]">payments</span>
                         <span class="text-sm font-medium" data-translate="nav.income">Income</span>
                     </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.goals') }}">
+                        <span class="material-symbols-outlined text-[20px]">savings</span>
+                        <span class="text-sm font-medium" data-translate="nav.goals">Savings Goals</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.subscriptions') }}">
+                        <span class="material-symbols-outlined text-[20px]">subscriptions</span>
+                        <span class="text-sm font-medium" data-translate="nav.subscriptions">Subscriptions</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.analyzer') }}">
+                        <span class="material-symbols-outlined text-[20px]">psychology</span>
+                        <span class="text-sm font-medium" data-translate="nav.analyzer">Expense Analyzer</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.insights') }}">
+                        <span class="material-symbols-outlined text-[20px]">insights</span>
+                        <span class="text-sm font-medium" data-translate="nav.insights">Smart Insights</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.challenges') }}">
+                        <span class="material-symbols-outlined text-[20px]">emoji_events</span>
+                        <span class="text-sm font-medium" data-translate="nav.challenges">Challenges</span>
+                    </a>
+                    <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.forecast') }}">
+                        <span class="material-symbols-outlined text-[20px]">auto_graph</span>
+                        <span class="text-sm font-medium" data-translate="nav.forecast">Forecast</span>
+                    </a>
                     <a class="flex items-center gap-3 px-3 py-2.5 rounded-lg text-text-muted dark:text-[#92adc9] hover:bg-slate-50 dark:hover:bg-[#233648] hover:text-text-main dark:hover:text-white transition-colors" href="{{ url_for('main.recurring') }}">
                         <span class="material-symbols-outlined text-[20px]">repeat</span>
                         <span class="text-sm font-medium" data-translate="nav.recurring">Recurring</span>
@@ -166,7 +190,7 @@
 
 <!-- Create User Modal -->
 <div id="create-user-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
-    <div class="bg-card-light dark:bg-card-dark border border-border-light dark:border-slate-700 rounded-xl max-w-md w-full p-6">
+    <div class="bg-card-light dark:bg-card-dark border border-border-light dark:border-slate-700 rounded-xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
         <div class="flex items-center justify-between mb-4">
             <h3 class="text-xl font-bold text-text-main dark:text-white" data-translate="admin.createNewUser">Create New User</h3>
             <button onclick="closeCreateUserModal()" class="text-text-muted dark:text-slate-400 hover:text-text-main dark:hover:text-white">
@@ -187,7 +211,52 @@
             
             <div>
                 <label class="text-text-muted dark:text-slate-400 text-sm mb-2 block" data-translate="form.password">Password</label>
-                <input type="password" name="password" required minlength="8" class="w-full bg-background-light dark:bg-slate-800 border border-border-light dark:border-slate-700 rounded-lg px-4 py-2 text-text-main dark:text-white focus:border-primary focus:ring-1 focus:ring-primary">
+                <div class="relative">
+                    <input type="password" name="password" id="create-password" required minlength="8" class="w-full bg-background-light dark:bg-slate-800 border border-border-light dark:border-slate-700 rounded-lg px-4 py-2 pr-10 text-text-main dark:text-white focus:border-primary focus:ring-1 focus:ring-primary">
+                    <button type="button" onclick="togglePasswordVisibility('create-password')" class="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted dark:text-slate-400 hover:text-text-main dark:hover:text-white">
+                        <span class="material-symbols-outlined text-[20px]">visibility</span>
+                    </button>
+                </div>
+                <!-- Password strength indicator -->
+                <div id="create-password-strength" class="mt-2 hidden">
+                    <div class="flex gap-1 mb-1">
+                        <div class="h-1 flex-1 rounded bg-slate-200 dark:bg-slate-700" id="create-strength-1"></div>
+                        <div class="h-1 flex-1 rounded bg-slate-200 dark:bg-slate-700" id="create-strength-2"></div>
+                        <div class="h-1 flex-1 rounded bg-slate-200 dark:bg-slate-700" id="create-strength-3"></div>
+                        <div class="h-1 flex-1 rounded bg-slate-200 dark:bg-slate-700" id="create-strength-4"></div>
+                    </div>
+                    <p id="create-strength-text" class="text-xs text-text-muted dark:text-slate-400"></p>
+                </div>
+            </div>
+            
+            <div>
+                <label class="text-text-muted dark:text-slate-400 text-sm mb-2 block" data-translate="form.confirmPassword">Confirm Password</label>
+                <div class="relative">
+                    <input type="password" name="confirm_password" id="create-confirm-password" required minlength="8" class="w-full bg-background-light dark:bg-slate-800 border border-border-light dark:border-slate-700 rounded-lg px-4 py-2 pr-10 text-text-main dark:text-white focus:border-primary focus:ring-1 focus:ring-primary">
+                    <button type="button" onclick="togglePasswordVisibility('create-confirm-password')" class="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted dark:text-slate-400 hover:text-text-main dark:hover:text-white">
+                        <span class="material-symbols-outlined text-[20px]">visibility</span>
+                    </button>
+                </div>
+                <p id="create-password-match" class="text-xs mt-1 hidden"></p>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="text-text-muted dark:text-slate-400 text-sm mb-2 block" data-translate="admin.language">Language</label>
+                    <select name="language" class="w-full bg-background-light dark:bg-slate-800 border border-border-light dark:border-slate-700 rounded-lg px-4 py-2 text-text-main dark:text-white focus:border-primary focus:ring-1 focus:ring-primary">
+                        <option value="en">English</option>
+                        <option value="ro">Română</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-text-muted dark:text-slate-400 text-sm mb-2 block" data-translate="admin.currency">Currency</label>
+                    <select name="currency" class="w-full bg-background-light dark:bg-slate-800 border border-border-light dark:border-slate-700 rounded-lg px-4 py-2 text-text-main dark:text-white focus:border-primary focus:ring-1 focus:ring-primary">
+                        <option value="RON">RON (lei)</option>
+                        <option value="EUR">EUR (€)</option>
+                        <option value="USD">USD ($)</option>
+                        <option value="GBP">GBP (£)</option>
+                    </select>
+                </div>
             </div>
             
             <div class="flex items-center gap-2">
@@ -196,10 +265,106 @@
             </div>
             
             <div class="flex gap-3 pt-2">
-                <button type="submit" class="flex-1 bg-primary hover:bg-primary/90 text-white py-2 rounded-lg font-medium transition-colors">
+                <button type="submit" id="create-user-btn" class="flex-1 bg-primary hover:bg-primary/90 text-white py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined text-[18px] animate-spin hidden" id="create-user-spinner">progress_activity</span>
                     <span data-translate="admin.create">Create</span>
                 </button>
                 <button type="button" onclick="closeCreateUserModal()" class="flex-1 bg-background-light dark:bg-slate-800 text-text-main dark:text-white py-2 rounded-lg font-medium hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
+                    <span data-translate="common.cancel">Cancel</span>
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Edit User Modal -->
+<div id="edit-user-modal" class="fixed inset-0 bg-black/50 backdrop-blur-sm hidden items-center justify-center z-50 p-4">
+    <div class="bg-card-light dark:bg-card-dark border border-border-light dark:border-slate-700 rounded-xl max-w-md w-full p-6 max-h-[90vh] overflow-y-auto">
+        <div class="flex items-center justify-between mb-4">
+            <h3 class="text-xl font-bold text-text-main dark:text-white" data-translate="admin.editUser">Edit User</h3>
+            <button onclick="closeEditUserModal()" class="text-text-muted dark:text-slate-400 hover:text-text-main dark:hover:text-white">
+                <span class="material-symbols-outlined">close</span>
+            </button>
+        </div>
+        
+        <form id="edit-user-form" class="space-y-4">
+            <input type="hidden" name="user_id" id="edit-user-id">
+            
+            <div>
+                <label class="text-text-muted dark:text-slate-400 text-sm mb-2 block" data-translate="form.username">Username</label>
+                <input type="text" name="username" id="edit-username" required class="w-full bg-background-light dark:bg-slate-800 border border-border-light dark:border-slate-700 rounded-lg px-4 py-2 text-text-main dark:text-white focus:border-primary focus:ring-1 focus:ring-primary">
+            </div>
+            
+            <div>
+                <label class="text-text-muted dark:text-slate-400 text-sm mb-2 block" data-translate="form.email">Email</label>
+                <input type="email" name="email" id="edit-email" required class="w-full bg-background-light dark:bg-slate-800 border border-border-light dark:border-slate-700 rounded-lg px-4 py-2 text-text-main dark:text-white focus:border-primary focus:ring-1 focus:ring-primary">
+            </div>
+            
+            <div class="border-t border-border-light dark:border-slate-700 pt-4">
+                <p class="text-text-muted dark:text-slate-400 text-xs mb-3" data-translate="admin.passwordOptional">Leave password fields empty to keep current password</p>
+                
+                <div class="mb-4">
+                    <label class="text-text-muted dark:text-slate-400 text-sm mb-2 block" data-translate="form.newPassword">New Password</label>
+                    <div class="relative">
+                        <input type="password" name="password" id="edit-password" minlength="8" class="w-full bg-background-light dark:bg-slate-800 border border-border-light dark:border-slate-700 rounded-lg px-4 py-2 pr-10 text-text-main dark:text-white focus:border-primary focus:ring-1 focus:ring-primary">
+                        <button type="button" onclick="togglePasswordVisibility('edit-password')" class="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted dark:text-slate-400 hover:text-text-main dark:hover:text-white">
+                            <span class="material-symbols-outlined text-[20px]">visibility</span>
+                        </button>
+                    </div>
+                    <!-- Password strength indicator -->
+                    <div id="edit-password-strength" class="mt-2 hidden">
+                        <div class="flex gap-1 mb-1">
+                            <div class="h-1 flex-1 rounded bg-slate-200 dark:bg-slate-700" id="edit-strength-1"></div>
+                            <div class="h-1 flex-1 rounded bg-slate-200 dark:bg-slate-700" id="edit-strength-2"></div>
+                            <div class="h-1 flex-1 rounded bg-slate-200 dark:bg-slate-700" id="edit-strength-3"></div>
+                            <div class="h-1 flex-1 rounded bg-slate-200 dark:bg-slate-700" id="edit-strength-4"></div>
+                        </div>
+                        <p id="edit-strength-text" class="text-xs text-text-muted dark:text-slate-400"></p>
+                    </div>
+                </div>
+                
+                <div id="edit-confirm-password-container" class="hidden">
+                    <label class="text-text-muted dark:text-slate-400 text-sm mb-2 block" data-translate="form.confirmPassword">Confirm Password</label>
+                    <div class="relative">
+                        <input type="password" name="confirm_password" id="edit-confirm-password" minlength="8" class="w-full bg-background-light dark:bg-slate-800 border border-border-light dark:border-slate-700 rounded-lg px-4 py-2 pr-10 text-text-main dark:text-white focus:border-primary focus:ring-1 focus:ring-primary">
+                        <button type="button" onclick="togglePasswordVisibility('edit-confirm-password')" class="absolute right-3 top-1/2 -translate-y-1/2 text-text-muted dark:text-slate-400 hover:text-text-main dark:hover:text-white">
+                            <span class="material-symbols-outlined text-[20px]">visibility</span>
+                        </button>
+                    </div>
+                    <p id="edit-password-match" class="text-xs mt-1 hidden"></p>
+                </div>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="text-text-muted dark:text-slate-400 text-sm mb-2 block" data-translate="admin.language">Language</label>
+                    <select name="language" id="edit-language" class="w-full bg-background-light dark:bg-slate-800 border border-border-light dark:border-slate-700 rounded-lg px-4 py-2 text-text-main dark:text-white focus:border-primary focus:ring-1 focus:ring-primary">
+                        <option value="en">English</option>
+                        <option value="ro">Română</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="text-text-muted dark:text-slate-400 text-sm mb-2 block" data-translate="admin.currency">Currency</label>
+                    <select name="currency" id="edit-currency" class="w-full bg-background-light dark:bg-slate-800 border border-border-light dark:border-slate-700 rounded-lg px-4 py-2 text-text-main dark:text-white focus:border-primary focus:ring-1 focus:ring-primary">
+                        <option value="RON">RON (lei)</option>
+                        <option value="EUR">EUR (€)</option>
+                        <option value="USD">USD ($)</option>
+                        <option value="GBP">GBP (£)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div class="flex items-center gap-2">
+                <input type="checkbox" name="is_admin" id="edit-is-admin-checkbox" class="rounded border-border-light dark:border-slate-700 text-primary focus:ring-primary">
+                <label for="edit-is-admin-checkbox" class="text-text-main dark:text-white text-sm" data-translate="admin.makeAdmin">Make admin</label>
+            </div>
+            
+            <div class="flex gap-3 pt-2">
+                <button type="submit" id="edit-user-btn" class="flex-1 bg-primary hover:bg-primary/90 text-white py-2 rounded-lg font-medium transition-colors flex items-center justify-center gap-2">
+                    <span class="material-symbols-outlined text-[18px] animate-spin hidden" id="edit-user-spinner">progress_activity</span>
+                    <span data-translate="admin.saveChanges">Save Changes</span>
+                </button>
+                <button type="button" onclick="closeEditUserModal()" class="flex-1 bg-background-light dark:bg-slate-800 text-text-main dark:text-white py-2 rounded-lg font-medium hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors">
                     <span data-translate="common.cancel">Cancel</span>
                 </button>
             </div>
