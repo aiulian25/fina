@@ -388,16 +388,54 @@ def setup_2fa():
         db.session.commit()
     
     totp = pyotp.TOTP(current_user.totp_secret)
+    
+    # Build provisioning URI with proper issuer format
+    # Format: ISSUER:account@email.com for better display in authenticator apps
+    account_name = f"FINA:{current_user.email}"
     provisioning_uri = totp.provisioning_uri(
-        name=current_user.email,
-        issuer_name='FINA'
+        name=account_name,
+        issuer_name='FINA Finance Tracker'
     )
     
-    # Generate QR code image
-    qr = qrcode.QRCode(version=1, box_size=10, border=5)
+    # Generate QR code image with FINA branding
+    qr = qrcode.QRCode(
+        version=1,
+        error_correction=qrcode.constants.ERROR_CORRECT_H,  # High error correction for logo overlay
+        box_size=10,
+        border=4
+    )
     qr.add_data(provisioning_uri)
     qr.make(fit=True)
-    img = qr.make_image(fill_color="black", back_color="white")
+    
+    # Create QR code with FINA colors
+    img = qr.make_image(fill_color="#111a22", back_color="white").convert('RGBA')
+    
+    # Try to add logo overlay in center
+    try:
+        from PIL import Image
+        import os
+        logo_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'static', 'icons', 'icon-96x96.png')
+        if os.path.exists(logo_path):
+            logo = Image.open(logo_path).convert('RGBA')
+            
+            # Calculate logo size (about 20% of QR code)
+            qr_width, qr_height = img.size
+            logo_size = int(qr_width * 0.2)
+            logo = logo.resize((logo_size, logo_size), Image.Resampling.LANCZOS)
+            
+            # Calculate position (center)
+            pos = ((qr_width - logo_size) // 2, (qr_height - logo_size) // 2)
+            
+            # Create white background for logo
+            white_bg = Image.new('RGBA', (logo_size + 10, logo_size + 10), 'white')
+            bg_pos = (pos[0] - 5, pos[1] - 5)
+            img.paste(white_bg, bg_pos)
+            
+            # Paste logo
+            img.paste(logo, pos, logo)
+    except Exception as e:
+        # If logo overlay fails, continue with plain QR code
+        print(f"Logo overlay failed: {e}")
     
     buf = io.BytesIO()
     img.save(buf, format='PNG')
