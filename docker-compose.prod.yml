@@ -1,38 +1,59 @@
-# Production Docker Compose - Uses pre-built image from GitHub Container Registry
-# Deploy on any machine with: docker compose -f docker-compose.prod.yml up -d
+#version: '3.8'
 
 services:
-  web:
+  fina:
     image: ghcr.io/aiulian25/fina:latest
     container_name: fina
+    restart: unless-stopped
     ports:
-      - "5103:5103"
-    volumes:
-      - ./data:/app/data:rw
-      - ./uploads:/app/uploads:rw
+      - "0.0.0.0:5103:5103"
     environment:
       - FLASK_ENV=production
-      - SECRET_KEY=${SECRET_KEY:-change-this-to-a-secure-random-string}
+      - SECRET_KEY=${SECRET_KEY:-change_this_in_production}
       - REDIS_URL=redis://redis:6379/0
       - DATABASE_URL=sqlite:////app/data/fina.db
+      # Set to true if behind HTTPS reverse proxy (nginx, traefik, caddy, etc.)
       - HTTPS_ENABLED=${HTTPS_ENABLED:-false}
+      # Session lifetime in seconds (default: 7 days)
+      - SESSION_LIFETIME=${SESSION_LIFETIME:-604800}
+    volumes:
+      - fina-data:/app/data
+      - fina-uploads:/app/uploads
     depends_on:
       - redis
-    restart: unless-stopped
+    security_opt:
+      - no-new-privileges:true
     networks:
       - fina-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5103/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
   redis:
     image: redis:7-alpine
     container_name: fina-redis
     restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - fina-redis:/data
     networks:
       - fina-network
-    volumes:
-      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
 
 volumes:
-  redis-data:
+  fina-data:
+    driver: local
+  fina-uploads:
+    driver: local
+  fina-redis:
+    driver: local
 
 networks:
   fina-network:

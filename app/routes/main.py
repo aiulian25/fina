@@ -8,6 +8,18 @@ from collections import defaultdict
 
 bp = Blueprint('main', __name__)
 
+
+@bp.route('/health')
+def health_check():
+    """Health check endpoint for Docker/load balancer"""
+    try:
+        # Test database connection
+        db.session.execute(db.text('SELECT 1'))
+        return jsonify({'status': 'healthy', 'database': 'ok'}), 200
+    except Exception as e:
+        return jsonify({'status': 'unhealthy', 'error': str(e)}), 500
+
+
 @bp.route('/')
 def index():
     if current_user.is_authenticated:
