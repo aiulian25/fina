@@ -52,12 +52,17 @@ echo "YOUR_GITHUB_TOKEN" | docker login ghcr.io -u YOUR_USERNAME --password-stdi
 
 > Create a token at: GitHub → Settings → Developer Settings → Personal Access Tokens → Tokens (classic) → Generate new token with `read:packages` scope
 
-### 2. Download the compose file and env template
+### 2. Clone the repo (or download files)
 
 ```bash
+git clone https://github.com/aiulian25/fina.git
+cd fina
+```
+
+Or for minimal deployment (just the compose file):
+```bash
 mkdir fina && cd fina
-curl -o docker-compose.yml https://raw.githubusercontent.com/aiulian25/fina/master/docker-compose.prod.yml
-curl -O https://raw.githubusercontent.com/aiulian25/fina/master/.env.example
+# Copy docker-compose.prod.yml and .env.example from the repo
 ```
 
 ### 3. Configure environment
