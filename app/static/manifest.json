@@ -81,5 +81,21 @@
         }
       ]
     }
+  ],
+  "screenshots": [
+    {
+      "src": "/static/icons/screenshots/screenshot-mobile.png",
+      "sizes": "540x1170",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "FINA Dashboard - Track your finances"
+    },
+    {
+      "src": "/static/icons/screenshots/screenshot-desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "FINA Dashboard - Desktop view"
+    }
   ]
 }

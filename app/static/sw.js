@@ -1,4 +1,4 @@
-const CACHE_NAME = 'fina-v11';
+const CACHE_NAME = 'fina-v12';
 const urlsToCache = [
   '/',
   '/static/js/app.js',
@@ -10,6 +10,8 @@ const urlsToCache = [
   '/static/icons/icon-192x192.png',
   '/static/icons/icon-512x512.png',
   '/static/icons/favicon.png',
+  '/static/icons/screenshots/screenshot-mobile.png',
+  '/static/icons/screenshots/screenshot-desktop.png',
   'https://cdn.tailwindcss.com',
   'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap',
   'https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap'
