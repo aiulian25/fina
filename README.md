@@ -56,7 +56,7 @@ echo "YOUR_GITHUB_TOKEN" | docker login ghcr.io -u YOUR_USERNAME --password-stdi
 
 ```bash
 mkdir fina && cd fina
-curl -O https://raw.githubusercontent.com/aiulian25/fina/master/docker-compose.prod.yml
+curl -o docker-compose.yml https://raw.githubusercontent.com/aiulian25/fina/master/docker-compose.prod.yml
 curl -O https://raw.githubusercontent.com/aiulian25/fina/master/.env.example
 ```
 
@@ -77,8 +77,8 @@ openssl rand -hex 32
 ### 4. Pull and run
 
 ```bash
-docker compose -f docker-compose.prod.yml pull
-docker compose -f docker-compose.prod.yml up -d
+docker compose pull
+docker compose up -d
 ```
 
 ### 5. Access the app
@@ -104,8 +104,8 @@ http://YOUR_SERVER_IP:5103
 ## 🔄 Update to Latest Version
 
 ```bash
-docker compose -f docker-compose.prod.yml pull
-docker compose -f docker-compose.prod.yml up -d
+docker compose pull
+docker compose up -d
 ```
 
 ---
@@ -114,16 +114,16 @@ docker compose -f docker-compose.prod.yml up -d
 
 ```bash
 # View logs
-docker compose -f docker-compose.prod.yml logs -f
+docker compose logs -f
 
 # Stop the app
-docker compose -f docker-compose.prod.yml down
+docker compose down
 
 # Restart
-docker compose -f docker-compose.prod.yml restart
+docker compose restart
 
 # Check status
-docker compose -f docker-compose.prod.yml ps
+docker compose ps
 ```
 
 ---
