@@ -358,9 +358,9 @@ def setup_2fa():
             from app.utils import log_security_event
             log_security_event('2FA_ENABLED', current_user.id, '2FA enabled with backup codes generated', True, request)
             
-            # Store backup codes before session clear
+            # Store user ID and backup codes before session clear
+            user_id = current_user.id
             backup_codes_to_show = backup_codes_plain
-            user_to_login = current_user
             
             # Security: Regenerate session after 2FA setup (security level increased)
             csrf_token = session.get('csrf_token')
@@ -368,8 +368,9 @@ def setup_2fa():
             if csrf_token:
                 session['csrf_token'] = csrf_token
             
-            # Re-login the user after session clear
-            login_user(user_to_login)
+            # Re-login the user after session clear (get fresh user from DB)
+            user = User.query.get(user_id)
+            login_user(user)
             
             # Re-establish session tracking
             session['last_activity'] = datetime.utcnow().isoformat()
