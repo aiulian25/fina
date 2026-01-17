@@ -7,7 +7,7 @@ from flask_login import login_required, current_user
 from app import db
 from app.models import (
     User, Category, Expense, Income, Document, RecurringExpense,
-    Tag, SavingsGoal, Challenge, UserChallenge
+    Tag, SavingsGoal, Challenge
 )
 from datetime import datetime
 import json
@@ -159,20 +159,6 @@ def export_data():
         except Exception:
             pass  # Goals might not exist
         
-        # Export user challenges
-        try:
-            user_challenges = UserChallenge.query.filter_by(user_id=current_user.id).all()
-            for uc in user_challenges:
-                backup_data['challenges'].append({
-                    'challenge_id': uc.challenge_id,
-                    'status': uc.status,
-                    'progress': uc.progress,
-                    'started_at': uc.started_at.isoformat() if uc.started_at else None,
-                    'completed_at': uc.completed_at.isoformat() if uc.completed_at else None
-                })
-        except Exception:
-            pass  # Challenges might not exist
-        
         # Generate filename
         timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
         filename = f"fina_backup_{current_user.username}_{timestamp}.json"
@@ -247,10 +233,6 @@ def import_data():
                 pass
             try:
                 SavingsGoal.query.filter_by(user_id=current_user.id).delete()
-            except:
-                pass
-            try:
-                UserChallenge.query.filter_by(user_id=current_user.id).delete()
             except:
                 pass
             Category.query.filter_by(user_id=current_user.id).delete()
