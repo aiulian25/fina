@@ -358,21 +358,28 @@ def setup_2fa():
             from app.utils import log_security_event
             log_security_event('2FA_ENABLED', current_user.id, '2FA enabled with backup codes generated', True, request)
             
+            # Store backup codes before session clear
+            backup_codes_to_show = backup_codes_plain
+            user_to_login = current_user
+            
             # Security: Regenerate session after 2FA setup (security level increased)
             csrf_token = session.get('csrf_token')
             session.clear()
             if csrf_token:
                 session['csrf_token'] = csrf_token
             
+            # Re-login the user after session clear
+            login_user(user_to_login)
+            
             # Re-establish session tracking
             session['last_activity'] = datetime.utcnow().isoformat()
             session['login_time'] = datetime.utcnow().isoformat()
             
             # Store plain backup codes in session for display
-            session['backup_codes'] = backup_codes_plain
+            session['backup_codes'] = backup_codes_to_show
             
             if request.is_json:
-                return {'success': True, 'message': '2FA enabled successfully', 'backup_codes': backup_codes_plain}
+                return {'success': True, 'message': '2FA enabled successfully', 'backup_codes': backup_codes_to_show}
             
             flash('2FA enabled successfully', 'success')
             return redirect(url_for('auth.show_backup_codes'))
