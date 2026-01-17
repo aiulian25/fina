@@ -29,5 +29,5 @@ RUN mkdir -p data uploads instance && \
 # Expose port
 EXPOSE 5103
 
-# Run the application
-CMD ["python", "run.py"]
+# Run the application with Gunicorn (production WSGI server)
+CMD ["gunicorn", "--bind", "0.0.0.0:5103", "--workers", "2", "--threads", "4", "run:app"]
