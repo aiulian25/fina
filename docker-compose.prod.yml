@@ -25,12 +25,6 @@ services:
       - no-new-privileges:true
     networks:
       - fina-network
-    healthcheck:
-      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:5103/health', timeout=5)"]
-      interval: 30s
-      timeout: 10s
-      retries: 3
-      start_period: 30s
 
   redis:
     image: redis:7-alpine
@@ -41,11 +35,6 @@ services:
       - fina-redis:/data
     networks:
       - fina-network
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
 
 volumes:
   fina-data:
