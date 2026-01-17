@@ -77,7 +77,7 @@ def create_app():
     os.makedirs('data', exist_ok=True)
     
     # Register blueprints
-    from app.routes import auth, main, expenses, admin, documents, settings, recurring, search, budget, csv_import, income, tags, goals, subscriptions, analyzer, insights, challenges, forecast
+    from app.routes import auth, main, expenses, admin, documents, settings, recurring, search, budget, csv_import, income, tags, goals, subscriptions, analyzer, insights, challenges, forecast, backup
     app.register_blueprint(auth.bp)
     app.register_blueprint(main.bp)
     app.register_blueprint(expenses.bp)
@@ -96,6 +96,7 @@ def create_app():
     app.register_blueprint(insights.bp)
     app.register_blueprint(challenges.bp)
     app.register_blueprint(forecast.bp)
+    app.register_blueprint(backup.bp)
     
     # Security headers middleware
     @app.after_request

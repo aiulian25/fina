@@ -294,6 +294,75 @@
                     </div>
                 </div>
                 
+                <!-- Backup & Restore Section -->
+                <div class="bg-card-light dark:bg-card-dark border border-border-light dark:border-[#233648] rounded-2xl p-6">
+                    <div class="mb-4">
+                        <h3 class="text-lg font-semibold text-text-main dark:text-white mb-1" data-translate="settings.backupRestore">Backup & Restore</h3>
+                        <p class="text-sm text-text-muted dark:text-[#92adc9]" data-translate="settings.backupRestoreDesc">Export your data or restore from a backup file</p>
+                    </div>
+                    
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <!-- Export Section -->
+                        <div class="flex flex-col gap-4 p-4 bg-background-light dark:bg-background-dark rounded-xl border border-border-light dark:border-[#233648]">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 flex items-center justify-center bg-primary/10 rounded-lg">
+                                    <span class="material-symbols-outlined text-primary text-[24px]">download</span>
+                                </div>
+                                <div>
+                                    <h4 class="font-medium text-text-main dark:text-white" data-translate="settings.exportData">Export Data</h4>
+                                    <p class="text-xs text-text-muted dark:text-[#92adc9]" data-translate="settings.exportDataDesc">Download all your data as JSON</p>
+                                </div>
+                            </div>
+                            <p class="text-sm text-text-muted dark:text-[#92adc9]" data-translate="settings.exportIncludes">Includes categories, expenses, income, recurring expenses, tags, and savings goals.</p>
+                            <button onclick="exportBackup()" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-primary text-white rounded-lg text-sm font-medium hover:bg-primary/90 transition-colors">
+                                <span class="material-symbols-outlined text-[18px]">cloud_download</span>
+                                <span data-translate="settings.downloadBackup">Download Backup</span>
+                            </button>
+                        </div>
+                        
+                        <!-- Import Section -->
+                        <div class="flex flex-col gap-4 p-4 bg-background-light dark:bg-background-dark rounded-xl border border-border-light dark:border-[#233648]">
+                            <div class="flex items-center gap-3">
+                                <div class="w-10 h-10 flex items-center justify-center bg-green-500/10 rounded-lg">
+                                    <span class="material-symbols-outlined text-green-500 text-[24px]">upload</span>
+                                </div>
+                                <div>
+                                    <h4 class="font-medium text-text-main dark:text-white" data-translate="settings.importData">Import Data</h4>
+                                    <p class="text-xs text-text-muted dark:text-[#92adc9]" data-translate="settings.importDataDesc">Restore from a backup file</p>
+                                </div>
+                            </div>
+                            <div class="flex flex-col gap-2">
+                                <label class="text-sm text-text-muted dark:text-[#92adc9]" data-translate="settings.importMode">Import Mode:</label>
+                                <select id="import-mode" class="w-full bg-card-light dark:bg-card-dark border border-border-light dark:border-[#233648] rounded-lg px-3 py-2 text-sm text-text-main dark:text-white">
+                                    <option value="merge" data-translate="settings.mergeData">Merge - Add to existing data</option>
+                                    <option value="replace" data-translate="settings.replaceData">Replace - Delete existing data first</option>
+                                </select>
+                            </div>
+                            <input type="file" id="backup-file" accept=".json" class="hidden">
+                            <button onclick="document.getElementById('backup-file').click()" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors">
+                                <span class="material-symbols-outlined text-[18px]">cloud_upload</span>
+                                <span data-translate="settings.selectBackupFile">Select Backup File</span>
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <!-- Import Preview Modal (hidden by default) -->
+                    <div id="import-preview" class="hidden mt-4 p-4 bg-background-light dark:bg-background-dark rounded-xl border border-border-light dark:border-[#233648]">
+                        <h4 class="font-medium text-text-main dark:text-white mb-3" data-translate="settings.importPreview">Import Preview</h4>
+                        <div id="import-preview-content" class="space-y-2 text-sm"></div>
+                        <div class="flex gap-3 mt-4">
+                            <button onclick="confirmImport()" class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors">
+                                <span class="material-symbols-outlined text-[18px]">check</span>
+                                <span data-translate="settings.confirmImport">Confirm Import</span>
+                            </button>
+                            <button onclick="cancelImport()" class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-slate-200 dark:bg-white/10 text-text-main dark:text-white rounded-lg text-sm font-medium hover:bg-slate-300 dark:hover:bg-white/20 transition-colors">
+                                <span class="material-symbols-outlined text-[18px]">close</span>
+                                <span data-translate="common.cancel">Cancel</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                
             </div>
         </div>
     </main>
@@ -487,5 +556,186 @@ function formatDateTime(isoString) {
 document.addEventListener('DOMContentLoaded', function() {
     loadActiveSessions();
 });
+
+// Backup & Restore Functions
+let pendingBackupFile = null;
+
+function exportBackup() {
+    showNotification('info', 'Preparing backup...');
+    
+    fetch('/api/backup/export', {
+        headers: {
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+        }
+    })
+    .then(response => {
+        if (!response.ok) throw new Error('Export failed');
+        return response.blob();
+    })
+    .then(blob => {
+        // Create download link
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `fina_backup_${new Date().toISOString().slice(0,10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        a.remove();
+        showNotification('success', 'Backup downloaded successfully');
+    })
+    .catch(error => {
+        console.error('Export error:', error);
+        showNotification('error', 'Failed to export backup');
+    });
+}
+
+document.getElementById('backup-file').addEventListener('change', function(e) {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    if (!file.name.endsWith('.json')) {
+        showNotification('error', 'Please select a JSON backup file');
+        return;
+    }
+    
+    pendingBackupFile = file;
+    previewImport(file);
+});
+
+function previewImport(file) {
+    const formData = new FormData();
+    formData.append('file', file);
+    
+    fetch('/api/backup/preview', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            showImportPreview(data.preview);
+        } else {
+            showNotification('error', data.error || 'Invalid backup file');
+        }
+    })
+    .catch(error => {
+        console.error('Preview error:', error);
+        showNotification('error', 'Failed to preview backup file');
+    });
+}
+
+function showImportPreview(preview) {
+    const container = document.getElementById('import-preview');
+    const content = document.getElementById('import-preview-content');
+    const mode = document.getElementById('import-mode').value;
+    
+    content.innerHTML = `
+        <div class="grid grid-cols-2 gap-x-4 gap-y-2">
+            <div class="text-text-muted dark:text-[#92adc9]">Backup Date:</div>
+            <div class="text-text-main dark:text-white">${new Date(preview.exported_at).toLocaleString()}</div>
+            
+            <div class="text-text-muted dark:text-[#92adc9]">Original User:</div>
+            <div class="text-text-main dark:text-white">${preview.original_user}</div>
+            
+            <div class="text-text-muted dark:text-[#92adc9]">Categories:</div>
+            <div class="text-text-main dark:text-white">${preview.counts.categories}</div>
+            
+            <div class="text-text-muted dark:text-[#92adc9]">Expenses:</div>
+            <div class="text-text-main dark:text-white">${preview.counts.expenses} (Total: ${preview.totals.expenses.toFixed(2)})</div>
+            
+            <div class="text-text-muted dark:text-[#92adc9]">Income:</div>
+            <div class="text-text-main dark:text-white">${preview.counts.income} (Total: ${preview.totals.income.toFixed(2)})</div>
+            
+            <div class="text-text-muted dark:text-[#92adc9]">Recurring:</div>
+            <div class="text-text-main dark:text-white">${preview.counts.recurring_expenses}</div>
+            
+            <div class="text-text-muted dark:text-[#92adc9]">Tags:</div>
+            <div class="text-text-main dark:text-white">${preview.counts.tags}</div>
+            
+            <div class="text-text-muted dark:text-[#92adc9]">Savings Goals:</div>
+            <div class="text-text-main dark:text-white">${preview.counts.savings_goals}</div>
+        </div>
+        
+        ${mode === 'replace' ? `
+        <div class="mt-3 p-3 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-lg">
+            <p class="text-sm text-red-600 dark:text-red-400 flex items-center gap-2">
+                <span class="material-symbols-outlined text-[18px]">warning</span>
+                <strong>Warning:</strong> Replace mode will DELETE all your existing data before importing!
+            </p>
+        </div>
+        ` : `
+        <div class="mt-3 p-3 bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/30 rounded-lg">
+            <p class="text-sm text-blue-600 dark:text-blue-400 flex items-center gap-2">
+                <span class="material-symbols-outlined text-[18px]">info</span>
+                Merge mode will add new data while keeping existing records.
+            </p>
+        </div>
+        `}
+    `;
+    
+    container.classList.remove('hidden');
+}
+
+function confirmImport() {
+    if (!pendingBackupFile) {
+        showNotification('error', 'No backup file selected');
+        return;
+    }
+    
+    const mode = document.getElementById('import-mode').value;
+    
+    if (mode === 'replace') {
+        if (!confirm('Are you sure you want to REPLACE all your data? This cannot be undone!')) {
+            return;
+        }
+    }
+    
+    const formData = new FormData();
+    formData.append('file', pendingBackupFile);
+    formData.append('mode', mode);
+    
+    showNotification('info', 'Importing data...');
+    
+    fetch('/api/backup/import', {
+        method: 'POST',
+        headers: {
+            'X-CSRFToken': document.querySelector('meta[name="csrf-token"]').content
+        },
+        body: formData
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            const stats = data.stats;
+            let message = 'Import complete! ';
+            if (stats.categories > 0) message += `${stats.categories} categories, `;
+            if (stats.expenses > 0) message += `${stats.expenses} expenses, `;
+            if (stats.income > 0) message += `${stats.income} income, `;
+            if (stats.recurring_expenses > 0) message += `${stats.recurring_expenses} recurring, `;
+            if (stats.tags > 0) message += `${stats.tags} tags, `;
+            if (stats.savings_goals > 0) message += `${stats.savings_goals} goals, `;
+            message = message.replace(/, $/, ' imported.');
+            
+            showNotification('success', message);
+            cancelImport();
+        } else {
+            showNotification('error', data.error || 'Import failed');
+        }
+    })
+    .catch(error => {
+        console.error('Import error:', error);
+        showNotification('error', 'Failed to import backup');
+    });
+}
+
+function cancelImport() {
+    pendingBackupFile = null;
+    document.getElementById('backup-file').value = '';
+    document.getElementById('import-preview').classList.add('hidden');
+}
 </script>
 {% endblock %}
