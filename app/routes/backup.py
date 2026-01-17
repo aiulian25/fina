@@ -1,9 +1,10 @@
 """
 Backup and Restore Routes for FINA
-Allows users to export all their data and import from a backup
+Allows users to export all their data (including files) and import from a backup
 """
-from flask import Blueprint, request, jsonify, Response
+from flask import Blueprint, request, jsonify, Response, current_app, send_file
 from flask_login import login_required, current_user
+from werkzeug.utils import secure_filename
 from app import db
 from app.models import (
     User, Category, Expense, Income, Document, RecurringExpense,
@@ -11,6 +12,11 @@ from app.models import (
 )
 from datetime import datetime
 import json
+import zipfile
+import io
+import os
+import shutil
+import tempfile
 
 bp = Blueprint('backup', __name__, url_prefix='/api/backup')
 
@@ -26,13 +32,16 @@ def serialize_datetime(obj):
 @login_required
 def export_data():
     """
-    Export all user data as JSON file
-    Includes: categories, expenses, income, recurring expenses, tags, goals, challenges
+    Export all user data as a ZIP file containing:
+    - data.json: All database records
+    - receipts/: Expense receipt images
+    - documents/: Uploaded documents
+    - avatar: User avatar (if custom)
     """
     try:
         # Collect all user data
         backup_data = {
-            'version': '1.0',
+            'version': '2.0',  # Version 2 includes files
             'app': 'FINA',
             'exported_at': datetime.utcnow().isoformat(),
             'user': {
@@ -40,7 +49,8 @@ def export_data():
                 'email': current_user.email,
                 'currency': current_user.currency,
                 'language': current_user.language,
-                'monthly_budget': current_user.monthly_budget
+                'monthly_budget': current_user.monthly_budget,
+                'avatar': current_user.avatar
             },
             'categories': [],
             'expenses': [],
@@ -48,12 +58,17 @@ def export_data():
             'recurring_expenses': [],
             'tags': [],
             'savings_goals': [],
-            'challenges': []
+            'documents': [],
+            'files': {
+                'receipts': [],
+                'documents': [],
+                'avatar': None
+            }
         }
         
         # Export categories
         categories = Category.query.filter_by(user_id=current_user.id).all()
-        category_map = {}  # Map old IDs to category names for reference
+        category_map = {}
         for cat in categories:
             category_map[cat.id] = cat.name
             backup_data['categories'].append({
@@ -66,8 +81,9 @@ def export_data():
                 'created_at': cat.created_at.isoformat() if cat.created_at else None
             })
         
-        # Export expenses
+        # Export expenses (with receipt paths)
         expenses = Expense.query.filter_by(user_id=current_user.id).all()
+        receipt_files = []
         for exp in expenses:
             expense_data = {
                 'amount': exp.amount,
@@ -75,9 +91,15 @@ def export_data():
                 'description': exp.description,
                 'category_name': category_map.get(exp.category_id, 'Uncategorized'),
                 'tags': exp.get_tags(),
+                'receipt_path': exp.receipt_path,  # Include receipt reference
                 'date': exp.date.isoformat() if exp.date else None,
                 'created_at': exp.created_at.isoformat() if exp.created_at else None
             }
+            # Track receipt files to include
+            if exp.receipt_path:
+                receipt_files.append(exp.receipt_path)
+                backup_data['files']['receipts'].append(exp.receipt_path)
+            
             # Get tag names from tag objects
             try:
                 tag_names = [t.name for t in exp.get_tag_objects()]
@@ -138,7 +160,7 @@ def export_data():
                     'created_at': tag.created_at.isoformat() if tag.created_at else None
                 })
         except Exception:
-            pass  # Tags might not exist
+            pass
         
         # Export savings goals
         try:
@@ -157,25 +179,77 @@ def export_data():
                     'created_at': goal.created_at.isoformat() if goal.created_at else None
                 })
         except Exception:
-            pass  # Goals might not exist
+            pass
         
-        # Generate filename
+        # Export documents
+        document_files = []
+        try:
+            documents = Document.query.filter_by(user_id=current_user.id).all()
+            for doc in documents:
+                backup_data['documents'].append({
+                    'filename': doc.filename,
+                    'original_filename': doc.original_filename,
+                    'file_path': doc.file_path,
+                    'file_size': doc.file_size,
+                    'file_type': doc.file_type,
+                    'mime_type': doc.mime_type,
+                    'document_category': doc.document_category,
+                    'status': doc.status,
+                    'ocr_text': doc.ocr_text,
+                    'created_at': doc.created_at.isoformat() if doc.created_at else None
+                })
+                if doc.file_path:
+                    document_files.append(doc.file_path)
+                    backup_data['files']['documents'].append(doc.file_path)
+        except Exception:
+            pass
+        
+        # Check for custom avatar
+        if current_user.avatar and not current_user.avatar.startswith('icons/avatars/'):
+            backup_data['files']['avatar'] = current_user.avatar
+        
+        # Create ZIP file in memory
+        zip_buffer = io.BytesIO()
+        
+        with zipfile.ZipFile(zip_buffer, 'w', zipfile.ZIP_DEFLATED) as zip_file:
+            # Add JSON data
+            json_data = json.dumps(backup_data, indent=2, default=serialize_datetime)
+            zip_file.writestr('data.json', json_data)
+            
+            # Add receipt files
+            upload_folder = current_app.config.get('UPLOAD_FOLDER', 'uploads')
+            for receipt_path in receipt_files:
+                full_path = os.path.join(upload_folder, receipt_path)
+                if os.path.exists(full_path):
+                    zip_file.write(full_path, f'receipts/{os.path.basename(receipt_path)}')
+            
+            # Add document files
+            for doc_path in document_files:
+                full_path = os.path.join(upload_folder, doc_path)
+                if os.path.exists(full_path):
+                    zip_file.write(full_path, f'documents/{os.path.basename(doc_path)}')
+            
+            # Add custom avatar
+            if backup_data['files']['avatar']:
+                avatar_path = os.path.join(upload_folder, backup_data['files']['avatar'])
+                if os.path.exists(avatar_path):
+                    zip_file.write(avatar_path, f'avatar/{os.path.basename(backup_data["files"]["avatar"])}')
+        
+        # Prepare response
+        zip_buffer.seek(0)
         timestamp = datetime.utcnow().strftime('%Y%m%d_%H%M%S')
-        filename = f"fina_backup_{current_user.username}_{timestamp}.json"
+        filename = f"fina_backup_{current_user.username}_{timestamp}.zip"
         
-        # Return as downloadable file
-        json_data = json.dumps(backup_data, indent=2, default=serialize_datetime)
-        
-        return Response(
-            json_data,
-            mimetype='application/json',
-            headers={
-                'Content-Disposition': f'attachment; filename={filename}',
-                'Content-Type': 'application/json'
-            }
+        return send_file(
+            zip_buffer,
+            mimetype='application/zip',
+            as_attachment=True,
+            download_name=filename
         )
         
     except Exception as e:
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
 
 
@@ -183,7 +257,7 @@ def export_data():
 @login_required
 def import_data():
     """
-    Import user data from a backup JSON file
+    Import user data from a backup file (ZIP or JSON)
     Options: 
     - merge: Add new data without deleting existing
     - replace: Delete existing data and replace with backup
@@ -193,19 +267,21 @@ def import_data():
             return jsonify({'success': False, 'error': 'No file provided'}), 400
         
         file = request.files['file']
-        if not file.filename.endswith('.json'):
-            return jsonify({'success': False, 'error': 'File must be a JSON file'}), 400
+        filename = file.filename.lower()
         
-        # Get import mode (merge or replace)
+        # Get import mode
         mode = request.form.get('mode', 'merge')
         if mode not in ['merge', 'replace']:
             mode = 'merge'
         
-        # Parse JSON file
-        try:
+        # Determine file type and parse
+        if filename.endswith('.zip'):
+            backup_data, files_data = parse_zip_backup(file)
+        elif filename.endswith('.json'):
             backup_data = json.loads(file.read().decode('utf-8'))
-        except json.JSONDecodeError as e:
-            return jsonify({'success': False, 'error': f'Invalid JSON file: {str(e)}'}), 400
+            files_data = None
+        else:
+            return jsonify({'success': False, 'error': 'File must be a ZIP or JSON file'}), 400
         
         # Validate backup file
         if backup_data.get('app') != 'FINA':
@@ -218,15 +294,20 @@ def import_data():
             'recurring_expenses': 0,
             'tags': 0,
             'savings_goals': 0,
+            'documents': 0,
+            'files_restored': 0,
             'skipped': 0
         }
         
         # If replace mode, delete existing data
         if mode == 'replace':
-            # Delete in order to respect foreign keys
             Expense.query.filter_by(user_id=current_user.id).delete()
             Income.query.filter_by(user_id=current_user.id).delete()
             RecurringExpense.query.filter_by(user_id=current_user.id).delete()
+            try:
+                Document.query.filter_by(user_id=current_user.id).delete()
+            except:
+                pass
             try:
                 Tag.query.filter_by(user_id=current_user.id).delete()
             except:
@@ -238,7 +319,11 @@ def import_data():
             Category.query.filter_by(user_id=current_user.id).delete()
             db.session.commit()
         
-        # Import categories first (needed for expense references)
+        # Restore files from ZIP if available
+        if files_data:
+            stats['files_restored'] = restore_files(files_data, backup_data.get('files', {}))
+        
+        # Import categories first
         category_name_to_id = {}
         existing_categories = {c.name.lower(): c for c in Category.query.filter_by(user_id=current_user.id).all()}
         
@@ -247,13 +332,11 @@ def import_data():
             if not cat_name:
                 continue
             
-            # Check if category exists (case-insensitive)
             if cat_name.lower() in existing_categories:
                 category_name_to_id[cat_name] = existing_categories[cat_name.lower()].id
                 stats['skipped'] += 1
                 continue
             
-            # Create new category
             cat = Category(
                 name=cat_name,
                 color=cat_data.get('color', '#2b8cee'),
@@ -264,7 +347,7 @@ def import_data():
                 user_id=current_user.id
             )
             db.session.add(cat)
-            db.session.flush()  # Get the ID
+            db.session.flush()
             category_name_to_id[cat_name] = cat.id
             existing_categories[cat_name.lower()] = cat
             stats['categories'] += 1
@@ -298,9 +381,9 @@ def import_data():
                 existing_tags[tag_name.lower()] = tag
                 stats['tags'] += 1
         except Exception:
-            pass  # Tags model might not exist
+            pass
         
-        # Get default category for uncategorized items
+        # Get default category
         default_category = Category.query.filter_by(user_id=current_user.id).first()
         if not default_category:
             default_category = Category(
@@ -322,6 +405,14 @@ def import_data():
             if not cat_id:
                 cat_id = default_category.id
             
+            # Handle receipt path - map to restored file location
+            receipt_path = exp_data.get('receipt_path')
+            if receipt_path and files_data:
+                # Update path to point to restored file
+                basename = os.path.basename(receipt_path)
+                if any(basename in f for f in files_data.get('receipts', {}).keys()):
+                    receipt_path = f"receipts/{basename}"
+            
             exp = Expense(
                 amount=float(exp_data.get('amount', 0)),
                 currency=exp_data.get('currency', current_user.currency),
@@ -329,6 +420,7 @@ def import_data():
                 category_id=cat_id,
                 user_id=current_user.id,
                 tags=json.dumps(exp_data.get('tags', [])),
+                receipt_path=receipt_path,
                 date=datetime.fromisoformat(exp_data['date']) if exp_data.get('date') else datetime.utcnow()
             )
             db.session.add(exp)
@@ -382,6 +474,33 @@ def import_data():
             db.session.add(rec)
             stats['recurring_expenses'] += 1
         
+        # Import documents
+        for doc_data in backup_data.get('documents', []):
+            # Check if file was restored
+            file_path = doc_data.get('file_path')
+            if file_path and files_data:
+                basename = os.path.basename(file_path)
+                if any(basename in f for f in files_data.get('documents', {}).keys()):
+                    file_path = f"documents/{basename}"
+            
+            try:
+                doc = Document(
+                    filename=doc_data.get('filename', 'unknown'),
+                    original_filename=doc_data.get('original_filename', 'unknown'),
+                    file_path=file_path or doc_data.get('file_path', ''),
+                    file_size=doc_data.get('file_size', 0),
+                    file_type=doc_data.get('file_type', 'unknown'),
+                    mime_type=doc_data.get('mime_type', 'application/octet-stream'),
+                    document_category=doc_data.get('document_category'),
+                    status=doc_data.get('status', 'uploaded'),
+                    ocr_text=doc_data.get('ocr_text'),
+                    user_id=current_user.id
+                )
+                db.session.add(doc)
+                stats['documents'] += 1
+            except Exception:
+                pass
+        
         # Import savings goals
         try:
             for goal_data in backup_data.get('savings_goals', []):
@@ -401,7 +520,13 @@ def import_data():
                 db.session.add(goal)
                 stats['savings_goals'] += 1
         except Exception:
-            pass  # Goals model might not exist
+            pass
+        
+        # Restore avatar if included
+        if files_data and files_data.get('avatar'):
+            avatar_info = backup_data.get('files', {}).get('avatar')
+            if avatar_info:
+                current_user.avatar = avatar_info
         
         db.session.commit()
         
@@ -413,28 +538,112 @@ def import_data():
         
     except Exception as e:
         db.session.rollback()
+        import traceback
+        traceback.print_exc()
         return jsonify({'success': False, 'error': str(e)}), 500
+
+
+def parse_zip_backup(file):
+    """Parse a ZIP backup file and extract data + files"""
+    files_data = {
+        'receipts': {},
+        'documents': {},
+        'avatar': None
+    }
+    
+    with zipfile.ZipFile(file, 'r') as zip_file:
+        # Read JSON data
+        try:
+            json_content = zip_file.read('data.json')
+            backup_data = json.loads(json_content.decode('utf-8'))
+        except KeyError:
+            raise ValueError('Invalid backup: missing data.json')
+        
+        # Extract files
+        for name in zip_file.namelist():
+            if name == 'data.json':
+                continue
+            
+            content = zip_file.read(name)
+            
+            if name.startswith('receipts/'):
+                files_data['receipts'][name] = content
+            elif name.startswith('documents/'):
+                files_data['documents'][name] = content
+            elif name.startswith('avatar/'):
+                files_data['avatar'] = {'name': name, 'content': content}
+    
+    return backup_data, files_data
+
+
+def restore_files(files_data, files_info):
+    """Restore files from backup to uploads folder"""
+    upload_folder = current_app.config.get('UPLOAD_FOLDER', 'uploads')
+    files_restored = 0
+    
+    # Restore receipts
+    receipts_folder = os.path.join(upload_folder, 'receipts')
+    os.makedirs(receipts_folder, exist_ok=True)
+    
+    for path, content in files_data.get('receipts', {}).items():
+        filename = os.path.basename(path)
+        dest_path = os.path.join(receipts_folder, filename)
+        with open(dest_path, 'wb') as f:
+            f.write(content)
+        files_restored += 1
+    
+    # Restore documents
+    documents_folder = os.path.join(upload_folder, 'documents')
+    os.makedirs(documents_folder, exist_ok=True)
+    
+    for path, content in files_data.get('documents', {}).items():
+        filename = os.path.basename(path)
+        dest_path = os.path.join(documents_folder, filename)
+        with open(dest_path, 'wb') as f:
+            f.write(content)
+        files_restored += 1
+    
+    # Restore avatar
+    if files_data.get('avatar'):
+        avatars_folder = os.path.join(upload_folder, 'avatars')
+        os.makedirs(avatars_folder, exist_ok=True)
+        
+        avatar_info = files_data['avatar']
+        filename = os.path.basename(avatar_info['name'])
+        dest_path = os.path.join(avatars_folder, filename)
+        with open(dest_path, 'wb') as f:
+            f.write(avatar_info['content'])
+        files_restored += 1
+    
+    return files_restored
 
 
 @bp.route('/preview', methods=['POST'])
 @login_required
 def preview_import():
-    """
-    Preview what will be imported from a backup file without actually importing
-    """
+    """Preview what will be imported from a backup file"""
     try:
         if 'file' not in request.files:
             return jsonify({'success': False, 'error': 'No file provided'}), 400
         
         file = request.files['file']
-        if not file.filename.endswith('.json'):
-            return jsonify({'success': False, 'error': 'File must be a JSON file'}), 400
+        filename = file.filename.lower()
         
-        # Parse JSON file
-        try:
+        # Parse based on file type
+        if filename.endswith('.zip'):
+            backup_data, files_data = parse_zip_backup(file)
+            has_files = True
+            file_counts = {
+                'receipts': len(files_data.get('receipts', {})),
+                'documents': len(files_data.get('documents', {})),
+                'avatar': 1 if files_data.get('avatar') else 0
+            }
+        elif filename.endswith('.json'):
             backup_data = json.loads(file.read().decode('utf-8'))
-        except json.JSONDecodeError as e:
-            return jsonify({'success': False, 'error': f'Invalid JSON file: {str(e)}'}), 400
+            has_files = False
+            file_counts = {'receipts': 0, 'documents': 0, 'avatar': 0}
+        else:
+            return jsonify({'success': False, 'error': 'File must be a ZIP or JSON file'}), 400
         
         # Validate backup file
         if backup_data.get('app') != 'FINA':
@@ -442,9 +651,10 @@ def preview_import():
         
         # Gather preview info
         preview = {
-            'version': backup_data.get('version', 'Unknown'),
+            'version': backup_data.get('version', '1.0'),
             'exported_at': backup_data.get('exported_at', 'Unknown'),
             'original_user': backup_data.get('user', {}).get('username', 'Unknown'),
+            'has_files': has_files,
             'counts': {
                 'categories': len(backup_data.get('categories', [])),
                 'expenses': len(backup_data.get('expenses', [])),
@@ -452,8 +662,9 @@ def preview_import():
                 'recurring_expenses': len(backup_data.get('recurring_expenses', [])),
                 'tags': len(backup_data.get('tags', [])),
                 'savings_goals': len(backup_data.get('savings_goals', [])),
-                'challenges': len(backup_data.get('challenges', []))
+                'documents': len(backup_data.get('documents', []))
             },
+            'file_counts': file_counts,
             'totals': {
                 'expenses': sum(e.get('amount', 0) for e in backup_data.get('expenses', [])),
                 'income': sum(i.get('amount', 0) for i in backup_data.get('income', []))

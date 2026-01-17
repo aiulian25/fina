@@ -338,7 +338,7 @@
                                     <option value="replace" data-translate="settings.replaceData">Replace - Delete existing data first</option>
                                 </select>
                             </div>
-                            <input type="file" id="backup-file" accept=".json" class="hidden">
+                            <input type="file" id="backup-file" accept=".json,.zip" class="hidden">
                             <button onclick="document.getElementById('backup-file').click()" class="w-full flex items-center justify-center gap-2 px-4 py-2.5 bg-green-600 text-white rounded-lg text-sm font-medium hover:bg-green-700 transition-colors">
                                 <span class="material-symbols-outlined text-[18px]">cloud_upload</span>
                                 <span data-translate="settings.selectBackupFile">Select Backup File</span>
@@ -594,8 +594,8 @@ document.getElementById('backup-file').addEventListener('change', function(e) {
     const file = e.target.files[0];
     if (!file) return;
     
-    if (!file.name.endsWith('.json')) {
-        showNotification('error', 'Please select a JSON backup file');
+    if (!file.name.endsWith('.json') && !file.name.endsWith('.zip')) {
+        showNotification('error', 'Please select a ZIP or JSON backup file');
         return;
     }
     
@@ -633,6 +633,27 @@ function showImportPreview(preview) {
     const content = document.getElementById('import-preview-content');
     const mode = document.getElementById('import-mode').value;
     
+    // Build files section if backup includes files
+    let filesSection = '';
+    if (preview.has_files && preview.file_counts) {
+        const totalFiles = (preview.file_counts.receipts || 0) + (preview.file_counts.documents || 0) + (preview.file_counts.avatar || 0);
+        if (totalFiles > 0) {
+            filesSection = `
+            <div class="mt-3 pt-3 border-t border-border-light dark:border-[#233648]">
+                <div class="text-sm font-medium text-text-main dark:text-white mb-2 flex items-center gap-2">
+                    <span class="material-symbols-outlined text-[18px] text-green-500">folder</span>
+                    Attached Files (${totalFiles})
+                </div>
+                <div class="grid grid-cols-2 gap-x-4 gap-y-1 text-sm pl-6">
+                    ${preview.file_counts.receipts > 0 ? `<div class="text-text-muted dark:text-[#92adc9]">Receipts:</div><div class="text-text-main dark:text-white">${preview.file_counts.receipts}</div>` : ''}
+                    ${preview.file_counts.documents > 0 ? `<div class="text-text-muted dark:text-[#92adc9]">Documents:</div><div class="text-text-main dark:text-white">${preview.file_counts.documents}</div>` : ''}
+                    ${preview.file_counts.avatar > 0 ? `<div class="text-text-muted dark:text-[#92adc9]">Avatar:</div><div class="text-text-main dark:text-white">Yes</div>` : ''}
+                </div>
+            </div>
+            `;
+        }
+    }
+    
     content.innerHTML = `
         <div class="grid grid-cols-2 gap-x-4 gap-y-2">
             <div class="text-text-muted dark:text-[#92adc9]">Backup Date:</div>
@@ -658,7 +679,12 @@ function showImportPreview(preview) {
             
             <div class="text-text-muted dark:text-[#92adc9]">Savings Goals:</div>
             <div class="text-text-main dark:text-white">${preview.counts.savings_goals}</div>
+            
+            <div class="text-text-muted dark:text-[#92adc9]">Documents:</div>
+            <div class="text-text-main dark:text-white">${preview.counts.documents || 0}</div>
         </div>
+        
+        ${filesSection}
         
         ${mode === 'replace' ? `
         <div class="mt-3 p-3 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-lg">
