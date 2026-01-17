@@ -219,21 +219,51 @@ def export_data():
             # Add receipt files
             upload_folder = current_app.config.get('UPLOAD_FOLDER', 'uploads')
             for receipt_path in receipt_files:
-                full_path = os.path.join(upload_folder, receipt_path)
+                # Handle different path formats
+                if os.path.isabs(receipt_path):
+                    full_path = receipt_path
+                else:
+                    full_path = os.path.join(upload_folder, receipt_path)
+                
                 if os.path.exists(full_path):
                     zip_file.write(full_path, f'receipts/{os.path.basename(receipt_path)}')
+                else:
+                    # Try without receipts/ prefix if it was stored that way
+                    alt_path = os.path.join(upload_folder, 'receipts', os.path.basename(receipt_path))
+                    if os.path.exists(alt_path):
+                        zip_file.write(alt_path, f'receipts/{os.path.basename(receipt_path)}')
             
             # Add document files
             for doc_path in document_files:
-                full_path = os.path.join(upload_folder, doc_path)
+                # Handle different path formats (absolute vs relative)
+                if os.path.isabs(doc_path):
+                    full_path = doc_path
+                else:
+                    full_path = os.path.join(upload_folder, doc_path)
+                
                 if os.path.exists(full_path):
                     zip_file.write(full_path, f'documents/{os.path.basename(doc_path)}')
+                else:
+                    # Try with documents/ prefix
+                    alt_path = os.path.join(upload_folder, 'documents', os.path.basename(doc_path))
+                    if os.path.exists(alt_path):
+                        zip_file.write(alt_path, f'documents/{os.path.basename(doc_path)}')
             
             # Add custom avatar
             if backup_data['files']['avatar']:
-                avatar_path = os.path.join(upload_folder, backup_data['files']['avatar'])
-                if os.path.exists(avatar_path):
-                    zip_file.write(avatar_path, f'avatar/{os.path.basename(backup_data["files"]["avatar"])}')
+                avatar_path = backup_data['files']['avatar']
+                if os.path.isabs(avatar_path):
+                    full_path = avatar_path
+                else:
+                    full_path = os.path.join(upload_folder, avatar_path)
+                
+                if os.path.exists(full_path):
+                    zip_file.write(full_path, f'avatar/{os.path.basename(avatar_path)}')
+                else:
+                    # Try with avatars/ prefix
+                    alt_path = os.path.join(upload_folder, 'avatars', os.path.basename(avatar_path))
+                    if os.path.exists(alt_path):
+                        zip_file.write(alt_path, f'avatar/{os.path.basename(avatar_path)}')
         
         # Prepare response
         zip_buffer.seek(0)

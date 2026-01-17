@@ -29,6 +29,35 @@ def allowed_document(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_DOCUMENT_TYPES.keys()
 
+
+def resolve_file_path(stored_path):
+    """
+    Resolve stored file path to actual file location.
+    Handles both absolute paths and relative paths (from backup imports).
+    """
+    # If it's already an absolute path and exists, use it
+    if os.path.isabs(stored_path) and os.path.exists(stored_path):
+        return stored_path
+    
+    # Try relative to upload folder
+    upload_folder = current_app.config.get('UPLOAD_FOLDER', 'uploads')
+    
+    # Try as-is relative to upload folder (e.g., "documents/file.pdf")
+    full_path = os.path.join(upload_folder, stored_path)
+    if os.path.exists(full_path):
+        return full_path
+    
+    # Try just the basename in the appropriate subfolder
+    basename = os.path.basename(stored_path)
+    
+    # Check in documents subfolder
+    doc_path = os.path.join(upload_folder, 'documents', basename)
+    if os.path.exists(doc_path):
+        return doc_path
+    
+    # Return original path (will fail with "file not found")
+    return stored_path
+
 def get_file_type_icon(file_type):
     """Get material icon name for file type"""
     icons = {
@@ -183,11 +212,14 @@ def view_document(document_id):
     if not document:
         return jsonify({'success': False, 'message': 'Document not found'}), 404
     
-    if not os.path.exists(document.file_path):
+    # Resolve path (handles both absolute and relative paths from backups)
+    actual_path = resolve_file_path(document.file_path)
+    
+    if not os.path.exists(actual_path):
         return jsonify({'success': False, 'message': 'File not found on server'}), 404
     
     return send_file(
-        document.file_path,
+        actual_path,
         mimetype=document.mime_type,
         as_attachment=False
     )
@@ -206,11 +238,14 @@ def download_document(document_id):
     if not document:
         return jsonify({'success': False, 'message': 'Document not found'}), 404
     
-    if not os.path.exists(document.file_path):
+    # Resolve path (handles both absolute and relative paths from backups)
+    actual_path = resolve_file_path(document.file_path)
+    
+    if not os.path.exists(actual_path):
         return jsonify({'success': False, 'message': 'File not found on server'}), 404
     
     return send_file(
-        document.file_path,
+        actual_path,
         mimetype=document.mime_type,
         as_attachment=True,
         download_name=document.original_filename
@@ -230,10 +265,11 @@ def delete_document(document_id):
     if not document:
         return jsonify({'success': False, 'message': 'Document not found'}), 404
     
-    # Delete physical file
-    if os.path.exists(document.file_path):
+    # Resolve and delete physical file
+    actual_path = resolve_file_path(document.file_path)
+    if os.path.exists(actual_path):
         try:
-            os.remove(document.file_path)
+            os.remove(actual_path)
         except Exception as e:
             print(f"Error deleting file: {e}")
     

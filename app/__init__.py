@@ -101,8 +101,8 @@ def create_app():
     # Security headers middleware
     @app.after_request
     def add_security_headers(response):
-        # Prevent clickjacking
-        response.headers['X-Frame-Options'] = 'DENY'
+        # Prevent clickjacking (SAMEORIGIN allows iframes from same domain for PDF preview)
+        response.headers['X-Frame-Options'] = 'SAMEORIGIN'
         
         # Prevent MIME type sniffing
         response.headers['X-Content-Type-Options'] = 'nosniff'
