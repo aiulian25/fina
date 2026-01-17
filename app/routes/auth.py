@@ -579,3 +579,62 @@ def disable_2fa():
     
     flash('2FA disabled', 'success')
     return redirect(url_for('main.settings'))
+
+
+@bp.route('/regenerate-backup-codes', methods=['GET', 'POST'])
+@login_required
+def regenerate_backup_codes():
+    """Regenerate backup codes for users with 2FA already enabled"""
+    from app.utils import log_security_event
+    
+    if not current_user.two_factor_enabled:
+        flash('2FA is not enabled. Please enable 2FA first.', 'error')
+        return redirect(url_for('auth.setup_2fa'))
+    
+    if request.method == 'POST':
+        data = request.get_json() if request.is_json else request.form
+        code = data.get('code', '').strip()
+        password = data.get('password', '').strip()
+        
+        # Verify password for security
+        if not password or not bcrypt.check_password_hash(current_user.password_hash, password):
+            log_security_event('BACKUP_CODES_REGEN_FAILED', current_user.id, 'Invalid password', False, request)
+            if request.is_json:
+                return {'success': False, 'message': 'Invalid password'}, 401
+            flash('Invalid password', 'error')
+            return render_template('auth/regenerate_codes.html')
+        
+        # Verify current 2FA code
+        totp = pyotp.TOTP(current_user.totp_secret)
+        is_valid = totp.verify(code)
+        
+        # Also allow backup code verification
+        if not is_valid:
+            is_valid = verify_backup_code(current_user, code)
+        
+        if not is_valid:
+            log_security_event('BACKUP_CODES_REGEN_FAILED', current_user.id, 'Invalid 2FA code', False, request)
+            if request.is_json:
+                return {'success': False, 'message': 'Invalid 2FA code'}, 401
+            flash('Invalid 2FA code', 'error')
+            return render_template('auth/regenerate_codes.html')
+        
+        # Generate new backup codes
+        backup_codes_plain = generate_backup_codes(10)
+        backup_codes_hashed = hash_backup_codes(backup_codes_plain)
+        
+        current_user.backup_codes = json.dumps(backup_codes_hashed)
+        db.session.commit()
+        
+        log_security_event('BACKUP_CODES_REGENERATED', current_user.id, 'New backup codes generated', True, request)
+        
+        # Store plain backup codes in session for display
+        session['backup_codes'] = backup_codes_plain
+        
+        if request.is_json:
+            return {'success': True, 'message': 'Backup codes regenerated', 'backup_codes': backup_codes_plain}
+        
+        flash('Backup codes regenerated successfully', 'success')
+        return redirect(url_for('auth.show_backup_codes'))
+    
+    return render_template('auth/regenerate_codes.html')

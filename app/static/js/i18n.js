@@ -394,6 +394,14 @@ const translations = {
         'twofa.enterCode': 'Enter the code in the 2FA field when logging in',
         'twofa.oneTimeUse': 'Each code works only once - it will be deleted after use',
         'twofa.regenerate': 'You can regenerate codes anytime from Settings',
+        'twofa.regenerateTitle': 'Regenerate Backup Codes',
+        'twofa.regenerateDesc': 'Verify your identity to generate new backup codes',
+        'twofa.warningTitle': 'Warning',
+        'twofa.regenerateWarning': 'Generating new backup codes will invalidate all your existing codes. Any previously saved codes will no longer work.',
+        'twofa.verificationCode': 'Verification Code',
+        'twofa.codeHint': 'Enter the 6-digit code from your authenticator app or a backup code',
+        'twofa.regenerateCodes': 'Generate New Backup Codes',
+        'common.backToSettings': 'Back to Settings',
         
         // Admin
         'admin.title': 'Admin Panel',
