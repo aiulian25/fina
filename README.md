@@ -151,11 +151,12 @@ Access at `http://localhost:5103`
 
 | Component | Technology |
 |-----------|------------|
-| Backend | Flask 3.0 (Python 3.11) |
+| Backend | Flask 3.1+ (Python 3.11) |
 | Database | SQLite |
 | Cache/Sessions | Redis |
 | Frontend | Tailwind CSS, Chart.js |
 | Containerization | Docker |
+| WSGI Server | Gunicorn 22+ |
 
 ---
 
@@ -164,9 +165,13 @@ Access at `http://localhost:5103`
 - Password hashing with bcrypt (12 rounds)
 - CSRF protection on all forms
 - Rate limiting on authentication endpoints
-- Secure session management with Redis
+- Secure session cookies (HttpOnly, SameSite, Secure)
 - Content Security Policy headers
+- X-Frame-Options, X-Content-Type-Options headers
+- Session inactivity timeout
 - Optional 2FA with TOTP
+- All API routes protected with authentication
+- Regular dependency security updates (Trivy scanned)
 
 ---
 
